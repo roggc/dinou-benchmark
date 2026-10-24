@@ -16,12 +16,33 @@ import { promisify } from "node:util";
 const frameworks = selectedFrameworks();
 const results = [];
 
-// En gVisor (y en varios runtimes de contenedor) la contabilidad de /proc está
-// inflada y VmRSS no es por proceso: los MB absolutos no son fiables.
-const { stdout: kernelRelease } = await promisify(execFile)("uname", ["-r"]);
-const reliable = !/gvisor/i.test(kernelRelease);
-if (!reliable) {
-  console.warn("aviso: kernel gVisor detectado, el RSS de /proc no es por proceso; se marcará como no fiable.");
+const isWin = process.platform === "win32";
+const WIN_RSS_SCRIPT = path.join(ROOT, "scripts", "win-rss.ps1");
+
+let reliable = true;
+if (process.platform === "linux") {
+  try {
+    const { stdout: kernelRelease } = await promisify(execFile)("uname", ["-r"]);
+    reliable = !/gvisor/i.test(kernelRelease);
+    if (!reliable) {
+      console.warn("aviso: kernel gVisor detectado, el RSS de /proc no es por proceso; se marcará como no fiable.");
+    }
+  } catch {
+    reliable = false;
+  }
+}
+
+async function winTreeRss(pid) {
+  try {
+    const { stdout } = await promisify(execFile)(
+      "powershell",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", WIN_RSS_SCRIPT, "-ParentPid", String(pid)],
+      { timeout: 5000 }
+    );
+    return Number(stdout.trim()) || 0;
+  } catch {
+    return 0;
+  }
 }
 
 async function childrenOf(pid) {
@@ -44,6 +65,7 @@ async function rssOf(pid) {
 }
 
 async function treeRss(pid) {
+  if (isWin) return winTreeRss(pid);
   let total = await rssOf(pid);
   for (const child of await childrenOf(pid)) total += await treeRss(child);
   return total;

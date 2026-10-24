@@ -1,12 +1,31 @@
-import { spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-export const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
+export const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/[/\\]$/, "");
+const isWin = process.platform === "win32";
 
 export function log(...args) {
   console.log(...args);
+}
+
+export function killProcessTree(child) {
+  if (!child || !child.pid) return;
+  if (isWin) {
+    try {
+      execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: "ignore" });
+    } catch {}
+  } else {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch {
+      try {
+        child.kill("SIGKILL");
+      } catch {}
+    }
+  }
 }
 
 export async function readJson(file, fallback = null) {
@@ -69,7 +88,8 @@ export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeo
     cwd,
     env: { ...process.env, PORT: String(port), NODE_ENV: env.NODE_ENV ?? "production", ...env },
     stdio: ["ignore", "pipe", "pipe"],
-    detached: true,
+    detached: !isWin,
+    shell: isWin,
   });
 
   let output = "";
@@ -97,13 +117,7 @@ export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeo
   }
 
   const stop = async () => {
-    try {
-      process.kill(-child.pid, "SIGKILL");
-    } catch {
-      try {
-        child.kill("SIGKILL");
-      } catch {}
-    }
+    killProcessTree(child);
     await waitForPortFree(port, 15_000);
   };
 
@@ -123,6 +137,7 @@ export function runCommand({ cwd, cmd, args, timeoutMs = 600_000, env = {} }) {
       cwd,
       env: { ...process.env, ...env },
       stdio: ["ignore", "pipe", "pipe"],
+      shell: isWin,
     });
     let stdout = "";
     let stderr = "";
@@ -133,12 +148,7 @@ export function runCommand({ cwd, cmd, args, timeoutMs = 600_000, env = {} }) {
       stderr += d.toString();
     });
     const timer = setTimeout(() => {
-      try {
-        process.kill(-child.pid, "SIGKILL");
-      } catch {}
-      try {
-        child.kill("SIGKILL");
-      } catch {}
+      killProcessTree(child);
     }, timeoutMs);
 
     child.on("close", (code) => {

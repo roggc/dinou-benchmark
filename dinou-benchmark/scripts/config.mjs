@@ -1,7 +1,7 @@
-/** Reexporta la configuración única del benchmark. */
+import { fileURLToPath } from "node:url";
 import config from "../bench.config.mjs";
 
-export const ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+export const ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/[/\\]$/, "");
 export const { routes, setup, frameworks } = config;
 
 export function frameworkById(id) {

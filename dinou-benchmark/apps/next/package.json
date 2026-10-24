@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "sh -c 'next dev -p ${PORT:-3102}'",
+    "dev": "node run.mjs dev",
     "build": "next build",
-    "start": "sh -c 'next start -p ${PORT:-3102}'"
+    "start": "node run.mjs start"
   },
   "dependencies": {
     "next": "16.4.2",
