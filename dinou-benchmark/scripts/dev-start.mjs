@@ -31,7 +31,7 @@ for (const fw of frameworks) {
   }
 
   console.log(
-    `${fw.name}: dev cold start ${samples.map((s) => round(s, 2)).join(" / ")} s (mediana ${round(median(samples), 2)} s)`
+    `${fw.name} ${fw.version}: dev cold start ${samples.map((s) => round(s, 2)).join(" / ")} s (mediana ${round(median(samples), 2)} s)`
   );
   results.push({
     framework: fw.id,

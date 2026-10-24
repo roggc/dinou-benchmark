@@ -59,7 +59,7 @@ for (const fw of frameworks) {
   }
 
   console.log(
-    `${fw.name}: HMR ${samples.map((s) => round(s * 1000, 0)).join(" / ")} ms (mediana ${round(median(samples) * 1000, 0)} ms)`
+    `${fw.name} ${fw.version}: HMR ${samples.map((s) => round(s * 1000, 0)).join(" / ")} ms (mediana ${round(median(samples) * 1000, 0)} ms)`
   );
   results.push({
     framework: fw.id,

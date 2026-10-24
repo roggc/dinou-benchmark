@@ -1,0 +1,702 @@
+[
+  {
+    "id": 1,
+    "title": "Recurso 001",
+    "category": "infra",
+    "score": 37,
+    "summary": "Registro de demostración número 1. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 2,
+    "title": "Recurso 002",
+    "category": "design",
+    "score": 74,
+    "summary": "Registro de demostración número 2. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 3,
+    "title": "Recurso 003",
+    "category": "growth",
+    "score": 11,
+    "summary": "Registro de demostración número 3. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 4,
+    "title": "Recurso 004",
+    "category": "support",
+    "score": 48,
+    "summary": "Registro de demostración número 4. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 5,
+    "title": "Recurso 005",
+    "category": "analytics",
+    "score": 85,
+    "summary": "Registro de demostración número 5. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 6,
+    "title": "Recurso 006",
+    "category": "infra",
+    "score": 22,
+    "summary": "Registro de demostración número 6. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 7,
+    "title": "Recurso 007",
+    "category": "design",
+    "score": 59,
+    "summary": "Registro de demostración número 7. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 8,
+    "title": "Recurso 008",
+    "category": "growth",
+    "score": 96,
+    "summary": "Registro de demostración número 8. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 9,
+    "title": "Recurso 009",
+    "category": "support",
+    "score": 33,
+    "summary": "Registro de demostración número 9. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 10,
+    "title": "Recurso 010",
+    "category": "analytics",
+    "score": 70,
+    "summary": "Registro de demostración número 10. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 11,
+    "title": "Recurso 011",
+    "category": "infra",
+    "score": 7,
+    "summary": "Registro de demostración número 11. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 12,
+    "title": "Recurso 012",
+    "category": "design",
+    "score": 44,
+    "summary": "Registro de demostración número 12. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 13,
+    "title": "Recurso 013",
+    "category": "growth",
+    "score": 81,
+    "summary": "Registro de demostración número 13. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 14,
+    "title": "Recurso 014",
+    "category": "support",
+    "score": 18,
+    "summary": "Registro de demostración número 14. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 15,
+    "title": "Recurso 015",
+    "category": "analytics",
+    "score": 55,
+    "summary": "Registro de demostración número 15. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 16,
+    "title": "Recurso 016",
+    "category": "infra",
+    "score": 92,
+    "summary": "Registro de demostración número 16. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 17,
+    "title": "Recurso 017",
+    "category": "design",
+    "score": 29,
+    "summary": "Registro de demostración número 17. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 18,
+    "title": "Recurso 018",
+    "category": "growth",
+    "score": 66,
+    "summary": "Registro de demostración número 18. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 19,
+    "title": "Recurso 019",
+    "category": "support",
+    "score": 3,
+    "summary": "Registro de demostración número 19. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 20,
+    "title": "Recurso 020",
+    "category": "analytics",
+    "score": 40,
+    "summary": "Registro de demostración número 20. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 21,
+    "title": "Recurso 021",
+    "category": "infra",
+    "score": 77,
+    "summary": "Registro de demostración número 21. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 22,
+    "title": "Recurso 022",
+    "category": "design",
+    "score": 14,
+    "summary": "Registro de demostración número 22. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 23,
+    "title": "Recurso 023",
+    "category": "growth",
+    "score": 51,
+    "summary": "Registro de demostración número 23. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 24,
+    "title": "Recurso 024",
+    "category": "support",
+    "score": 88,
+    "summary": "Registro de demostración número 24. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 25,
+    "title": "Recurso 025",
+    "category": "analytics",
+    "score": 25,
+    "summary": "Registro de demostración número 25. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 26,
+    "title": "Recurso 026",
+    "category": "infra",
+    "score": 62,
+    "summary": "Registro de demostración número 26. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 27,
+    "title": "Recurso 027",
+    "category": "design",
+    "score": 99,
+    "summary": "Registro de demostración número 27. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 28,
+    "title": "Recurso 028",
+    "category": "growth",
+    "score": 36,
+    "summary": "Registro de demostración número 28. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 29,
+    "title": "Recurso 029",
+    "category": "support",
+    "score": 73,
+    "summary": "Registro de demostración número 29. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 30,
+    "title": "Recurso 030",
+    "category": "analytics",
+    "score": 10,
+    "summary": "Registro de demostración número 30. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 31,
+    "title": "Recurso 031",
+    "category": "infra",
+    "score": 47,
+    "summary": "Registro de demostración número 31. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 32,
+    "title": "Recurso 032",
+    "category": "design",
+    "score": 84,
+    "summary": "Registro de demostración número 32. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 33,
+    "title": "Recurso 033",
+    "category": "growth",
+    "score": 21,
+    "summary": "Registro de demostración número 33. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 34,
+    "title": "Recurso 034",
+    "category": "support",
+    "score": 58,
+    "summary": "Registro de demostración número 34. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 35,
+    "title": "Recurso 035",
+    "category": "analytics",
+    "score": 95,
+    "summary": "Registro de demostración número 35. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 36,
+    "title": "Recurso 036",
+    "category": "infra",
+    "score": 32,
+    "summary": "Registro de demostración número 36. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 37,
+    "title": "Recurso 037",
+    "category": "design",
+    "score": 69,
+    "summary": "Registro de demostración número 37. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 38,
+    "title": "Recurso 038",
+    "category": "growth",
+    "score": 6,
+    "summary": "Registro de demostración número 38. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 39,
+    "title": "Recurso 039",
+    "category": "support",
+    "score": 43,
+    "summary": "Registro de demostración número 39. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 40,
+    "title": "Recurso 040",
+    "category": "analytics",
+    "score": 80,
+    "summary": "Registro de demostración número 40. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 41,
+    "title": "Recurso 041",
+    "category": "infra",
+    "score": 17,
+    "summary": "Registro de demostración número 41. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 42,
+    "title": "Recurso 042",
+    "category": "design",
+    "score": 54,
+    "summary": "Registro de demostración número 42. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 43,
+    "title": "Recurso 043",
+    "category": "growth",
+    "score": 91,
+    "summary": "Registro de demostración número 43. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 44,
+    "title": "Recurso 044",
+    "category": "support",
+    "score": 28,
+    "summary": "Registro de demostración número 44. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 45,
+    "title": "Recurso 045",
+    "category": "analytics",
+    "score": 65,
+    "summary": "Registro de demostración número 45. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 46,
+    "title": "Recurso 046",
+    "category": "infra",
+    "score": 2,
+    "summary": "Registro de demostración número 46. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 47,
+    "title": "Recurso 047",
+    "category": "design",
+    "score": 39,
+    "summary": "Registro de demostración número 47. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 48,
+    "title": "Recurso 048",
+    "category": "growth",
+    "score": 76,
+    "summary": "Registro de demostración número 48. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 49,
+    "title": "Recurso 049",
+    "category": "support",
+    "score": 13,
+    "summary": "Registro de demostración número 49. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 50,
+    "title": "Recurso 050",
+    "category": "analytics",
+    "score": 50,
+    "summary": "Registro de demostración número 50. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 51,
+    "title": "Recurso 051",
+    "category": "infra",
+    "score": 87,
+    "summary": "Registro de demostración número 51. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 52,
+    "title": "Recurso 052",
+    "category": "design",
+    "score": 24,
+    "summary": "Registro de demostración número 52. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 53,
+    "title": "Recurso 053",
+    "category": "growth",
+    "score": 61,
+    "summary": "Registro de demostración número 53. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 54,
+    "title": "Recurso 054",
+    "category": "support",
+    "score": 98,
+    "summary": "Registro de demostración número 54. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 55,
+    "title": "Recurso 055",
+    "category": "analytics",
+    "score": 35,
+    "summary": "Registro de demostración número 55. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 56,
+    "title": "Recurso 056",
+    "category": "infra",
+    "score": 72,
+    "summary": "Registro de demostración número 56. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 57,
+    "title": "Recurso 057",
+    "category": "design",
+    "score": 9,
+    "summary": "Registro de demostración número 57. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 58,
+    "title": "Recurso 058",
+    "category": "growth",
+    "score": 46,
+    "summary": "Registro de demostración número 58. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 59,
+    "title": "Recurso 059",
+    "category": "support",
+    "score": 83,
+    "summary": "Registro de demostración número 59. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 60,
+    "title": "Recurso 060",
+    "category": "analytics",
+    "score": 20,
+    "summary": "Registro de demostración número 60. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 61,
+    "title": "Recurso 061",
+    "category": "infra",
+    "score": 57,
+    "summary": "Registro de demostración número 61. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 62,
+    "title": "Recurso 062",
+    "category": "design",
+    "score": 94,
+    "summary": "Registro de demostración número 62. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 63,
+    "title": "Recurso 063",
+    "category": "growth",
+    "score": 31,
+    "summary": "Registro de demostración número 63. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 64,
+    "title": "Recurso 064",
+    "category": "support",
+    "score": 68,
+    "summary": "Registro de demostración número 64. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 65,
+    "title": "Recurso 065",
+    "category": "analytics",
+    "score": 5,
+    "summary": "Registro de demostración número 65. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 66,
+    "title": "Recurso 066",
+    "category": "infra",
+    "score": 42,
+    "summary": "Registro de demostración número 66. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 67,
+    "title": "Recurso 067",
+    "category": "design",
+    "score": 79,
+    "summary": "Registro de demostración número 67. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 68,
+    "title": "Recurso 068",
+    "category": "growth",
+    "score": 16,
+    "summary": "Registro de demostración número 68. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 69,
+    "title": "Recurso 069",
+    "category": "support",
+    "score": 53,
+    "summary": "Registro de demostración número 69. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 70,
+    "title": "Recurso 070",
+    "category": "analytics",
+    "score": 90,
+    "summary": "Registro de demostración número 70. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 71,
+    "title": "Recurso 071",
+    "category": "infra",
+    "score": 27,
+    "summary": "Registro de demostración número 71. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 72,
+    "title": "Recurso 072",
+    "category": "design",
+    "score": 64,
+    "summary": "Registro de demostración número 72. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 73,
+    "title": "Recurso 073",
+    "category": "growth",
+    "score": 1,
+    "summary": "Registro de demostración número 73. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 74,
+    "title": "Recurso 074",
+    "category": "support",
+    "score": 38,
+    "summary": "Registro de demostración número 74. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 75,
+    "title": "Recurso 075",
+    "category": "analytics",
+    "score": 75,
+    "summary": "Registro de demostración número 75. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 76,
+    "title": "Recurso 076",
+    "category": "infra",
+    "score": 12,
+    "summary": "Registro de demostración número 76. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 77,
+    "title": "Recurso 077",
+    "category": "design",
+    "score": 49,
+    "summary": "Registro de demostración número 77. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 78,
+    "title": "Recurso 078",
+    "category": "growth",
+    "score": 86,
+    "summary": "Registro de demostración número 78. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 79,
+    "title": "Recurso 079",
+    "category": "support",
+    "score": 23,
+    "summary": "Registro de demostración número 79. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 80,
+    "title": "Recurso 080",
+    "category": "analytics",
+    "score": 60,
+    "summary": "Registro de demostración número 80. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 81,
+    "title": "Recurso 081",
+    "category": "infra",
+    "score": 97,
+    "summary": "Registro de demostración número 81. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 82,
+    "title": "Recurso 082",
+    "category": "design",
+    "score": 34,
+    "summary": "Registro de demostración número 82. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 83,
+    "title": "Recurso 083",
+    "category": "growth",
+    "score": 71,
+    "summary": "Registro de demostración número 83. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 84,
+    "title": "Recurso 084",
+    "category": "support",
+    "score": 8,
+    "summary": "Registro de demostración número 84. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 85,
+    "title": "Recurso 085",
+    "category": "analytics",
+    "score": 45,
+    "summary": "Registro de demostración número 85. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 86,
+    "title": "Recurso 086",
+    "category": "infra",
+    "score": 82,
+    "summary": "Registro de demostración número 86. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 87,
+    "title": "Recurso 087",
+    "category": "design",
+    "score": 19,
+    "summary": "Registro de demostración número 87. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 88,
+    "title": "Recurso 088",
+    "category": "growth",
+    "score": 56,
+    "summary": "Registro de demostración número 88. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 89,
+    "title": "Recurso 089",
+    "category": "support",
+    "score": 93,
+    "summary": "Registro de demostración número 89. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 90,
+    "title": "Recurso 090",
+    "category": "analytics",
+    "score": 30,
+    "summary": "Registro de demostración número 90. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 91,
+    "title": "Recurso 091",
+    "category": "infra",
+    "score": 67,
+    "summary": "Registro de demostración número 91. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 92,
+    "title": "Recurso 092",
+    "category": "design",
+    "score": 4,
+    "summary": "Registro de demostración número 92. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 93,
+    "title": "Recurso 093",
+    "category": "growth",
+    "score": 41,
+    "summary": "Registro de demostración número 93. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 94,
+    "title": "Recurso 094",
+    "category": "support",
+    "score": 78,
+    "summary": "Registro de demostración número 94. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 95,
+    "title": "Recurso 095",
+    "category": "analytics",
+    "score": 15,
+    "summary": "Registro de demostración número 95. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 96,
+    "title": "Recurso 096",
+    "category": "infra",
+    "score": 52,
+    "summary": "Registro de demostración número 96. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 97,
+    "title": "Recurso 097",
+    "category": "design",
+    "score": 89,
+    "summary": "Registro de demostración número 97. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 98,
+    "title": "Recurso 098",
+    "category": "growth",
+    "score": 26,
+    "summary": "Registro de demostración número 98. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 99,
+    "title": "Recurso 099",
+    "category": "support",
+    "score": 63,
+    "summary": "Registro de demostración número 99. Contenido generado localmente, sin red."
+  },
+  {
+    "id": 100,
+    "title": "Recurso 100",
+    "category": "analytics",
+    "score": 0,
+    "summary": "Registro de demostración número 100. Contenido generado localmente, sin red."
+  }
+]

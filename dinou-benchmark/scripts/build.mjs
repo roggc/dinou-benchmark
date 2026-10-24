@@ -34,11 +34,12 @@ for (const fw of frameworks) {
 
   for (let i = 0; i < runs; i += 1) {
     for (const out of fw.outputDirs) await rm(path.join(cwd, out), { recursive: true, force: true });
+    if (process.platform === "win32") await new Promise((r) => setTimeout(r, 400));
 
     const run = await runCommand({ cwd, cmd: "pnpm", args: ["run", "build"], timeoutMs: 900_000 });
     if (run.code !== 0) {
       console.error(run.stdout.slice(-2500), run.stderr.slice(-2500));
-      throw new Error(`build falló: ${fw.name}`);
+      throw new Error(`build falló: ${fw.name} ${fw.version}`);
     }
     times.push(run.ms / 1000);
   }
@@ -49,7 +50,7 @@ for (const fw of frameworks) {
     size += sizePerDir[out];
   }
 
-  console.log(`${fw.name}: build ${times.map((t) => round(t, 1)).join(" / ")} s · salida ${round(size / 1e6, 1)} MB`);
+  console.log(`${fw.name} ${fw.version}: build ${times.map((t) => round(t, 1)).join(" / ")} s · salida ${round(size / 1e6, 1)} MB`);
   results.push({
     framework: fw.id,
     version: fw.version,

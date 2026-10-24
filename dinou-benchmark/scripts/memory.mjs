@@ -115,7 +115,7 @@ for (const fw of frameworks) {
     const idleMedian = median(idle);
 
     console.log(
-      `${fw.name}: RSS reposo ${round(idleMedian / 1e6, 1)} MB · pico ${round(peak.value / 1e6, 1)} MB · post-carga ${round(afterLoad / 1e6, 1)} MB`
+      `${fw.name} ${fw.version}: RSS reposo ${round(idleMedian / 1e6, 1)} MB · pico ${round(peak.value / 1e6, 1)} MB · post-carga ${round(afterLoad / 1e6, 1)} MB`
     );
 
     results.push({

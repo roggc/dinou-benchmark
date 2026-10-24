@@ -38,23 +38,35 @@ export const setup = {
 
 export const frameworks = [
   {
-    id: "dinou",
+    id: "dinou-8",
     name: "Dinou",
-    version: "8.0.1",
-    dir: "apps/dinou",
+    version: "8.1.1",
+    dir: "apps/dinou-8",
     port: 3101,
     dev: { cmd: "pnpm", args: ["run", "dev"] },
     build: { cmd: "pnpm", args: ["run", "build"] },
     start: { cmd: "pnpm", args: ["run", "start"] },
-    /** Directorios de salida del build (para tamaño y JS de cliente). */
     outputDirs: [".dinou"],
-    /** Subcadenas de ruta que identifican assets enviados al navegador. */
-    // El bundle de cliente de Dinou aterriza en .dinou/dist3/*.js (el subdirectorio
-    // .dinou/dist3/server/ es solo de servidor y se excluye abajo).
     clientAssetHints: ["dist3"],
-    /** Fichero que el script de HMR edita y el marcador que espera ver. */
     hmr: {
-      file: "apps/dinou/src/page.tsx",
+      file: "apps/dinou-8/src/page.tsx",
+      find: "HMR_MARKER_DINOU",
+      replace: "HMR_MARKER_DINOU_EDITADO",
+    },
+  },
+  {
+    id: "dinou-9",
+    name: "Dinou",
+    version: "9.0.0",
+    dir: "apps/dinou-9",
+    port: 3103,
+    dev: { cmd: "pnpm", args: ["run", "dev"] },
+    build: { cmd: "pnpm", args: ["run", "build"] },
+    start: { cmd: "pnpm", args: ["run", "start"] },
+    outputDirs: [".dinou"],
+    clientAssetHints: ["dist3"],
+    hmr: {
+      file: "apps/dinou-9/src/page.tsx",
       find: "HMR_MARKER_DINOU",
       replace: "HMR_MARKER_DINOU_EDITADO",
     },

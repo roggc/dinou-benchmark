@@ -63,7 +63,7 @@ for (const fw of frameworks) {
   biggest.sort((a, b) => b.raw - a.raw);
 
   console.log(
-    `${fw.name}: ${clientFiles.length} ficheros JS de cliente · ${round(raw / 1024, 1)} KiB crudo · ${round(gzip / 1024, 1)} KiB gzip · ${round(brotli / 1024, 1)} KiB brotli`
+    `${fw.name} ${fw.version}: ${clientFiles.length} ficheros JS de cliente · ${round(raw / 1024, 1)} KiB crudo · ${round(gzip / 1024, 1)} KiB gzip · ${round(brotli / 1024, 1)} KiB brotli`
   );
 
   results.push({

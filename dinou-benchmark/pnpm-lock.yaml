@@ -21,11 +21,36 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  apps/dinou:
+  apps/dinou-8:
     dependencies:
       dinou:
-        specifier: 8.0.1
-        version: 8.0.1(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
+        specifier: file:C:/Users/roggc/dev/dinou-8.1.1.tgz
+        version: file:../../../dev/dinou-8.1.1.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
+      react:
+        specifier: 19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: 19.3.1
+        version: 19.3.1(react@19.3.1)
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.0
+        version: 22.20.0
+      '@types/react':
+        specifier: 19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  apps/dinou-9:
+    dependencies:
+      dinou:
+        specifier: file:C:/Users/roggc/dev/dinou-9.0.0.tgz
+        version: file:../../../dev/dinou-9.0.0.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -1791,12 +1816,21 @@ packages:
   detect-node@2.1.0:
     resolution: {integrity: sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==}
 
-  dinou@8.0.1:
-    resolution: {integrity: sha512-fz5GnPMrux2HPaXWizhm0jyPpviUYNWJ0KgW7Oe73j9fIdvEOfTB6zC05wfNiYzHVfJVH2e58unV6SVrX8ad4g==}
+  dinou@file:../../../dev/dinou-8.1.1.tgz:
+    resolution: {integrity: sha512-5M07Imo5eG+lGrfInUBBMLWdYAM8KASsmWTPByw5YEsjXTVgyKd4SmCtc9GhosiBihEfhD9AsPimHI4eiDx/Kw==, tarball: file:../../../dev/dinou-8.1.1.tgz}
+    version: 8.1.1
     hasBin: true
     peerDependencies:
-      react: '>=19.3.0'
-      react-dom: '>=19.3.0'
+      react: '>=19.3.1'
+      react-dom: '>=19.3.1'
+
+  dinou@file:../../../dev/dinou-9.0.0.tgz:
+    resolution: {integrity: sha512-vbd6Ec/FfRYTDmnYcfrjr1MwB6fn3Jm60pYxrJTB8ZBDLC28C3JgrkqThbrx8PFNg9UYVXdq6fdF67Xs1yjMKA==, tarball: file:../../../dev/dinou-9.0.0.tgz}
+    version: 9.0.0
+    hasBin: true
+    peerDependencies:
+      react: '>=19.3.1'
+      react-dom: '>=19.3.1'
 
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
@@ -5254,7 +5288,81 @@ snapshots:
 
   detect-node@2.1.0: {}
 
-  dinou@8.0.1(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3):
+  dinou@file:../../../dev/dinou-8.1.1.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3):
+    dependencies:
+      '@babel/core': 7.29.7
+      '@babel/parser': 7.29.11
+      '@babel/plugin-syntax-import-meta': 7.10.4(@babel/core@7.29.7)
+      '@babel/preset-react': 7.29.7(@babel/core@7.29.7)
+      '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
+      '@babel/traverse': 7.29.10
+      '@esbuild-plugins/tsconfig-paths': 0.1.2(esbuild@0.27.7)(typescript@5.9.3)
+      '@roggc/react-server-dom-esm': 19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@rollup/plugin-babel': 6.1.0(@babel/core@7.29.7)(rollup@4.65.0)
+      '@rollup/plugin-commonjs': 28.0.9(rollup@4.65.0)
+      '@rollup/plugin-json': 6.1.0(rollup@4.65.0)
+      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.65.0)
+      '@rollup/plugin-replace': 6.0.3(rollup@4.65.0)
+      '@swc/core': 1.16.20(@swc/helpers@0.5.23)
+      '@tailwindcss/postcss': 4.3.3
+      autoprefixer: 10.6.1(postcss@8.5.31)
+      babel-loader: 10.1.1(@babel/core@7.29.7)(webpack@5.112.2)
+      babel-plugin-react-compiler: 1.0.0
+      chokidar: 4.0.3
+      commander: 14.0.3
+      copy-webpack-plugin: 14.0.0(webpack@5.112.2)
+      cross-env: 7.0.3
+      css-loader: 7.1.5(webpack@5.112.2)
+      dotenv: 16.6.1
+      esbuild: 0.27.7
+      esbuild-copy-static-files: 0.1.0
+      generic-names: 4.0.0
+      mini-css-extract-plugin: 2.10.2(webpack@5.112.2)
+      postcss: 8.5.31
+      postcss-import: 16.2.0(postcss@8.5.31)
+      postcss-loader: 8.2.1(postcss@8.5.31)(typescript@5.9.3)(webpack@5.112.2)
+      postcss-modules: 6.0.1(postcss@8.5.31)
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+      react-refresh: 0.17.0
+      react-server-dom-webpack: 19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.112.2)
+      rollup: 4.65.0
+      rollup-plugin-copy: 3.5.0
+      rollup-plugin-delete: 3.0.2(rollup@4.65.0)
+      rollup-plugin-postcss: 4.0.2(postcss@8.5.31)
+      rollup-plugin-tsconfig-paths: 1.5.2(rollup@4.65.0)(typescript@5.9.3)
+      tailwindcss: 4.3.3
+      tsconfig-paths-webpack-plugin: 4.2.0
+      webpack: 5.112.2(@swc/core@1.16.20(@swc/helpers@0.5.23))(esbuild@0.27.7)(postcss@8.5.31)(webpack-cli@6.0.1)
+      webpack-cli: 6.0.1(webpack-dev-server@5.2.7)(webpack@5.112.2)
+      webpack-dev-server: 5.2.7(webpack-cli@6.0.1)(webpack@5.112.2)
+      ws: 8.22.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@napi-rs/image'
+      - '@rspack/core'
+      - '@swc/css'
+      - '@swc/helpers'
+      - '@swc/html'
+      - '@types/babel__core'
+      - bufferutil
+      - clean-css
+      - cssnano
+      - csso
+      - debug
+      - html-minifier-terser
+      - imagemin
+      - lightningcss
+      - sharp
+      - supports-color
+      - svgo
+      - ts-node
+      - typescript
+      - uglify-js
+      - utf-8-validate
+      - webpack-bundle-analyzer
+
+  dinou@file:../../../dev/dinou-9.0.0.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.11

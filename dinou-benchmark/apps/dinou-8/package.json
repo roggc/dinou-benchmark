@@ -1,5 +1,5 @@
 {
-  "name": "@dinou-benchmark/dinou",
+  "name": "@dinou-benchmark/dinou-8",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "start": "dinou start"
   },
   "dependencies": {
-    "dinou": "8.0.1",
+    "dinou": "file:C:/Users/roggc/dev/dinou-8.1.1.tgz",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
