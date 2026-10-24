@@ -1,0 +1,23 @@
+{
+  "name": "@dinou-benchmark/next",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "sh -c 'next dev -p ${PORT:-3102}'",
+    "build": "next build",
+    "start": "sh -c 'next start -p ${PORT:-3102}'"
+  },
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
+  }
+}
+
+

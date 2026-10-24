@@ -1,0 +1,29 @@
+{
+  "name": "dinou-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "shared": "node scripts/sync-shared.mjs",
+    "bench": "node scripts/bench.mjs",
+    "bench:verify": "node scripts/verify.mjs",
+    "bench:build": "node scripts/build.mjs",
+    "bench:dev": "node scripts/dev-start.mjs",
+    "bench:hmr": "node scripts/hmr.mjs",
+    "bench:bundle": "node scripts/bundle.mjs",
+    "bench:load": "node scripts/load.mjs",
+    "bench:memory": "node scripts/memory.mjs",
+    "bench:report": "node scripts/report.mjs",
+    "bench:reset-data": "node scripts/reset-data.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.0",
+    "autocannon": "8.0.0",
+    "playwright": "1.64.1",
+    "typescript": "5.9.3"
+  }
+}

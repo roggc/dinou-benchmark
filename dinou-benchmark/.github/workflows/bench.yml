@@ -1,0 +1,51 @@
+name: bench
+
+# Solo validación: comprueba que las dos apps instalan, compilan y pasan las 13
+# verificaciones. NO publica resultados: un runner compartido no es un entorno
+# de medida válido y sus números no son comparables.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Sincronizar shared/ (igualdad byte a byte)
+        run: pnpm shared
+
+      - name: Build de las dos apps
+        run: pnpm bench:build
+
+      - name: Instalar Chromium para la comprobación de mutación y HMR
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verificación funcional (13 comprobaciones por framework)
+        run: pnpm bench:verify --skip-build
+
+      - name: Guardar artefactos de la ejecución
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: results/
+          retention-days: 7
+

@@ -1,0 +1,15 @@
+node_modules/
+.dinou/
+.next/
+out/
+dist/
+.tmp/
+results/*.json
+results/*.svg
+results/REPORT.md
+apps/*/data/messages.json
+.DS_Store
+*.log
+playwright-report/
+test-results/
+
