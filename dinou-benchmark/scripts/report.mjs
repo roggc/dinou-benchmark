@@ -28,7 +28,7 @@ const [verify, build, dev, hmr, bundle, load, memory] = await Promise.all([
 const byId = (list, id) => (list ?? []).find((entry) => entry.framework === id);
 const ids = [...new Set((load ?? []).map((l) => l.framework))];
 const labels = {
-  "dinou-8": "Dinou 8.1.1",
+  "dinou-8": "Dinou 8.1.2",
   "dinou-9": "Dinou 9.0.0",
   dinou: "Dinou",
   next: "Next.js 16.4.2",

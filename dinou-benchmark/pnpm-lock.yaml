@@ -24,8 +24,8 @@ importers:
   apps/dinou-8:
     dependencies:
       dinou:
-        specifier: file:C:/Users/roggc/dev/dinou-8.1.1.tgz
-        version: file:../../../dev/dinou-8.1.1.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
+        specifier: 8.1.2
+        version: 8.1.2(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -1816,16 +1816,15 @@ packages:
   detect-node@2.1.0:
     resolution: {integrity: sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==}
 
-  dinou@file:../../../dev/dinou-8.1.1.tgz:
-    resolution: {integrity: sha512-5M07Imo5eG+lGrfInUBBMLWdYAM8KASsmWTPByw5YEsjXTVgyKd4SmCtc9GhosiBihEfhD9AsPimHI4eiDx/Kw==, tarball: file:../../../dev/dinou-8.1.1.tgz}
-    version: 8.1.1
+  dinou@8.1.2:
+    resolution: {integrity: sha512-EnGfivFLcPyQ0zphNAkPSsnMMYKSwa3EkETorjRtwLIJk9k+K2wYMhOlbMVjfhPbRWVPjEJn+FDwGrR/xwep4g==}
     hasBin: true
     peerDependencies:
       react: '>=19.3.1'
       react-dom: '>=19.3.1'
 
   dinou@file:../../../dev/dinou-9.0.0.tgz:
-    resolution: {integrity: sha512-vbd6Ec/FfRYTDmnYcfrjr1MwB6fn3Jm60pYxrJTB8ZBDLC28C3JgrkqThbrx8PFNg9UYVXdq6fdF67Xs1yjMKA==, tarball: file:../../../dev/dinou-9.0.0.tgz}
+    resolution: {integrity: sha512-XdeY2HMu1tvn3MD2Isdf3EQqOfvz87g81k0PCpVLm6gx0Sxk9NBSkrhs9BW5CHOxbm7XLUtWL+8CCjomelmdkQ==, tarball: file:../../../dev/dinou-9.0.0.tgz}
     version: 9.0.0
     hasBin: true
     peerDependencies:
@@ -5288,7 +5287,7 @@ snapshots:
 
   detect-node@2.1.0: {}
 
-  dinou@file:../../../dev/dinou-8.1.1.tgz(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3):
+  dinou@8.1.2(@swc/helpers@0.5.23)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.9.3):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.11

@@ -7,6 +7,9 @@ packages:
 # instalan con el linker "hoisted".
 nodeLinker: hoisted
 
+minimumReleaseAgeExclude:
+  - dinou@8.1.2
+
 allowBuilds:
   '@swc/core': true
   esbuild: true

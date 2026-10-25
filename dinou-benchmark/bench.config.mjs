@@ -40,7 +40,7 @@ export const frameworks = [
   {
     id: "dinou-8",
     name: "Dinou",
-    version: "8.1.1",
+    version: "8.1.2",
     dir: "apps/dinou-8",
     port: 3101,
     dev: { cmd: "pnpm", args: ["run", "dev"] },

@@ -105,6 +105,7 @@ for (const fw of frameworks) {
     }
   } finally {
     await server.stop();
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   results.push({
