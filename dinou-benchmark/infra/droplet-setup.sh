@@ -50,18 +50,24 @@ cat >/etc/security/limits.d/99-bench.conf <<'EOF'
 * hard nofile 1048576
 EOF
 
-echo "==> Repository validation"
-if [ ! -d /opt/dinou-benchmark ]; then
-  echo "    Copy the repository to /opt/dinou-benchmark before proceeding:"
-  echo "    scp -r dinou-benchmark root@<ip>:/opt/"
-  exit 1
+echo "==> Repository setup"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ ! -f "$REPO_DIR/package.json" ]; then
+  if [ -d /opt/dinou-benchmark ]; then
+    REPO_DIR="/opt/dinou-benchmark"
+  else
+    echo "    Repository not found. Please clone the repository first:"
+    echo "    git clone <repo-url> /opt/dinou-benchmark"
+    exit 1
+  fi
 fi
-cd /opt/dinou-benchmark
+
+cd "$REPO_DIR"
 pnpm install --frozen-lockfile
 pnpm shared
 pnpm exec playwright install --with-deps chromium
 
-cat <<'NOTES'
+cat <<NOTES
 
 -----------------------------------------------------------------------
 Next steps:
@@ -70,7 +76,7 @@ Next steps:
    Runs all 3 frameworks sequentially across all 8 phases:
    (Dinou 8.1.2 on port 3101, Dinou 9.0.0 on 3103, and Next.js 16.4.2 on 3102)
 
-     cd /opt/dinou-benchmark && pnpm bench
+     cd $REPO_DIR && pnpm bench
 
 2) MANUAL TESTS WITH CPU PINNING (Optional)
    If you wish to run manual load tests isolating server and load generator:
