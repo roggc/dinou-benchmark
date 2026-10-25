@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Genera results/REPORT.md a partir de los JSON de results/ y un SVG con las
- * gráficas comparativas. Sin dependencias: solo plantillas.
+ * Generates results/REPORT.md from results/*.json and SVG vector charts.
+ * Zero external dependencies: pure templates.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,19 +37,19 @@ const label = (id) => labels[id] ?? id;
 const fmt = (n, digits = 1) => (n === undefined || n === null ? "—" : Number(n).toFixed(digits));
 
 const lines = [];
-lines.push("# Resultados del benchmark");
+lines.push("# Benchmark Results");
 lines.push("");
-lines.push(`Generado: ${new Date().toISOString()}`);
+lines.push(`Generated: ${new Date().toISOString()}`);
 lines.push("");
 lines.push(
-  "> **Aviso de honestidad.** Los números de este informe se han producido en una máquina compartida de un solo núcleo (sandbox), no en el droplet descrito en `infra/`. Sirven para comprobar que el arnés funciona, **no** para publicar comparativas. Para cifras publicables, ejecuta `pnpm bench` en el hardware indicado en el README (`infra/droplet-setup.sh`)."
+  "> **Honesty Notice.** The numbers in this report were produced in a single-core shared sandbox environment, not on the dedicated cloud hardware described in `infra/`. They serve to verify that the benchmark harness functions properly, **not** to publish definitive comparisons. For publishable figures, run `pnpm bench` on the dedicated hardware indicated in the README (`infra/droplet-setup.sh`)."
 );
 lines.push("");
 
 if (verify) {
-  lines.push("## Verificación funcional");
+  lines.push("## Functional Verification");
   lines.push("");
-  lines.push("| Framework | Comprobaciones | Estado |");
+  lines.push("| Framework | Checks Passed | Status |");
   lines.push("| --- | --- | --- |");
   for (const entry of verify) {
     lines.push(
@@ -61,7 +61,7 @@ if (verify) {
     entry.checks.filter((c) => !c.ok).map((c) => `- ${label(entry.framework)} → ${c.name}: ${c.detail}`)
   );
   if (failed.length) {
-    lines.push("Fallos:");
+    lines.push("Failures:");
     lines.push("");
     lines.push(...failed);
     lines.push("");
@@ -69,9 +69,9 @@ if (verify) {
 }
 
 if (load) {
-  lines.push("## Producción · TTFB, throughput y latencia");
+  lines.push("## Production · TTFB, Throughput and Latency");
   lines.push("");
-  lines.push("| Ruta | Tipo | Framework | TTFB p50 (ms) | TTFB p95 (ms) | req/s | p50 (ms) | p99 (ms) |");
+  lines.push("| Route | Type | Framework | TTFB p50 (ms) | TTFB p95 (ms) | req/s | p50 (ms) | p99 (ms) |");
   lines.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
   for (const route of routes) {
     for (const id of ids) {
@@ -84,31 +84,31 @@ if (load) {
   }
   lines.push("");
   lines.push(
-    `Carga: ${load[0]?.connections ?? "—"} conexiones, ${load[0]?.durationSeconds ?? "—"} s por ronda, ${load[0]?.runs ?? "—"} rondas, mediana entre rondas. autocannon no expone p95 exacto; se usa su p97.5 como cota superior.`
+    `Load test: ${load[0]?.connections ?? "—"} connections, ${load[0]?.durationSeconds ?? "—"} s per round, ${load[0]?.runs ?? "—"} rounds, median across rounds. autocannon does not expose exact p95; p97.5 is used as an upper bound.`
   );
   lines.push("");
 }
 
 if (build || dev || hmr || bundle || memory) {
-  lines.push("## Build, arranque, HMR, bundle y memoria");
+  lines.push("## Build, Startup, HMR, Bundle and Memory");
   lines.push("");
-  lines.push("| Métrica | " + ids.map(label).join(" | ") + " |");
+  lines.push("| Metric | " + ids.map(label).join(" | ") + " |");
   lines.push("| --- | " + ids.map(() => "---").join(" | ") + " |");
   const row = (name, fn) => {
     lines.push(`| ${name} | ` + ids.map((id) => fn(id)).join(" | ") + " |");
   };
-  row("Build de producción (s, mediana)", (id) => fmt(byId(build, id)?.medianSeconds, 2));
-  row("Tamaño de salida (MB)", (id) => fmt((byId(build, id)?.outputBytes ?? 0) / 1e6, 1));
-  row("Dev cold start (s, mediana)", (id) => fmt(byId(dev, id)?.medianSeconds, 2));
-  row("HMR edición → DOM (ms)", (id) => fmt(byId(hmr, id)?.medianMs, 0));
-  row("JS de cliente (KiB gzip)", (id) => fmt((byId(bundle, id)?.gzipBytes ?? 0) / 1024, 1));
-  row("JS de cliente (KiB brotli)", (id) => fmt((byId(bundle, id)?.brotliBytes ?? 0) / 1024, 1));
-  row("RSS en reposo (MB)", (id) => fmt((byId(memory, id)?.idleBytes ?? 0) / 1e6, 1));
-  row("RSS pico bajo carga (MB)", (id) => fmt((byId(memory, id)?.peakBytes ?? 0) / 1e6, 1));
+  row("Production build (s, median)", (id) => fmt(byId(build, id)?.medianSeconds, 2));
+  row("Output size (MB)", (id) => fmt((byId(build, id)?.outputBytes ?? 0) / 1e6, 1));
+  row("Dev cold start (s, median)", (id) => fmt(byId(dev, id)?.medianSeconds, 2));
+  row("HMR edit → DOM (ms)", (id) => fmt(byId(hmr, id)?.medianMs, 0));
+  row("Client JS (KiB gzip)", (id) => fmt((byId(bundle, id)?.gzipBytes ?? 0) / 1024, 1));
+  row("Client JS (KiB brotli)", (id) => fmt((byId(bundle, id)?.brotliBytes ?? 0) / 1024, 1));
+  row("Idle RSS (MB)", (id) => fmt((byId(memory, id)?.idleBytes ?? 0) / 1e6, 1));
+  row("Peak RSS under load (MB)", (id) => fmt((byId(memory, id)?.peakBytes ?? 0) / 1e6, 1));
   lines.push("");
   if ((memory ?? []).some((m) => m.reliable === false)) {
     lines.push(
-      "> ⚠️ **RSS no fiable en esta ejecución.** El kernel era gVisor: `/proc/<pid>/status` no contabiliza la memoria por proceso y las cifras de RAM están infladas. La columna se mantiene para que el formato del informe sea el mismo, pero ignórala. En el droplet (kernel Linux normal) sí es válida."
+      "> ⚠️ **RSS memory not reliable in this run.** The kernel was gVisor: `/proc/<pid>/status` does not account for memory per process and RAM figures appear inflated. In the dedicated droplet (standard Linux kernel), it is accurate."
     );
     lines.push("");
   }
@@ -116,7 +116,7 @@ if (build || dev || hmr || bundle || memory) {
 
 await writeFile(path.join(ROOT, "results", "REPORT.md"), lines.join("\n") + "\n", "utf8");
 
-// --- gráficas SVG (barras horizontales, sin dependencias) ---
+// --- SVG Charts (horizontal bars, zero external dependencies) ---
 function barChart({ title, series, unit, width = 760 }) {
   const barH = 26;
   const gap = 12;
@@ -161,14 +161,14 @@ if (load) {
     }
   }
   if (series.length) {
-    const chart = barChart({ title: "TTFB mediana por ruta (ms, menor es mejor)", series, unit: "ms" });
+    const chart = barChart({ title: "TTFB median by route (ms, lower is better)", series, unit: "ms" });
     charts.push({ name: "ttfb.svg", ...chart });
   }
 }
 
 if (bundle) {
   const series = ids.map((id) => ({ label: label(id), value: (byId(bundle, id)?.gzipBytes ?? 0) / 1024, color: colors[id] }));
-  const chart = barChart({ title: "JavaScript de cliente (KiB gzip, menor es mejor)", series, unit: "KiB" });
+  const chart = barChart({ title: "Client JavaScript (KiB gzip, lower is better)", series, unit: "KiB" });
   charts.push({ name: "bundle.svg", ...chart });
 }
 
@@ -182,7 +182,7 @@ const totalHeight = currentY + 20;
 
 const index = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${totalHeight}">
   <rect width="100%" height="100%" fill="#0b0d10"/>
-  <text x="20" y="34" font-family="ui-sans-serif" font-size="16" fill="#e7ecf3">Ver results/REPORT.md</text>
+  <text x="20" y="34" font-family="ui-sans-serif" font-size="16" fill="#e7ecf3">See results/REPORT.md</text>
   ${chartElements.join("\n")}
 </svg>`;
 
@@ -191,5 +191,4 @@ for (const chart of charts) {
   await writeFile(path.join(ROOT, "results", chart.name), chart.svg, "utf8");
 }
 
-console.log("Escrito results/REPORT.md y results/charts.svg");
-
+console.log("Wrote results/REPORT.md and results/charts.svg");

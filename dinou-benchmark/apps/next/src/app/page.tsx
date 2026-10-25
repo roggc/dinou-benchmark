@@ -2,7 +2,7 @@ import { ItemGrid } from "@/shared/components/item";
 import { PageHeader, Shell } from "@/shared/components/ui";
 import { listItems, stamp } from "@/shared/lib/data";
 
-/** Se evalúa al cargar el módulo, es decir, una sola vez en build. */
+/** Evaluated when the module is loaded, i.e., once at build time. */
 const BUILD_STAMP = stamp();
 
 export default function HomePage() {
@@ -11,9 +11,9 @@ export default function HomePage() {
   return (
     <Shell>
       <PageHeader
-        eyebrow="SSG · generado en build"
-        title="Listado de recursos"
-        description="Cincuenta registros leídos de un JSON local. La página se genera una sola vez durante el build y se sirve idéntica hasta el siguiente build."
+        eyebrow="SSG · generated at build"
+        title="Resource catalog"
+        description="Fifty records read from a local JSON. The page is generated once during build and served statically until the next build."
         badge={`${items.length} items`}
       />
       <div className="shell-note" data-testid="home-stamp">

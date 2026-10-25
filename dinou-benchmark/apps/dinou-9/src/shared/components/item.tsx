@@ -14,7 +14,7 @@ export function ItemCard({ item }: { item: Item }) {
       </div>
       <div className="item-foot">
         <span>score {item.score}</span>
-        <span className="item-cta">ver detalle →</span>
+        <span className="item-cta">view details →</span>
       </div>
     </a>
   );
@@ -49,16 +49,16 @@ export function ItemDetail({ item, stamp }: { item: Item; stamp: string }) {
           <dd>{item.score}</dd>
         </div>
         <div>
-          <dt>renderizado</dt>
+          <dt>rendered</dt>
           <dd data-testid="item-stamp">{stamp}</dd>
         </div>
       </dl>
       <p className="note">
-        Esta página se regenera como máximo una vez cada 60 segundos. La marca de
-        tiempo solo cambia cuando el caché se invalida.
+        This page regenerates at most once every 60 seconds. The timestamp only
+        changes when the cache is invalidated.
       </p>
       <a className="back" href="/">
-        ← volver al listado
+        ← back to listing
       </a>
     </article>
   );

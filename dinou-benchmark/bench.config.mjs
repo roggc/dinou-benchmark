@@ -1,29 +1,29 @@
 /**
- * bench.config.mjs — el ÚNICO fichero acoplado a un framework.
+ * bench.config.mjs — The ONLY file coupled to specific frameworks.
  *
- * Añadir un framework (por ejemplo Waku) consiste en:
- *   1. crear `apps/<id>` con su app equivalente,
- *   2. añadir una entrada más a `frameworks` aquí.
- * Nada más del harness (scripts/, verify, load, report) cambia.
+ * Adding a framework (e.g. Waku, Remix) consists of:
+ *   1. Creating `apps/<id>` with its equivalent application,
+ *   2. Adding an entry to `frameworks` here.
+ * Nothing else in the harness (scripts/, verify, load, report) needs to change.
  */
 
 export const routes = [
-  { id: "home", path: "/", kind: "ssg", label: "SSG · listado de 50 items" },
-  { id: "item", path: "/items/42", kind: "isr", label: "ISR 60 s · detalle" },
-  { id: "dashboard", path: "/dashboard", kind: "ssr", label: "SSR dinámico · 3 huecos" },
-  { id: "ppr", path: "/ppr", kind: "ppr", label: "PPR · shell estático + hueco" },
-  { id: "messages", path: "/messages", kind: "ssr", label: "SSR · Server Function + JSON local" },
+  { id: "home", path: "/", kind: "ssg", label: "SSG · 50 items list" },
+  { id: "item", path: "/items/42", kind: "isr", label: "ISR 60s · detail" },
+  { id: "dashboard", path: "/dashboard", kind: "ssr", label: "Dynamic SSR · 3 slots" },
+  { id: "ppr", path: "/ppr", kind: "ppr", label: "PPR · static shell + slot" },
+  { id: "messages", path: "/messages", kind: "ssr", label: "SSR · Server Function + local JSON" },
 ];
 
 export const setup = {
-  /** Rutas que el script de verificación exige que devuelvan 404. */
-  notFoundPaths: ["/esta-ruta-no-existe", "/items/999"],
-  /** Milisegundos de retardo artificial dentro de cada hueco Suspense. */
+  /** Routes required to return 404 by the verify script. */
+  notFoundPaths: ["/this-route-does-not-exist", "/items/999"],
+  /** Milliseconds of artificial delay inside each Suspense slot. */
   holeDelayMs: 200,
-  /** Umbrales de la verificación (holgados a propósito: la máquina es compartida). */
+  /** Verification thresholds (generous margins for shared environments). */
   thresholds: {
-    pprShellMs: 150, // primer chunk del shell
-    pprHoleMs: 150, // el hueco debe tardar al menos esto
+    pprShellMs: 150, // first chunk of shell
+    pprHoleMs: 150, // slot must take at least this long
     staticStabilityRuns: 3,
   },
   load: {
@@ -31,7 +31,7 @@ export const setup = {
     connections: Number(process.env.LOAD_CONNECTIONS || 50),
     warmupSeconds: Number(process.env.LOAD_WARMUP || 3),
     runs: Number(process.env.LOAD_RUNS || 3),
-    /** los números de un contenedor compartido no son publicables */
+    /** Numbers from shared runners are not publishable */
     smokeOnly: true,
   },
 };

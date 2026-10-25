@@ -11,7 +11,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} data-testid="submit">
-      {pending ? "Guardando…" : "Enviar"}
+      {pending ? "Saving…" : "Send"}
     </button>
   );
 }
@@ -20,8 +20,8 @@ export function MessageForm() {
   const router = useRouter();
   const [state, formAction] = useActionState<FormState, FormData>(submitMessage, initialState);
 
-  // Tras una mutación correcta se refresca el árbol RSC para que la lista
-  // vuelva a leer el JSON local sin recargar el navegador.
+  // After a successful mutation, the RSC tree is refreshed so the list
+  // re-reads local JSON without reloading the browser.
   useEffect(() => {
     if (state.ok && state.message) router.refresh();
   }, [state, router]);
@@ -29,8 +29,8 @@ export function MessageForm() {
   return (
     <>
       <form className="form" action={formAction} data-testid="message-form">
-        <input name="author" placeholder="autor" defaultValue="operador" maxLength={24} />
-        <input name="body" placeholder="Escribe un mensaje…" maxLength={280} required />
+        <input name="author" placeholder="author" defaultValue="operator" maxLength={24} />
+        <input name="body" placeholder="Write a message…" maxLength={280} required />
         <SubmitButton />
       </form>
       {state.message ? (

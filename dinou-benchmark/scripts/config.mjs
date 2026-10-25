@@ -6,7 +6,7 @@ export const { routes, setup, frameworks } = config;
 
 export function frameworkById(id) {
   const fw = frameworks.find((f) => f.id === id);
-  if (!fw) throw new Error(`framework desconocido: ${id}`);
+  if (!fw) throw new Error(`unknown framework: ${id}`);
   return fw;
 }
 

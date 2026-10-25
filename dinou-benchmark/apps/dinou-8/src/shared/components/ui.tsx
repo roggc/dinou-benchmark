@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 export function SiteNav() {
   const links = [
-    ["/", "Inicio"],
-    ["/items/42", "Detalle ISR"],
+    ["/", "Home"],
+    ["/items/42", "ISR Detail"],
     ["/dashboard", "Dashboard"],
     ["/ppr", "PPR"],
     ["/messages", "Server Function"],
@@ -32,7 +32,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <SiteNav />
       <main className="container">{children}</main>
       <footer className="site-footer">
-        Misma app, mismo CSS, mismos datos locales. Benchmark reproducible.
+        Same app, same CSS, same local data. Reproducible benchmark.
       </footer>
     </div>
   );
@@ -67,7 +67,7 @@ export function Skeleton({ label }: { label: string }) {
       <div className="sk-line sk-line-short" />
       <div className="sk-line" />
       <div className="sk-line sk-line-mid" />
-      <span className="sk-label">cargando {label}…</span>
+      <span className="sk-label">loading {label}…</span>
     </div>
   );
 }

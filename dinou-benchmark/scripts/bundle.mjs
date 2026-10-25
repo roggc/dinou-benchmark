@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Peso del JavaScript de cliente: recorre la salida del build, se queda con los
- * assets que el navegador descarga y calcula gzip y brotli de cada uno.
+ * Client JavaScript bundle size: traverses build output, filters assets
+ * downloaded by the browser, and computes gzip and brotli compression.
  */
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
@@ -36,7 +36,7 @@ for (const fw of frameworks) {
   const isClientAsset = (file) => {
     if (!file.endsWith(".js")) return false;
     const rel = file.split(path.sep).join("/");
-    // Nunca cuentan los bundles de servidor.
+    // Server bundles are never counted.
     if (/\/server\//.test(rel) || rel.endsWith("server.mjs")) return false;
     return fw.clientAssetHints.some((hint) => rel.includes(hint));
   };
@@ -63,7 +63,7 @@ for (const fw of frameworks) {
   biggest.sort((a, b) => b.raw - a.raw);
 
   console.log(
-    `${fw.name} ${fw.version}: ${clientFiles.length} ficheros JS de cliente · ${round(raw / 1024, 1)} KiB crudo · ${round(gzip / 1024, 1)} KiB gzip · ${round(brotli / 1024, 1)} KiB brotli`
+    `${fw.name} ${fw.version}: ${clientFiles.length} client JS files · ${round(raw / 1024, 1)} KiB raw · ${round(gzip / 1024, 1)} KiB gzip · ${round(brotli / 1024, 1)} KiB brotli`
   );
 
   results.push({

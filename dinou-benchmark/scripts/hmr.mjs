@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * HMR real: abre la app en Chromium, edita un fichero de la página de inicio y
- * mide cuánto tarda el texto nuevo en aparecer en el DOM sin recargar.
+ * Real HMR: launches Chromium, edits a homepage file on disk,
+ * and measures how long it takes for the updated text to appear in the DOM without a reload.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -59,7 +59,7 @@ for (const fw of frameworks) {
   }
 
   console.log(
-    `${fw.name} ${fw.version}: HMR ${samples.map((s) => round(s * 1000, 0)).join(" / ")} ms (mediana ${round(median(samples) * 1000, 0)} ms)`
+    `${fw.name} ${fw.version}: HMR ${samples.map((s) => round(s * 1000, 0)).join(" / ")} ms (median ${round(median(samples) * 1000, 0)} ms)`
   );
   results.push({
     framework: fw.id,

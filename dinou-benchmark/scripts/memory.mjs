@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * RAM del servidor de producción: RSS en reposo y pico durante carga.
+ * Production server RAM: idle RSS and peak RSS under load.
  *
- * Se lee únicamente el campo VmRSS de /proc/<pid>/status del árbol de procesos
- * que este script ha arrancado (no se inspecciona el entorno de nadie).
+ * Reads only the VmRSS field from /proc/<pid>/status of the process tree
+ * spawned by this script (or Windows equivalent via PowerShell).
  */
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -25,7 +25,7 @@ if (process.platform === "linux") {
     const { stdout: kernelRelease } = await promisify(execFile)("uname", ["-r"]);
     reliable = !/gvisor/i.test(kernelRelease);
     if (!reliable) {
-      console.warn("aviso: kernel gVisor detectado, el RSS de /proc no es por proceso; se marcará como no fiable.");
+      console.warn("warning: gVisor kernel detected; /proc RSS is not per-process and will be marked as unreliable.");
     }
   } catch {
     reliable = false;
@@ -115,7 +115,7 @@ for (const fw of frameworks) {
     const idleMedian = median(idle);
 
     console.log(
-      `${fw.name} ${fw.version}: RSS reposo ${round(idleMedian / 1e6, 1)} MB · pico ${round(peak.value / 1e6, 1)} MB · post-carga ${round(afterLoad / 1e6, 1)} MB`
+      `${fw.name} ${fw.version}: RSS idle ${round(idleMedian / 1e6, 1)} MB · peak ${round(peak.value / 1e6, 1)} MB · post-load ${round(afterLoad / 1e6, 1)} MB`
     );
 
     results.push({
@@ -127,8 +127,8 @@ for (const fw of frameworks) {
       at: new Date().toISOString(),
       reliable,
       note: reliable
-        ? "RSS del árbol de procesos del servidor; incluye el wrapper de pnpm."
-        : "RSS del árbol de procesos, pero el kernel es gVisor: la cifra está inflada y no es por proceso.",
+        ? "Process-tree RSS of the server; includes the pnpm wrapper."
+        : "Process-tree RSS, but kernel is gVisor: value is inflated and not per-process.",
     });
   } finally {
     await server.stop();

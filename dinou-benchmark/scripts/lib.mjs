@@ -79,8 +79,8 @@ export async function waitForPortFree(port, timeoutMs = 30_000) {
 }
 
 /**
- * Arranca un servidor en su propio grupo de procesos y espera a que la ruta
- * `readyPath` responda 200. Devuelve el tiempo de arranque y un `stop()`.
+ * Starts a server in its own process tree and waits for `readyPath`
+ * to respond with <500 status. Returns ready time in ms and a `stop()` handle.
  */
 export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeoutMs = 180_000, env = {} }) {
   const started = Date.now();
@@ -111,7 +111,7 @@ export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeo
         break;
       }
     } catch {
-      /* todavía no escucha */
+      /* not listening yet */
     }
     await new Promise((r) => setTimeout(r, 150));
   }
@@ -123,13 +123,13 @@ export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeo
 
   if (readyMs === null) {
     await stop();
-    throw new Error(`El servidor no respondió en ${timeoutMs} ms (${cmd} ${args.join(" ")})\n--- log ---\n${output.slice(-4000)}`);
+    throw new Error(`Server did not respond in ${timeoutMs} ms (${cmd} ${args.join(" ")})\n--- log ---\n${output.slice(-4000)}`);
   }
 
   return { child, readyMs, output: () => output, stop, port, url: `http://127.0.0.1:${port}` };
 }
 
-/** Ejecuta un comando y devuelve código, salida y duración. */
+/** Executes a command and returns exit code, stdout, stderr, and duration. */
 export function runCommand({ cwd, cmd, args, timeoutMs = 600_000, env = {} }) {
   return new Promise((resolve) => {
     const started = Date.now();
@@ -159,8 +159,8 @@ export function runCommand({ cwd, cmd, args, timeoutMs = 600_000, env = {} }) {
 }
 
 /**
- * Petición HTTP que mide por separado el primer byte/chunk y el final del body.
- * Es lo que permite distinguir un shell PPR (rápido) de su hueco (lento).
+ * HTTP fetch that separately measures time to first chunk and total body completion.
+ * Distinguishes a fast PPR static shell from its streaming dynamic hole.
  */
 export async function timedFetch(url, { timeoutMs = 30_000 } = {}) {
   const started = performance.now();
@@ -196,10 +196,10 @@ export async function timedFetch(url, { timeoutMs = 30_000 } = {}) {
   };
 }
 
-/** Limpia una ruta dentro del repo (nunca fuera de él). */
+/** Cleans a directory inside the repository (never outside). */
 export async function cleanDir(relPath) {
   const target = path.join(ROOT, relPath);
-  if (!target.startsWith(ROOT)) throw new Error("ruta fuera del repo");
+  if (!target.startsWith(ROOT)) throw new Error("path outside repository");
   await rm(target, { recursive: true, force: true });
 }
 

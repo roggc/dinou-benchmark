@@ -4,13 +4,13 @@ import { sleep, stamp } from "@/shared/lib/data";
 
 const DELAY = 200;
 
-async function Cotizacion() {
+async function LiveQuote() {
   await sleep(DELAY);
   return (
     <HoleCard
-      label="cotización en vivo"
-      value="142,08 €"
-      detail="hueco dinámico streameado tras el shell"
+      label="live quote"
+      value="142.08 €"
+      detail="dynamic hole streamed after the shell"
       stamp={stamp()}
     />
   );
@@ -21,17 +21,17 @@ export default function PprPage({ shellStamp }: { shellStamp: string }) {
     <Shell>
       <PageHeader
         eyebrow="PPR · ppr = true"
-        title="Shell estático, hueco dinámico"
-        description="El cascarón se prerenderiza en build y llega en el primer chunk. Dentro del mismo HTTP, el hueco resuelve 200 ms después con datos de esta petición."
+        title="Static shell, dynamic hole"
+        description="The shell is prerendered at build time and arrives in the first chunk. Within the same HTTP stream, the hole resolves 200 ms later with request-time data."
         badge="partial prerendering"
       />
       <div className="shell-note" data-testid="ppr-shell-stamp">
         <span className="dot" />
-        shell generado en build: {shellStamp}
+        shell generated at build: {shellStamp}
       </div>
       <div className="holes">
-        <Suspense fallback={<Skeleton label="cotización" />}>
-          <Cotizacion />
+        <Suspense fallback={<Skeleton label="quote" />}>
+          <LiveQuote />
         </Suspense>
       </div>
     </Shell>

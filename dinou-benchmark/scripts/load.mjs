@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Carga con autocannon sobre el build de producción ya arrancado por este
- * script. Por ruta y framework: TTFB (muestreo secuencial), req/s y latencias.
+ * Load testing with autocannon against the production build launched by this script.
+ * Measures per route and framework: TTFB (sequential sampling), req/s, and latencies.
  *
- * SIEMPRE producción: `pnpm build` + `pnpm start`, con warmup antes de medir.
+ * ALWAYS production: `pnpm build` + `pnpm start`, with warmup before measuring.
  */
 import path from "node:path";
 import autocannon from "autocannon";
@@ -30,7 +30,7 @@ function percentilesOf(latency) {
 
 for (const fw of frameworks) {
   const cwd = path.join(ROOT, fw.dir);
-  console.log(`\n=== carga: ${fw.name} ${fw.version} ===`);
+  console.log(`\n=== load: ${fw.name} ${fw.version} ===`);
   const server = await startServer({
     cwd,
     cmd: "pnpm",
@@ -116,11 +116,11 @@ for (const fw of frameworks) {
     runs: setup.load.runs,
     routes: perRoute,
     at: new Date().toISOString(),
-    note: "autocannon no expone p95 exacto; se usa su p97.5 como cota superior.",
+    note: "autocannon does not expose exact p95; p97.5 is used as an upper bound.",
   });
 }
 
-// Conserva los resultados de frameworks que no se han ejecutado en esta pasada.
+// Preserve results from frameworks not executed in this run.
 const previous = (await readJson(path.join(ROOT, "results", "load.json"), [])) ?? [];
 const merged = [...previous.filter((p) => !results.some((r) => r.framework === p.framework)), ...results];
 await writeJson(path.join(ROOT, "results", "load.json"), merged.sort((a, b) => a.framework.localeCompare(b.framework)));

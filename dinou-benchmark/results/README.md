@@ -1,22 +1,17 @@
 # results/
 
-Aquí escribe `pnpm bench` sus salidas:
+Output directory populated by `pnpm bench`:
 
-| Fichero | Contenido |
+| File | Content |
 | --- | --- |
-| `build.json` | tiempo de build y tamaño de salida por framework |
-| `verify.json` | las 13 comprobaciones funcionales por framework |
-| `dev-start.json` | arranque en frío del dev server |
-| `hmr.json` | edición → DOM en Chromium |
-| `bundle.json` | JS de cliente en crudo, gzip y brotli |
-| `load.json` | TTFB, req/s y latencias por ruta |
-| `memory.json` | RSS en reposo y bajo carga |
-| `REPORT.md` | tablas comparativas generadas |
-| `charts.svg`, `ttfb.svg`, `bundle.svg` | gráficas generadas |
+| `build.json` | Build duration and output directory size per framework |
+| `verify.json` | The 13 functional verification checks per framework |
+| `dev-start.json` | Dev server cold-start duration |
+| `hmr.json` | Real-browser edit-to-DOM HMR measurement |
+| `bundle.json` | Client-side JavaScript bundle sizes (raw, gzip, brotli) |
+| `load.json` | TTFB, req/s throughput, and latency percentiles per route |
+| `memory.json` | RSS memory consumption (idle and peak under load) |
+| `REPORT.md` | Generated comparative Markdown report |
+| `charts.svg`, `ttfb.svg`, `bundle.svg` | Generated vector benchmark charts |
 
-Los JSON están ignorados por git: se regeneran en cada ejecución. El informe
-tampoco se versiona salvo que lo decidas explícitamente.
-
-Los resultados que puedas encontrar en este directorio tras un clon vienen de un
-contenedor compartido de un solo núcleo y **no son publicables**.
-
+The JSON files are git-ignored by default: they are regenerated on each run.

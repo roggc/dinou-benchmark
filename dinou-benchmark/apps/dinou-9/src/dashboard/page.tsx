@@ -4,37 +4,37 @@ import { sleep, stamp } from "@/shared/lib/data";
 
 const DELAY = 200;
 
-async function Pedidos() {
+async function Orders() {
   await sleep(DELAY);
   return (
     <HoleCard
-      label="pedidos · 24 h"
-      value="1.284"
-      detail="+8,4 % respecto al día anterior"
+      label="orders · 24h"
+      value="1,284"
+      detail="+8.4% vs previous day"
       stamp={stamp()}
     />
   );
 }
 
-async function Ingresos() {
+async function Revenue() {
   await sleep(DELAY);
   return (
     <HoleCard
-      label="ingresos · 24 h"
-      value="48.920 €"
-      detail="ticket medio 38,10 €"
+      label="revenue · 24h"
+      value="€48,920"
+      detail="average ticket €38.10"
       stamp={stamp()}
     />
   );
 }
 
-async function Incidencias() {
+async function Incidents() {
   await sleep(DELAY);
   return (
     <HoleCard
-      label="incidencias abiertas"
+      label="open incidents"
       value="7"
-      detail="2 de severidad alta"
+      detail="2 high severity"
       stamp={stamp()}
     />
   );
@@ -44,24 +44,24 @@ export default function DashboardPage() {
   return (
     <Shell>
       <PageHeader
-        eyebrow="SSR dinámico · revalidate = 0"
-        title="Panel de operaciones"
-        description="Se renderiza en cada petición. Los tres huecos esperan 200 ms cada uno en paralelo, así que el HTML completo tarda ~200 ms y nunca se cachea."
+        eyebrow="Dynamic SSR · revalidate = 0"
+        title="Operations dashboard"
+        description="Rendered on every request. The three holes wait 200 ms each in parallel, so the full HTML takes ~200 ms and is never cached."
         badge="force-dynamic"
       />
       <div className="shell-note" data-testid="dashboard-stamp">
         <span className="dot" />
-        petición recibida: {stamp()}
+        request received: {stamp()}
       </div>
       <div className="holes">
-        <Suspense fallback={<Skeleton label="pedidos" />}>
-          <Pedidos />
+        <Suspense fallback={<Skeleton label="orders" />}>
+          <Orders />
         </Suspense>
-        <Suspense fallback={<Skeleton label="ingresos" />}>
-          <Ingresos />
+        <Suspense fallback={<Skeleton label="revenue" />}>
+          <Revenue />
         </Suspense>
-        <Suspense fallback={<Skeleton label="incidencias" />}>
-          <Incidencias />
+        <Suspense fallback={<Skeleton label="incidents" />}>
+          <Incidents />
         </Suspense>
       </div>
     </Shell>

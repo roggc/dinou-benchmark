@@ -1,10 +1,10 @@
 packages:
   - "apps/*"
 
-# Dinou resuelve sus propias dependencias (react-server-dom-webpack, babel, rollup,
-# postcss...) desde node_modules planos. Con el linker aislado de pnpm el runtime
-# de Dinou no encuentra algunos paquetes hermanos, así que ambos proyectos se
-# instalan con el linker "hoisted".
+# Dinou resolves its own dependencies (react-server-dom-webpack, babel, rollup,
+# postcss...) from flat node_modules. With pnpm's isolated linker, the Dinou runtime
+# cannot find some sibling packages, so workspace projects are installed with the
+# "hoisted" linker.
 nodeLinker: hoisted
 
 minimumReleaseAgeExclude:

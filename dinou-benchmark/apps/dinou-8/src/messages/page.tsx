@@ -6,21 +6,21 @@ export default function MessagesPage({ messages, stamp }: { messages: Message[];
   return (
     <Shell>
       <PageHeader
-        eyebrow="Server Function · mutación local"
-        title="Mensajes"
-        description="El formulario llama a una Server Function que escribe en un JSON local y revalida esta ruta. Sin API intermedia ni cliente HTTP."
-        badge={`${messages.length} mensajes`}
+        eyebrow="Server Function · local mutation"
+        title="Messages"
+        description="The form calls a Server Function that writes to a local JSON and revalidates this route. No intermediate API or HTTP client."
+        badge={`${messages.length} messages`}
       />
 
       <MessageForm />
 
       <div className="shell-note" data-testid="messages-stamp">
         <span className="dot" />
-        renderizado: {stamp}
+        rendered: {stamp}
       </div>
 
       {messages.length === 0 ? (
-        <p className="empty">Todavía no hay mensajes.</p>
+        <p className="empty">No messages yet.</p>
       ) : (
         <ul className="messages" data-testid="messages">
           {messages.map((message) => (

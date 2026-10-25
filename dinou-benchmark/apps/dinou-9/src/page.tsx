@@ -6,9 +6,9 @@ export default function HomePage({ items, stamp }: { items: Item[]; stamp: strin
   return (
     <Shell>
       <PageHeader
-        eyebrow="SSG · generado en build"
-        title="Listado de recursos"
-        description="Cincuenta registros leídos de un JSON local. La página se genera una sola vez durante el build y se sirve idéntica hasta el siguiente build."
+        eyebrow="SSG · generated at build"
+        title="Resource catalog"
+        description="Fifty records read from a local JSON. The page is generated once during build and served statically until the next build."
         badge={`${items.length} items`}
       />
       <div className="shell-note" data-testid="home-stamp">

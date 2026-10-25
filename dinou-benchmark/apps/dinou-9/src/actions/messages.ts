@@ -6,25 +6,25 @@ import { appendMessage } from "@/shared/lib/store";
 export type FormState = { ok: boolean; message: string };
 
 /**
- * Server Function de Dinou: directiva "use server" a nivel de módulo.
- * El componente de cliente la importa directamente (pasarla como prop
- * provocaba HTTP 400 en 8.0.1 — ver README → "Diferencias").
+ * Dinou Server Function: module-level "use server" directive.
+ * Client components import it directly (passing as a prop
+ * caused HTTP 400 in 8.0.1 — see README).
  */
 export async function submitMessage(_prev: FormState, formData: FormData): Promise<FormState> {
   const body = String(formData.get("body") ?? "").trim();
-  const author = String(formData.get("author") ?? "operador").trim() || "operador";
+  const author = String(formData.get("author") ?? "operator").trim() || "operator";
 
   if (!body) {
-    return { ok: false, message: "Escribe un mensaje antes de enviar." };
+    return { ok: false, message: "Write a message before submitting." };
   }
   if (body.length > 280) {
-    return { ok: false, message: "Máximo 280 caracteres." };
+    return { ok: false, message: "Maximum 280 characters." };
   }
 
   await appendMessage(author, body);
-  // Invalida el HTML y el payload RSC cacheados de /messages.
+  // Invalidate cached HTML and RSC payload for /messages.
   await revalidatePath("/messages");
 
-  return { ok: true, message: `Guardado (${body.length} caracteres).` };
+  return { ok: true, message: `Saved (${body.length} characters).` };
 }
 

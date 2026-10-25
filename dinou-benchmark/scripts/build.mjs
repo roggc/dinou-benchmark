@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Mide el build de producción: tiempo de pared y tamaño de la salida. */
+/** Measures production build: wall clock time and output directory size. */
 import { rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { ROOT, selectedFrameworks } from "./config.mjs";
@@ -39,7 +39,7 @@ for (const fw of frameworks) {
     const run = await runCommand({ cwd, cmd: "pnpm", args: ["run", "build"], timeoutMs: 900_000 });
     if (run.code !== 0) {
       console.error(run.stdout.slice(-2500), run.stderr.slice(-2500));
-      throw new Error(`build falló: ${fw.name} ${fw.version}`);
+      throw new Error(`build failed: ${fw.name} ${fw.version}`);
     }
     times.push(run.ms / 1000);
   }
@@ -50,7 +50,7 @@ for (const fw of frameworks) {
     size += sizePerDir[out];
   }
 
-  console.log(`${fw.name} ${fw.version}: build ${times.map((t) => round(t, 1)).join(" / ")} s · salida ${round(size / 1e6, 1)} MB`);
+  console.log(`${fw.name} ${fw.version}: build ${times.map((t) => round(t, 1)).join(" / ")} s · output ${round(size / 1e6, 1)} MB`);
   results.push({
     framework: fw.id,
     version: fw.version,

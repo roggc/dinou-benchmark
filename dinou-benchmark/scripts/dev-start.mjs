@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Arranque en frío del servidor de desarrollo: tiempo desde `pnpm dev` hasta la
- * primera respuesta 200 en `/`. Se repite N veces y se queda con la mediana.
+ * Dev server cold start: time from `pnpm dev` until first 200 response on `/`.
+ * Repeated N times and reports the median.
  */
 import path from "node:path";
 import { ROOT, selectedFrameworks } from "./config.mjs";
@@ -31,7 +31,7 @@ for (const fw of frameworks) {
   }
 
   console.log(
-    `${fw.name} ${fw.version}: dev cold start ${samples.map((s) => round(s, 2)).join(" / ")} s (mediana ${round(median(samples), 2)} s)`
+    `${fw.name} ${fw.version}: dev cold start ${samples.map((s) => round(s, 2)).join(" / ")} s (median ${round(median(samples), 2)} s)`
   );
   results.push({
     framework: fw.id,

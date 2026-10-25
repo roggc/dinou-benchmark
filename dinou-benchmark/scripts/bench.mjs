@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Orquestador: `pnpm bench` ejecuta todo el pipeline en orden y termina
- * generando results/REPORT.md.
+ * Orchestrator: `pnpm bench` runs the entire pipeline in order and finishes
+ * by generating results/REPORT.md.
  *
- * Fases: build → verify → bundle → dev-start → hmr → load → memory → report
- * Se pueden saltar fases con --skip=hmr,load o ejecutar solo algunas con
+ * Phases: build → verify → bundle → dev-start → hmr → load → memory → report
+ * Phases can be skipped with --skip=hmr,load or filtered with
  * --only-steps=verify,load.
  */
 import { spawn } from "node:child_process";
@@ -42,18 +42,17 @@ function run(step) {
 const started = Date.now();
 for (const step of STEPS) {
   if (skip.includes(step[0])) {
-    console.log(`\n— ${step[0]} (omitido)`);
+    console.log(`\n— ${step[0]} (skipped)`);
     continue;
   }
   if (only && !only.includes(step[0]) && step[0] !== "report") continue;
   console.log(`\n▶ ${step[0]}`);
   const code = await run(step);
   if (code !== 0 && step[0] !== "verify") {
-    console.error(`\n✗ ${step[0]} falló (código ${code}). Pipeline detenido.`);
+    console.error(`\n✗ ${step[0]} failed (exit code ${code}). Pipeline stopped.`);
     process.exit(code);
   }
-  if (code !== 0) console.warn(`\n⚠ ${step[0]} terminó con fallos; se continúa para no perder el resto de métricas.`);
+  if (code !== 0) console.warn(`\n⚠ ${step[0]} completed with failures; continuing to collect remaining metrics.`);
 }
 
-console.log(`\nPipeline completo en ${Math.round((Date.now() - started) / 1000)} s. Informe: results/REPORT.md`);
-
+console.log(`\nFull pipeline completed in ${Math.round((Date.now() - started) / 1000)} s. Report: results/REPORT.md`);

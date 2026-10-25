@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Repone el JSON local de mensajes en ambas apps (estado limpio antes de medir). */
+/** Restores the local messages JSON in all apps (clean state before measuring). */
 import { cp } from "node:fs/promises";
 import path from "node:path";
 import { ROOT, frameworks } from "./config.mjs";
@@ -10,5 +10,5 @@ for (const fw of frameworks) {
     path.join(ROOT, fw.dir, "data/messages.json")
   );
 }
-console.log(`Datos de mensajes repuestos en ${frameworks.length} apps.`);
+console.log(`Message data reset in ${frameworks.length} apps.`);
 

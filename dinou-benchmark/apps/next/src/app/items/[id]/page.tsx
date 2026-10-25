@@ -5,9 +5,9 @@ import { Shell } from "@/shared/components/ui";
 import { getItem, itemIds, stamp } from "@/shared/lib/data";
 
 /**
- * ISR en Next 16 con `cacheComponents`: la entrada se cachea 60 s y se
- * regenera en segundo plano. `export const revalidate` ya no es compatible con
- * cacheComponents, así que la ventana se declara con cacheLife.
+ * ISR in Next 16 with `cacheComponents`: cached for 60s and
+ * regenerated in background. `export const revalidate` is not supported with
+ * cacheComponents, so the lifetime is defined via cacheLife.
  */
 async function loadItem(id: string) {
   "use cache";
@@ -17,7 +17,7 @@ async function loadItem(id: string) {
   return { item, stamp: stamp() };
 }
 
-/** 100 rutas prerenderizadas en build. */
+/** 100 routes prerendered at build time. */
 export function generateStaticParams() {
   return itemIds().map((id) => ({ id }));
 }
@@ -26,7 +26,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const data = await loadItem(id);
 
-  // Equivalente a `dynamicParams = false`: cualquier id fuera de 1–100 es 404.
+  // Equivalent to `dynamicParams = false`: any id outside 1–100 returns 404.
   if (!data) notFound();
 
   return (

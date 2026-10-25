@@ -3,7 +3,7 @@ import { PageHeader, Shell } from "@/shared/components/ui";
 import { readMessages, type Message } from "@/shared/lib/store";
 import { stamp } from "@/shared/lib/data";
 
-/** Ruta totalmente dinámica: la lista debe reflejar la última mutación. */
+/** Fully dynamic route: the list must reflect the latest mutation. */
 export const instant = false;
 
 export default async function MessagesPage() {
@@ -12,21 +12,21 @@ export default async function MessagesPage() {
   return (
     <Shell>
       <PageHeader
-        eyebrow="Server Action · mutación local"
-        title="Mensajes"
-        description="El formulario llama a una Server Action que escribe en un JSON local y revalida esta ruta. Sin API intermedia ni cliente HTTP."
-        badge={`${messages.length} mensajes`}
+        eyebrow="Server Action · local mutation"
+        title="Messages"
+        description="The form calls a Server Action that writes to a local JSON and revalidates this route. No intermediate API or HTTP client."
+        badge={`${messages.length} messages`}
       />
 
       <MessageForm />
 
       <div className="shell-note" data-testid="messages-stamp">
         <span className="dot" />
-        renderizado: {stamp()}
+        rendered: {stamp()}
       </div>
 
       {messages.length === 0 ? (
-        <p className="empty">Todavía no hay mensajes.</p>
+        <p className="empty">No messages yet.</p>
       ) : (
         <ul className="messages" data-testid="messages">
           {messages.map((message) => (

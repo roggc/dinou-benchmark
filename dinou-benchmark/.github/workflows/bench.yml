@@ -1,8 +1,8 @@
 name: bench
 
-# Solo validación: comprueba que las dos apps instalan, compilan y pasan las 13
-# verificaciones. NO publica resultados: un runner compartido no es un entorno
-# de medida válido y sus números no son comparables.
+# Validation only: verifies that all apps install, build, and pass the 13
+# checks. DOES NOT publish benchmark results: a shared runner is not a valid
+# measurement environment and its numbers are not comparable.
 
 on:
   push:
@@ -26,22 +26,22 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Sincronizar shared/ (igualdad byte a byte)
+      - name: Synchronize shared/ (byte-for-byte equality)
         run: pnpm shared
 
-      - name: Build de las dos apps
+      - name: Build all apps
         run: pnpm bench:build
 
-      - name: Instalar Chromium para la comprobación de mutación y HMR
+      - name: Install Chromium for mutation and HMR checks
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Verificación funcional (13 comprobaciones por framework)
+      - name: Functional verification (13 checks per framework)
         run: pnpm bench:verify --skip-build
 
-      - name: Guardar artefactos de la ejecución
+      - name: Upload run artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:

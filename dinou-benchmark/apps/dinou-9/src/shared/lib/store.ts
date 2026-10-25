@@ -8,7 +8,7 @@ export type Message = {
   at: string;
 };
 
-/** Almacén local en disco: sin base de datos y sin red, igual en ambos frameworks. */
+/** Local disk store: no database and no network, identical across frameworks. */
 const storeFile = path.join(process.cwd(), "data", "messages.json");
 
 export async function readMessages(): Promise<Message[]> {
