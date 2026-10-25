@@ -45,30 +45,46 @@ async function winTreeRss(pid) {
   }
 }
 
-async function childrenOf(pid) {
+async function linuxTreeRss(rootPid) {
   try {
-    const raw = await readFile(`/proc/${pid}/task/${pid}/children`, "utf8");
-    return raw.trim().split(/\s+/).filter(Boolean).map(Number);
+    const { stdout } = await promisify(execFile)("ps", ["-eo", "pid,ppid,rss"]);
+    const lines = stdout.trim().split("\n").slice(1);
+    const byPpid = new Map();
+    const rssByPid = new Map();
+    for (const line of lines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= 3) {
+        const p = Number(parts[0]);
+        const pp = Number(parts[1]);
+        const rss = Number(parts[2]) * 1024; // ps returns RSS in KB -> convert to bytes
+        rssByPid.set(p, rss);
+        if (!byPpid.has(pp)) byPpid.set(pp, []);
+        byPpid.get(pp).push(p);
+      }
+    }
+    function sumTree(pid) {
+      let sum = rssByPid.get(pid) || 0;
+      for (const child of byPpid.get(pid) || []) {
+        sum += sumTree(child);
+      }
+      return sum;
+    }
+    return sumTree(rootPid);
   } catch {
-    return [];
-  }
-}
-
-async function rssOf(pid) {
-  try {
-    const raw = await readFile(`/proc/${pid}/status`, "utf8");
-    const match = raw.match(/^VmRSS:\s+(\d+) kB/m);
-    return match ? Number(match[1]) * 1024 : 0;
-  } catch {
-    return 0;
+    // Fallback: single process /proc/<pid>/status if ps is unavailable
+    try {
+      const raw = await readFile(`/proc/${rootPid}/status`, "utf8");
+      const match = raw.match(/^VmRSS:\s+(\d+) kB/m);
+      return match ? Number(match[1]) * 1024 : 0;
+    } catch {
+      return 0;
+    }
   }
 }
 
 async function treeRss(pid) {
   if (isWin) return winTreeRss(pid);
-  let total = await rssOf(pid);
-  for (const child of await childrenOf(pid)) total += await treeRss(child);
-  return total;
+  return linuxTreeRss(pid);
 }
 
 function runAutocannon(opts) {

@@ -16,6 +16,15 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y -qq curl ca-certificates git build-essential jq unzip htop sysstat linux-tools-common >/dev/null
 
+if [ ! -f /swapfile ] && [ "$(free -m | awk '/^Swap:/ {print $2}')" -eq 0 ]; then
+  echo "==> Configuring 4 GB swap file"
+  fallocate -l 4G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=4096 status=none
+  chmod 600 /swapfile
+  mkswap /swapfile >/dev/null
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
 echo "==> Node.js 22 LTS"
 if ! command -v node >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
