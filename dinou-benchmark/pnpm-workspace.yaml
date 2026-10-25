@@ -7,8 +7,9 @@ packages:
 # "hoisted" linker.
 nodeLinker: hoisted
 
+minimumReleaseAge: 0
 minimumReleaseAgeExclude:
-  - dinou@8.1.2
+  - dinou
 
 allowBuilds:
   '@swc/core': true
