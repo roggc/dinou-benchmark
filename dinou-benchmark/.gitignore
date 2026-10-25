@@ -12,4 +12,5 @@ apps/*/data/messages.json
 *.log
 playwright-report/
 test-results/
+*.tsbuildinfo
 
