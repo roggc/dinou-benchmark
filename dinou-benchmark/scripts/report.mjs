@@ -117,13 +117,13 @@ if (build || dev || hmr || bundle || memory) {
 await writeFile(path.join(ROOT, "results", "REPORT.md"), lines.join("\n") + "\n", "utf8");
 
 // --- gráficas SVG (barras horizontales, sin dependencias) ---
-function barChart({ title, series, unit, width = 720 }) {
+function barChart({ title, series, unit, width = 760 }) {
   const barH = 26;
   const gap = 12;
   const top = 54;
   const height = top + series.length * (barH + gap) + 24;
   const max = Math.max(...series.map((s) => s.value), 1);
-  const left = 190;
+  const left = 200;
   const usable = width - left - 90;
   const bars = series
     .map((s, i) => {
@@ -134,11 +134,14 @@ function barChart({ title, series, unit, width = 720 }) {
   <text x="${left + w + 8}" y="${y + 17}" font-family="ui-monospace" font-size="12" fill="#e7ecf3">${s.value.toFixed(1)} ${unit}</text>`;
     })
     .join("\n  ");
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  return {
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="100%" height="100%" fill="#0b0d10"/>
   <text x="0" y="26" font-family="ui-sans-serif" font-size="15" font-weight="600" fill="#e7ecf3">${title}</text>
   ${bars}
-</svg>`;
+</svg>`,
+    height,
+  };
 }
 
 const colors = {
@@ -157,20 +160,30 @@ if (load) {
       if (entry) series.push({ label: `${route.path} · ${id}`, value: entry.ttfbMs.median, color: colors[id] });
     }
   }
-  if (series.length) charts.push({ name: "ttfb.svg", svg: barChart({ title: "TTFB mediana por ruta (ms, menor es mejor)", series, unit: "ms" }) });
+  if (series.length) {
+    const chart = barChart({ title: "TTFB mediana por ruta (ms, menor es mejor)", series, unit: "ms" });
+    charts.push({ name: "ttfb.svg", ...chart });
+  }
 }
 
 if (bundle) {
   const series = ids.map((id) => ({ label: label(id), value: (byId(bundle, id)?.gzipBytes ?? 0) / 1024, color: colors[id] }));
-  charts.push({ name: "bundle.svg", svg: barChart({ title: "JavaScript de cliente (KiB gzip, menor es mejor)", series, unit: "KiB" }) });
+  const chart = barChart({ title: "JavaScript de cliente (KiB gzip, menor es mejor)", series, unit: "KiB" });
+  charts.push({ name: "bundle.svg", ...chart });
 }
 
-const index = `<svg xmlns="http://www.w3.org/2000/svg" width="760" height="${charts.length * 260 + 60}">
+let currentY = 60;
+const chartElements = [];
+for (const chart of charts) {
+  chartElements.push(`<g transform="translate(20,${currentY})">${chart.svg}</g>`);
+  currentY += chart.height + 40;
+}
+const totalHeight = currentY + 20;
+
+const index = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${totalHeight}">
   <rect width="100%" height="100%" fill="#0b0d10"/>
   <text x="20" y="34" font-family="ui-sans-serif" font-size="16" fill="#e7ecf3">Ver results/REPORT.md</text>
-  ${charts
-    .map((c, i) => `<g transform="translate(20,${60 + i * 260})">${c.svg}</g>`)
-    .join("\n")}
+  ${chartElements.join("\n")}
 </svg>`;
 
 await writeFile(path.join(ROOT, "results", "charts.svg"), index, "utf8");
