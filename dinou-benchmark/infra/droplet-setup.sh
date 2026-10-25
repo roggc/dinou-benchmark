@@ -65,6 +65,7 @@ fi
 cd /opt/dinou-benchmark
 pnpm install --frozen-lockfile
 pnpm shared
+pnpm exec playwright install --with-deps chromium
 
 cat <<'NOTES'
 
@@ -80,18 +81,24 @@ A) DOS DROPLETS (recomendado)
    cambia `port`/host en bench.config.mjs, o lanza autocannon a mano
    contra la IP privada. Mantén los dos droplets en la misma región y VPC.
 
-B) UN SOLO DROPLET (cpu pinning)
-   El servidor y el generador de carga compiten por CPU, así que hay que
-   separarlos por núcleo. En un droplet de 4 vCPU:
+B) UN SOLO DROPLET (cpu pinning o ejecución automatizada)
+   El benchmark automatizado prueba los 3 frameworks secuencialmente
+   (Dinou 8.1.2 en puerto 3101, Dinou 9.0.0 en 3103 y Next.js en 3102):
 
-     # servidor en los núcleos 0-1
-     taskset -c 0,1 pnpm --dir apps/dinou run start &
-     # carga en los núcleos 2-3
+     cd /opt/dinou-benchmark && pnpm bench
+
+   Si prefieres lanzar pruebas manuales con taskset para separar servidor y carga:
+     # Dinou 8.1.2 (puerto 3101)
+     taskset -c 0,1 pnpm --dir apps/dinou-8 run start &
      taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3101/
 
-   Repite para apps/next (puerto 3102) y anota en el informe que se usó
-   un solo droplet con pinning: los req/s absolutos no son comparables
-   con los de un despliegue de dos máquinas.
+     # Dinou 9.0.0 (puerto 3103)
+     taskset -c 0,1 pnpm --dir apps/dinou-9 run start &
+     taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3103/
+
+     # Next.js 16.4.2 (puerto 3102)
+     taskset -c 0,1 pnpm --dir apps/next run start &
+     taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3102/
 
 Recomendaciones de método
   - 3 rondas por ruta y mediana, nunca la mejor.
