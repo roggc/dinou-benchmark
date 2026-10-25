@@ -9,7 +9,7 @@
     "start": "dinou start"
   },
   "dependencies": {
-    "dinou": "file:C:/Users/roggc/dev/dinou-9.0.0.tgz",
+    "dinou": "9.0.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
