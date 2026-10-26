@@ -17,8 +17,8 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedi
 | `/items/42` | ISR (Cached) | **1,732 req/s** · p99 145 ms | 1,311 req/s · p99 177 ms | **1.3×** | 1.2× lower |
 
 - On dynamic and PPR routes, Dinou delivers **2.4× to 3.2× higher throughput** (requests per second) while maintaining a p99 latency that is **up to 15× lower**.
-- On **ISR, both frameworks serve directly from cache**, resulting in a narrow gap (1.3×)—virtually a technical tie.
-- **Dinou 8.1.2 and 9.0.0 exhibit identical performance** (variance remains within ±5%), confirming that v9 introduces zero performance regressions.
+- On **ISR, both frameworks serve directly from cache**, resulting in a narrow gap (1.3×).
+- **Dinou 8.1.2 and 9.0.0 exhibit identical performance** (variance remains within ±5%), showing no measurable performance regression in this benchmark.
 
 ---
 
@@ -40,7 +40,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedi
 
 - **Production Builds Only**: All three applications are measured in production mode (`build` + `start`), never in development.
 - **200 Connections, 30s Duration, 3 Runs per Route**: Every metric represents sustained high-concurrency traffic.
-- **5s Warm-up at Full 200 Connections**: Performed prior to recording each route to warm V8 JIT, route dispatchers, and kernel socket structures.
+- **5s Warm-up at Full 200 Connections**: Performed prior to recording each route to warm up the V8 JIT and caches.
 - **Percentile Calculation**: Each published percentile represents the **median of that respective percentile across the 3 independent runs**. Because Autocannon does not record an exact p95, reported "p95" entries represent the **p97.5** upper bound.
 - **Throughput (req/s)**: Median across the 3 runs (minimum and maximum values are preserved in `results/load.json`).
 - **Sequential TTFB (Unloaded)**: 30 sequential requests sampled **without concurrent load** between warm-up and load testing. This establishes baseline server processing time and must not be conflated with latency under load.
@@ -56,7 +56,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedi
 | `/items/42` | ISR · Detail view, `revalidate: 60` |
 | `/dashboard` | Dynamic SSR · Shell + three parallel Suspense slots with 200 ms artificial delay (`await sleep(200)`) |
 | `/ppr` | Partial Prerendering · Static shell + one dynamic 200 ms slot streamed in the same HTTP response |
-| `/messages` | Dynamic SSR · Server Function / Server Action performing asynchronous disk I/O (`fs.promises.readFile`) on a local JSON store (no in-memory cache) |
+| `/messages` | Dynamic SSR · reads a local JSON store via `fs.promises.readFile` on every request (no in-memory cache) |
 
 ---
 
@@ -106,7 +106,7 @@ This official run matches an earlier independent run (200 connections, 30s × 3,
 | `/ppr` | 624 → 638 req/s (+2%) | 200 → 202 req/s (+1%) |
 | `/messages` | 491 → 482 req/s (−2%) | 195 → 197 req/s (+1%) |
 
-Furthermore, an independent load generator (Grafana k6, 200 Virtual Users, 30s duration, route `/`) yielded the exact same relative performance ratio: **1,441.6 vs 771.3 req/s (1.87× faster)** and a p95 latency of **141 ms vs 261 ms**, with 0 failed checks in both frameworks.
+Furthermore, an independent load generator (Grafana k6, 200 Virtual Users, 30s duration, route `/`) yielded a consistent relative performance ratio: **1,441.6 vs 771.3 req/s (1.87× faster)** and a p95 latency of **141 ms vs 261 ms**, with 0 failed checks in both frameworks.
 
 ---
 
@@ -127,7 +127,7 @@ The exhaustive diagnostic investigation into this behavior is documented in [`an
 On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (p50) reaches **~900 ms**, with tail queues reaching **6–8 seconds**. In contrast, Dinou maintains a **~300–400 ms p50** and a **sub-second p99 (< 1s)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (200 ms per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
 
 ### ISR: Near Parity
-Because both frameworks serve ISR responses directly from in-memory cache, framework runtime overhead represents a smaller portion of request handling (1.3× throughput difference, near-identical p99 latency).
+Because both frameworks serve ISR responses directly from cache, framework runtime overhead represents a smaller portion of request handling (1.3× throughput difference, near-identical p99 latency).
 
 ---
 
@@ -143,7 +143,7 @@ Because both frameworks serve ISR responses directly from in-memory cache, frame
 | **Idle Memory (RSS)** | ~273 MB | ~232 MB | Next.js uses 41 MB less at idle |
 | **Peak Memory Under Load (RSS)** | ~391 MB (+118 MB) | ~474 MB (+242 MB) | Dinou expands by half as much |
 
-> *Note on HMR*: Measured **end-to-end** from filesystem write to DOM reflection in a real Chromium browser via Playwright, rather than just compiler rebuild time.  
+> *Note on HMR*: Measured **end-to-end**: from file save on disk until the change is visible in the browser, rather than just bundler rebuild time.  
 > *Note on Memory*: Sampled during the standard 50-connection pipeline run.
 
 ---
@@ -154,7 +154,7 @@ Because both frameworks serve ISR responses directly from in-memory cache, frame
 - **Sample Size**: One official publication pass (comprising 3 independent runs per route). Results replicate earlier exploratory runs within ±5%.
 - **Synthetic Delays**: The 200 ms delays on dynamic routes simulate database latency and third-party API response times.
 - **Single-Process Node.js**: Results reflect single-process Node.js execution. Multi-core deployments (`node:cluster` or container clusters behind Nginx/Envoy) will exhibit different absolute numbers.
-- **Next.js 16 Architecture**: Next.js 16 replaces `experimental.ppr` with `cacheComponents` (`cacheLife`, `connection()`). Both implementations follow current canonical conventions.
+- **Next.js 16 Architecture**: Next.js 16 replaces `experimental.ppr` with `cacheComponents` (`cacheLife`, `connection()`). Both implementations aim to follow each framework's idiomatic conventions.
 
 ---
 
