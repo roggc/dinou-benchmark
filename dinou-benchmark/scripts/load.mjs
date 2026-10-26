@@ -66,6 +66,7 @@ for (const fw of frameworks) {
           url,
           connections: setup.load.connections,
           duration: setup.load.durationSeconds,
+          timeout: Math.max(30, setup.load.durationSeconds),
           pipelining: 1,
         });
         runs.push({
