@@ -1,167 +1,167 @@
-# Dinou vs Next.js — Resultados oficiales del benchmark
+# Dinou vs Next.js — Official Benchmark Results
 
-> Comparación de **Dinou 8.1.2**, **Dinou 9.0.0** y **Next.js 16.4.2** (los tres con React 19.3.1) en una misma app con páginas idénticas: SSG, ISR, SSR con Suspense, PPR y SSR con lectura de disco.
+> A head-to-head comparison of **Dinou 8.1.2**, **Dinou 9.0.0**, and **Next.js 16.4.2** (all running React 19.3.1) across an identical application with equivalent pages: SSG, ISR, SSR with Suspense, PPR, and SSR with disk I/O.
 
 ---
 
-## 1. Resumen
+## 1. Executive Summary
 
-> **Fecha oficial:** 26 de octubre de 2026 · **Entorno:** 4 vCPU dedicadas / 8 GB RAM (DigitalOcean CPU-Optimized)
+> **Official Run Date:** October 26, 2026 · **Environment:** 4 Dedicated vCPUs / 8 GB RAM (DigitalOcean CPU-Optimized)
 
-Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta:
+Under 200 concurrent connections, 30s per execution, 3 runs per route:
 
-| Ruta | Tipo | Dinou 9.0.0 | Next.js 16.4.2 | Ventaja de Dinou (req/s) | Ventaja de Dinou (p99) |
+| Route | Type | Dinou 9.0.0 | Next.js 16.4.2 | Dinou Lead (req/s) | Dinou Lead (p99 Latency) |
 | :--- | :--- | ---: | ---: | :---: | :---: |
-| `/ppr` | PPR | **638 req/s** · p99 388 ms | 202 req/s · p99 6.030 ms | **3,2× más rápido** | **15× menor latencia** |
-| `/messages` | SSR (I/O de disco) | **482 req/s** · p99 870 ms | 197 req/s · p99 5.776 ms | **2,4× más rápido** | **6,6× menor latencia** |
-| `/dashboard` | SSR + Suspense | **460 req/s** · p99 574 ms | 195 req/s · p99 7.947 ms | **2,4× más rápido** | **14× menor latencia** |
-| `/` | SSG | **1.722 req/s** · p99 138 ms | 806 req/s · p99 380 ms | **2,1× más rápido** | **2,8× menor latencia** |
-| `/items/42` | ISR (en caché) | **1.732 req/s** · p99 145 ms | 1.311 req/s · p99 177 ms | **1,3× más rápido** | **1,2× menor latencia** |
+| `/ppr` | PPR | **638 req/s** · p99 388 ms | 202 req/s · p99 6,030 ms | **3.2× faster** | **15× lower latency** |
+| `/messages` | SSR (Disk I/O) | **482 req/s** · p99 870 ms | 197 req/s · p99 5,776 ms | **2.4× faster** | **6.6× lower latency** |
+| `/dashboard` | SSR + Suspense | **460 req/s** · p99 574 ms | 195 req/s · p99 7,947 ms | **2.4× faster** | **14× lower latency** |
+| `/` | SSG | **1,722 req/s** · p99 138 ms | 806 req/s · p99 380 ms | **2.1× faster** | **2.8× lower latency** |
+| `/items/42` | ISR (Cached) | **1,732 req/s** · p99 145 ms | 1,311 req/s · p99 177 ms | **1.3× faster** | **1.2× lower latency** |
 
-- En las 5 rutas evaluadas, **Dinou supera a Next.js tanto en peticiones por segundo como en latencia**.
-- En las rutas dinámicas y PPR, Dinou sirve entre **2,4 y 3,2 veces más peticiones por segundo** y su latencia p99 es **hasta 15 veces menor**.
-- En **ISR los dos sirven desde caché** y la diferencia es pequeña (1,3× a favor de Dinou).
-- **Dinou 8.1.2 y 9.0.0 rinden de forma equivalente** (las diferencias entran en un ±5 %), sin mostrar regresiones medibles en este benchmark.
+- Across all 5 evaluated routes, **Dinou outperforms Next.js in both throughput and latency**.
+- On dynamic and PPR routes, Dinou delivers **2.4× to 3.2× higher throughput** while maintaining a p99 latency that is **up to 15× lower**.
+- On **ISR, both frameworks serve directly from cache**, resulting in a narrow gap (1.3× in favor of Dinou).
+- **Dinou 8.1.2 and 9.0.0 exhibit equivalent performance** (variance remains within ±5%), showing no measurable performance regression in this benchmark.
 
 ---
 
-## 2. Entorno
+## 2. Testbed & Environment
 
-| Parámetro | Valor |
+| Parameter | Specification |
 | :--- | :--- |
-| Máquina | DigitalOcean CPU-Optimized, 4 vCPU dedicadas (`Intel Xeon Platinum 8168 @ 2.70GHz`), 8 GB RAM |
-| Sistema operativo | Ubuntu 24.04 LTS, kernel `6.8.0-142-generic` |
-| Node.js | `v22.23.4` |
-| Gestor de paquetes | `pnpm 12.15.0` |
-| Cliente de carga | `autocannon 8.0.0` (mismo host) |
-| `ulimit -n` / `somaxconn` | `65535` / `65535` |
-| Versiones | Dinou 8.1.2 · Dinou 9.0.0 · Next.js 16.4.2 · React 19.3.1 |
+| **Instance / Hardware** | DigitalOcean CPU-Optimized, 4 Dedicated vCPUs (`Intel Xeon Platinum 8168 @ 2.70GHz`), 8 GB RAM |
+| **Operating System** | Ubuntu 24.04 LTS, kernel `6.8.0-142-generic` |
+| **Node.js Runtime** | `v22.23.4` |
+| **Package Manager** | `pnpm 12.15.0` |
+| **Load Client** | `autocannon 8.0.0` (same host, loopback) |
+| **OS Limits (`ulimit -n` / `somaxconn`)** | `65535` / `65535` |
+| **Framework Versions** | Dinou 8.1.2 · Dinou 9.0.0 · Next.js 16.4.2 · React 19.3.1 |
 
 ---
 
-## 3. Metodología
+## 3. Methodology
 
-- **Builds de producción** de las tres apps (`build` + `start`), nunca en modo dev.
-- **200 conexiones**, **30 s por ejecución**, **3 ejecuciones por ruta**: Todas las métricas de carga representan tráfico concurrente sostenido.
-- **Calentamiento de 5 s con las mismas 200 conexiones** antes de medir cada ruta.
-- **Percentiles**: cada percentil publicado es la **mediana de ese percentil en las 3 ejecuciones**. autocannon no calcula el p95 exacto, así que donde aparezca "p95" en realidad es el **p97,5**.
-- **req/s**: mediana de las 3 ejecuciones. En `results/load.json` también se guardan el mínimo y el máximo.
-- **TTFB**: 30 peticiones secuenciales **sin carga**, entre el calentamiento y la medición. Es el tiempo base del servidor y no se debe comparar con la latencia bajo carga.
-- **Keep-alive igual en las tres apps**: `keepAliveTimeout` de 65 s. Dinou además fija `headersTimeout` en 66 s. Next no permite configurarlo y lo deja en 60 s, el valor por defecto de Node.
-- **Timeout de autocannon de 30 s o más.** Una petición que tarda mucho cuenta como **latencia**, no como timeout.
-- **Ninguna instrumentación activa** durante la pasada oficial.
+- **Production Builds Only**: All three applications are measured in production mode (`build` + `start`), never in development.
+- **200 Connections, 30s Duration, 3 Runs per Route**: All load metrics represent sustained high-concurrency traffic.
+- **5s Warm-up at Full 200 Connections**: Performed prior to recording each route to warm up the V8 JIT and caches.
+- **Percentile Calculation**: Each published percentile represents the **median of that respective percentile across the 3 independent runs**. Because Autocannon does not record an exact p95, reported "p95" entries represent the **p97.5** upper bound.
+- **Throughput (req/s)**: Median across the 3 runs (minimum and maximum values are preserved in `results/load.json`).
+- **Sequential TTFB (Unloaded)**: 30 sequential requests sampled **without concurrent load** between warm-up and load testing. This establishes baseline server processing time and must not be conflated with latency under load.
+- **Keep-Alive Configuration**: `keepAliveTimeout` is configured to 65s across all apps. Dinou additionally sets `headersTimeout` to 66s. Next.js does not expose this setting and defaults to Node's 60s value.
+- **Autocannon Timeout at 30s or Higher**: Delayed requests from initial connection queues are recorded as **latency** rather than premature client-side abort errors.
+- **Zero Active Instrumentation**: No diagnostic hooks, probes, or logging listeners were active during the official run.
 
-### Datos de las rutas
+### Evaluated Routes
 
-| Ruta | Qué hace |
+| Route | Implementation Details |
 | :--- | :--- |
-| `/` | SSG, listado de 50 items |
-| `/items/42` | ISR, `revalidate: 60` |
-| `/dashboard` | SSR dinámico con 3 bloques Suspense de 200 ms (`await sleep(200)`) |
-| `/ppr` | Shell estático y un hueco dinámico de 200 ms |
-| `/messages` | SSR con `fs.promises.readFile` sobre un JSON local (en cada app, sin caché) |
+| `/` | SSG · 50 items list loaded from local JSON, statically pre-rendered at build time |
+| `/items/42` | ISR · Detail view, `revalidate: 60` |
+| `/dashboard` | Dynamic SSR · Shell + three parallel Suspense slots with 200 ms artificial delay (`await sleep(200)`) |
+| `/ppr` | Partial Prerendering · Static shell + one dynamic 200 ms slot streamed in the same HTTP response |
+| `/messages` | Dynamic SSR · reads a local JSON store via `fs.promises.readFile` on every request (no in-memory cache) |
 
 ---
 
-## 4. Resultados completos
+## 4. Full Benchmark Results
 
 ### Dinou 8.1.2
 
-| Ruta | TTFB (sin carga) | req/s | p50 | p99 | Errores |
+| Route | TTFB (Unloaded) | Throughput (req/s) | p50 Latency | p99 Latency | Errors |
 | :--- | ---: | ---: | ---: | ---: | :---: |
-| `/` | 1,28 ms | 1.752,3 | 106 ms | 144 ms | 0 |
-| `/items/42` | 0,92 ms | 1.697,4 | 106 ms | 137 ms | 0 |
-| `/dashboard` | 2,70 ms | 470,0 | 407 ms | 559 ms | 0 |
-| `/ppr` | 1,97 ms | 647,5 | 302 ms | 382 ms | 0 |
-| `/messages` | 2,27 ms | 481,8 | 401 ms | 928 ms | 0 |
+| `/` | 1.28 ms | 1,752.3 req/s | 106 ms | 144 ms | 0 |
+| `/items/42` | 0.92 ms | 1,697.4 req/s | 106 ms | 137 ms | 0 |
+| `/dashboard` | 2.70 ms | 470.0 req/s | 407 ms | 559 ms | 0 |
+| `/ppr` | 1.97 ms | 647.5 req/s | 302 ms | 382 ms | 0 |
+| `/messages` | 2.27 ms | 481.8 req/s | 401 ms | 928 ms | 0 |
 
 ### Dinou 9.0.0
 
-| Ruta | TTFB (sin carga) | req/s | p50 | p99 | Errores |
+| Route | TTFB (Unloaded) | Throughput (req/s) | p50 Latency | p99 Latency | Errors |
 | :--- | ---: | ---: | ---: | ---: | :---: |
-| `/` | 1,17 ms | 1.722,4 | 109 ms | 138 ms | 0 |
-| `/items/42` | 0,90 ms | 1.731,8 | 106 ms | 145 ms | 0 |
-| `/dashboard` | 2,61 ms | 459,5 | 414 ms | 574 ms | 0 |
-| `/ppr` | 2,04 ms | 638,2 | 303 ms | 388 ms | 0 |
-| `/messages` | 2,11 ms | 481,6 | 400 ms | 870 ms | 0 |
+| `/` | 1.17 ms | 1,722.4 req/s | 109 ms | 138 ms | 0 |
+| `/items/42` | 0.90 ms | 1,731.8 req/s | 106 ms | 145 ms | 0 |
+| `/dashboard` | 2.61 ms | 459.5 req/s | 414 ms | 574 ms | 0 |
+| `/ppr` | 2.04 ms | 638.2 req/s | 303 ms | 388 ms | 0 |
+| `/messages` | 2.11 ms | 481.6 req/s | 400 ms | 870 ms | 0 |
 
 ### Next.js 16.4.2
 
-| Ruta | TTFB (sin carga) | req/s | p50 | p99 | Errores |
+| Route | TTFB (Unloaded) | Throughput (req/s) | p50 Latency | p99 Latency | Errors |
 | :--- | ---: | ---: | ---: | ---: | :---: |
-| `/` | 2,64 ms | 805,5 | 188 ms | 380 ms | 0 |
-| `/items/42` | 1,93 ms | 1.310,7 | 139 ms | 177 ms | 0 |
-| `/dashboard` | 7,22 ms | 194,7 | 909 ms | 7.947 ms | 0 |
-| `/ppr` | 3,01 ms | 202,3 | 900 ms | 6.030 ms | 0 |
-| `/messages` | 6,12 ms | 196,7 | 937 ms | 5.776 ms | 0 |
+| `/` | 2.64 ms | 805.5 req/s | 188 ms | 380 ms | 0 |
+| `/items/42` | 1.93 ms | 1,310.7 req/s | 139 ms | 177 ms | 0 |
+| `/dashboard` | 7.22 ms | 194.7 req/s | 909 ms | 7,947 ms | 0 |
+| `/ppr` | 3.01 ms | 202.3 req/s | 900 ms | 6,030 ms | 0 |
+| `/messages` | 6.12 ms | 196.7 req/s | 937 ms | 5,776 ms | 0 |
 
 ---
 
-## 5. Reproducibilidad
+## 5. Reproducibility & Variance Analysis
 
-Esta pasada coincide con una anterior (200 conexiones, 30 s × 1, sin calentamiento a plena concurrencia): **todas las cifras de req/s están dentro de un ±5 %**.
+This official run matches an earlier independent run (200 connections, 30s × 1, without full-concurrency warm-up): **all throughput figures remain within ±5% variance**.
 
-| Ruta | Dinou 9 (Anterior → Oficial) | Media Dinou 9 | Next 16 (Anterior → Oficial) | Media Next 16 | Ganador (Ventaja media) |
+| Route | Dinou 9 (Previous → Official) | Dinou 9 Mean | Next 16 (Previous → Official) | Next 16 Mean | Winner (Overall Mean Lead) |
 | :--- | :--- | ---: | :--- | ---: | :---: |
-| `/` | 1.658 → 1.722 req/s (+4 %) | **1.690,0 req/s** | 846 → 806 req/s (−5 %) | 826,0 req/s | **Dinou (2,0× más rápido)** |
-| `/items/42` | 1.699 → 1.732 req/s (+2 %) | **1.715,5 req/s** | 1.362 → 1.311 req/s (−4 %) | 1.336,5 req/s | **Dinou (1,3× más rápido)** |
-| `/dashboard` | 436 → 460 req/s (+5 %) | **448,0 req/s** | 187 → 195 req/s (+4 %) | 191,0 req/s | **Dinou (2,3× más rápido)** |
-| `/ppr` | 624 → 638 req/s (+2 %) | **631,0 req/s** | 200 → 202 req/s (+1 %) | 201,0 req/s | **Dinou (3,1× más rápido)** |
-| `/messages` | 491 → 482 req/s (−2 %) | **486,5 req/s** | 195 → 197 req/s (+1 %) | 196,0 req/s | **Dinou (2,5× más rápido)** |
+| `/` | 1,658 → 1,722 req/s (+4%) | **1,690.0 req/s** | 846 → 806 req/s (−5%) | 826.0 req/s | **Dinou (2.0× faster)** |
+| `/items/42` | 1,699 → 1,732 req/s (+2%) | **1,715.5 req/s** | 1,362 → 1,311 req/s (−4%) | 1,336.5 req/s | **Dinou (1.3× faster)** |
+| `/dashboard` | 436 → 460 req/s (+5%) | **448.0 req/s** | 187 → 195 req/s (+4%) | 191.0 req/s | **Dinou (2.3× faster)** |
+| `/ppr` | 624 → 638 req/s (+2%) | **631.0 req/s** | 200 → 202 req/s (+1%) | 201.0 req/s | **Dinou (3.1× faster)** |
+| `/messages` | 491 → 482 req/s (−2%) | **486.5 req/s** | 195 → 197 req/s (+1%) | 196.0 req/s | **Dinou (2.5× faster)** |
 
-Además, un cliente de carga distinto (Grafana k6, 200 VUs, 30 s, ruta `/`) confirmó la ventaja de Dinou con una relación consistente: **Dinou alcanzó 1.441,6 req/s frente a 771,3 req/s de Next.js (1,87× más rápido)**, con un p95 de **141 ms (Dinou) frente a 261 ms (Next.js)**, y 0 fallos en ambos.
-
----
-
-## 6. Cómo leer estos resultados
-
-### "0 errores" es efecto del timeout de 30 s
-En pasadas anteriores, con el timeout de 10 s que autocannon usa por defecto, aparecían algunos timeouts, sobre todo en Next. Con 30 s, esas peticiones cuentan como **latencia**. Por eso las cifras de errores no se pueden comparar directamente con las pasadas anteriores.
-
-### La ráfaga inicial de conexiones
-Cada ejecución abre las 200 conexiones de golpe. Mientras el event loop está ocupado con las conexiones ya activas, unas pocas conexiones nuevas esperan en la cola del kernel hasta que Node las acepta. **Pasa en los dos frameworks y no es un fallo de ninguno.** Afecta sobre todo a la latencia **máxima**. Por eso se publican p50 y p99, y no el máximo.
-
-- En Dinou afecta a ~0,04 % de las peticiones de `/`, así que su p99 no cambia (138 ms).
-- En Next afecta a ~0,7 % de las peticiones de `/`. Esas peticiones se acercan al p99, y por eso su p99 en `/` sube a 380 ms aunque su p50 sea 188 ms.
-
-La investigación completa está en [`analysis.md`](./analysis.md).
-
-### En las rutas dinámicas, Next está saturado
-En `/dashboard`, `/ppr` y `/messages`, el p50 de Next ronda los **900 ms** y su cola llega a **6-8 s**. Dinou se mantiene en **~300-400 ms de p50** y **menos de 1 s de p99**. Con el mismo tráfico, Dinou sigue respondiendo cerca del retardo de diseño de cada ruta (200 ms por hueco) y Next acumula cola.
-
-### ISR: menor diferencia (Dinou por delante por 1,3×)
-Dado que ambos frameworks sirven las respuestas ISR directamente desde la caché sin re-ejecutar componentes en cada petición, la sobrecarga del runtime representa una fracción menor del tiempo total de respuesta. **Dinou se mantiene por delante en todas las métricas** (1.732 frente a 1.311 req/s, un 1,3× de ventaja en throughput; 145 ms frente a 177 ms en latencia p99), si bien es la ruta con la diferencia más estrecha de todo el benchmark.
+Furthermore, an independent load generator (Grafana k6, 200 Virtual Users, 30s duration, route `/`) confirmed Dinou's advantage with a consistent performance ratio: **Dinou delivered 1,441.6 req/s vs Next.js's 771.3 req/s (1.87× faster)**, with a p95 latency of **141 ms (Dinou) vs 261 ms (Next.js)**, and 0 failed checks in both frameworks.
 
 ---
 
-## 7. Otras métricas (misma máquina, pasada completa `pnpm bench`)
+## 6. How to Interpret These Results
 
-| Métrica | Dinou 9.0.0 | Next.js 16.4.2 | Diferencia |
+### "0 Errors" Reflects the 30s Timeout Configuration
+In preliminary runs with Autocannon's default 10s per-request timeout, client timeouts occurred primarily on Next.js. With a 30s client timeout, delayed requests are recorded as **tail latency** rather than connection failures. Error metrics from this run should therefore not be compared directly against runs using lower timeout thresholds.
+
+### The Initial Connection Burst Phenomenon
+Each test execution opens 200 TCP connections simultaneously on localhost. While Node's single-threaded event loop is saturated servicing active keep-alive streams, queued connections dwell in the Linux kernel listen backlog until accepted across successive loop turns. **This occurs in both frameworks and is an OS/event-loop queueing dynamic, not a framework bug.** It primarily impacts maximum latency, which is why p50 and p99 percentiles are reported instead of maximums.
+
+- In Dinou, this queueing affected ~0.04% of requests on `/`, leaving p99 unaffected (138 ms).
+- In Next.js, this affected ~0.7% of requests on `/`. These requests fall close to the 99th percentile, raising Next's p99 on `/` to 380 ms despite a p50 of 188 ms.
+
+The exhaustive diagnostic investigation into this behavior is documented in [`analysis.md`](./analysis.md).
+
+### True Event Loop Saturation on Dynamic Routes in Next.js
+On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (p50) reaches **~900 ms**, with tail queues reaching **6–8 seconds**. In contrast, Dinou maintains a **~300–400 ms p50** and a **sub-second p99 (< 1s)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (200 ms per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
+
+### ISR: Smallest Gap (Dinou Leads by 1.3×)
+Because both frameworks serve cached ISR responses without executing page components on every request, framework runtime overhead represents a smaller portion of total request handling. **Dinou maintains the lead across all metrics** (1,732 vs 1,311 req/s, a 1.3× throughput advantage; 145 ms vs 177 ms p99 latency), but the performance gap is the narrowest among all evaluated routes.
+
+---
+
+## 7. Supplementary Project Metrics (Full `pnpm bench` Pipeline)
+
+| Metric | Dinou 9.0.0 | Next.js 16.4.2 | Comparison |
 | :--- | ---: | ---: | :--- |
-| Build de producción | 4,6 s | 10,0–11,3 s | **2,2–2,5× más rápido** |
-| Salida del build | 4,4 MB | 37,5 MB | **8,5× menor** |
-| JS al cliente (brotli) | 76,9 KiB | 149,0 KiB | **~48 % menos** |
-| Arranque en frío del dev server (mediana) | 1,37 s | 3,51 s | **2,6× más rápido** |
-| HMR, edición → navegador (mediana) | 206 ms | 331 ms | **1,6× más rápido** |
-| RAM en reposo | ~273 MB | ~232 MB | **Next usa menos** |
-| RAM pico bajo carga | ~391 MB (+118) | ~474 MB (+242) | Dinou crece la mitad |
+| **Production Build Duration** | 4.6 s | 10.0–11.3 s | **2.2–2.5× faster build** |
+| **Build Output Directory Size** | 4.4 MB | 37.5 MB | **8.5× smaller disk footprint** |
+| **Client JS Bundle (Brotli)** | 76.9 KiB | 149.0 KiB | **~48% smaller client bundle** |
+| **Dev Server Cold-Start (Median)** | 1.37 s | 3.51 s | **2.6× faster dev start** |
+| **Browser HMR Edit-to-DOM (Median)** | 206 ms | 331 ms | **1.6× faster HMR** |
+| **Idle Memory (RSS)** | ~273 MB | ~232 MB | Next.js uses 41 MB less at idle |
+| **Peak Memory Under Load (RSS)** | ~391 MB (+118 MB) | ~474 MB (+242 MB) | Dinou expands by half as much |
 
-> El HMR se mide **de principio a fin**: desde que se guarda el fichero hasta que el cambio es visible en el navegador. No es el tiempo de rebuild del bundler.
-> La memoria se midió en la pasada completa con 50 conexiones, no en la pasada oficial de 200.
-
----
-
-## 8. Limitaciones
-
-- El cliente de carga y el servidor comparten máquina. Con 4 vCPU la interferencia es pequeña, pero no es cero.
-- Hay una sola pasada oficial (con 3 ejecuciones por ruta). Coincide con una pasada anterior dentro de un ±5 %.
-- La app de prueba es sintética: los retardos de 200 ms simulan consultas a base de datos.
-- Los resultados son de Node.js en un solo proceso. Con varios procesos (`node:cluster`) o detrás de un proxy, los números absolutos cambian.
-- Next.js 16 ya no tiene `experimental.ppr`. En Next, el PPR y el ISR se hacen con `cacheComponents` (`cacheLife`, `connection()`).
+> *Note on HMR*: Measured **end-to-end**: from file save on disk until the change is visible in the browser, rather than just bundler rebuild time.  
+> *Note on Memory*: Sampled during the standard 50-connection pipeline run.
 
 ---
 
-## 9. Cómo reproducirlo
+## 8. Limitations & Boundary Conditions
+
+- **Colocated Client & Server**: The load generator and application servers ran on the same host. With 4 dedicated vCPUs, interference is minimal but non-zero.
+- **Sample Size**: One official publication pass (comprising 3 independent runs per route). Results replicate earlier exploratory runs within ±5%.
+- **Synthetic Delays**: The 200 ms delays on dynamic routes simulate database latency and third-party API response times.
+- **Single-Process Node.js**: Results reflect single-process Node.js execution. Multi-core deployments (`node:cluster` or container clusters behind Nginx/Envoy) will exhibit different absolute numbers.
+- **Next.js 16 Architecture**: Next.js 16 replaces `experimental.ppr` with `cacheComponents` (`cacheLife`, `connection()`). Both implementations aim to follow each framework's idiomatic conventions.
+
+---
+
+## 9. How to Reproduce
 
 ```bash
 git clone https://github.com/roggc/dinou-benchmark
@@ -169,12 +169,20 @@ cd dinou-benchmark/dinou-benchmark
 pnpm install --frozen-lockfile
 pnpm shared
 
+# 1. Ensure file descriptor limits
 ulimit -n 65535
+
+# 2. Build production artifacts
 pnpm bench:build
+
+# 3. Log exact environment parameters
 { node -v; pnpm -v; uname -r; nproc; free -h; } > results/env.txt
 
+# 4. Execute official high-concurrency load suite
 LOAD_CONNECTIONS=200 LOAD_DURATION=30 LOAD_WARMUP=5 LOAD_RUNS=3 pnpm bench:load
+
+# 5. Generate Markdown report and vector charts
 pnpm bench:report
 ```
 
-Los resultados se guardan en `results/load.json` y `results/REPORT.md`.
+All raw structured metrics are emitted to `results/load.json` and summarized in `results/REPORT.md`.
