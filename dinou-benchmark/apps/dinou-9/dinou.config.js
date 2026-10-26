@@ -1,5 +1,9 @@
 let received = 0;
 let finished = 0;
+let maxDurationMs = 0;
+let slowOver1s = 0;
+let totalDurationMs = 0;
+let topSlowInsideNode = [];
 
 export default {
   plugins: [
@@ -14,18 +18,53 @@ export default {
           if (req.url === "/__stats") {
             res.statusCode = 200;
             res.setHeader("content-type", "application/json");
-            res.end(JSON.stringify({ received, finished, inFlight: received - finished }));
+            res.end(
+              JSON.stringify({
+                received,
+                finished,
+                inFlight: received - finished,
+                maxDurationMs,
+                avgDurationMs: finished > 0 ? (totalDurationMs / finished).toFixed(2) : 0,
+                slowOver1s,
+                topSlowInsideNode: topSlowInsideNode.sort((a, b) => b.durationMs - a.durationMs).slice(0, 5),
+              })
+            );
             return;
           }
           if (req.url === "/__reset_stats") {
             received = 0;
             finished = 0;
+            maxDurationMs = 0;
+            slowOver1s = 0;
+            totalDurationMs = 0;
+            topSlowInsideNode = [];
             res.statusCode = 200;
             res.end("ok");
             return;
           }
+
+          const reqStart = Date.now();
           received++;
-          res.on("finish", () => finished++);
+
+          res.on("finish", () => {
+            finished++;
+            const duration = Date.now() - reqStart;
+            totalDurationMs += duration;
+            if (duration > maxDurationMs) {
+              maxDurationMs = duration;
+            }
+            if (duration > 1000) {
+              slowOver1s++;
+            }
+            if (duration > 100) {
+              topSlowInsideNode.push({ url: req.url, durationMs: duration });
+              if (topSlowInsideNode.length > 20) {
+                topSlowInsideNode.sort((a, b) => b.durationMs - a.durationMs);
+                topSlowInsideNode = topSlowInsideNode.slice(0, 10);
+              }
+            }
+          });
+
           next();
         });
       },
