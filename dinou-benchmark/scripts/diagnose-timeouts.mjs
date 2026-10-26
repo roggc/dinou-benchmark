@@ -33,7 +33,8 @@ async function runTest(label, headers = {}) {
       {
         url: `${server.url}/`,
         connections: 200,
-        duration: 10,
+        duration: 20,
+        timeout: 10,
         pipelining: 1,
         headers,
       },
