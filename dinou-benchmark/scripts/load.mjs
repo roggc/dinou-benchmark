@@ -24,6 +24,7 @@ function percentilesOf(latency) {
   return {
     p50: round(latency.p50 ?? latency.p75 ?? 0, 2),
     p95: round(latency.p95 ?? latency.p97_5 ?? latency.p99 ?? 0, 2),
+    p97_5: round(latency.p97_5 ?? latency.p99 ?? 0, 2),
     p99: round(latency.p99 ?? 0, 2),
   };
 }
@@ -47,12 +48,15 @@ for (const fw of frameworks) {
       const url = `${server.url}${route.path}`;
 
       // warmup
-      await runAutocannon({
-        url,
-        connections: 10,
-        duration: setup.load.warmupSeconds,
-        pipelining: 1,
-      });
+      if (setup.load.warmupSeconds > 0) {
+        await runAutocannon({
+          url,
+          connections: setup.load.connections,
+          duration: setup.load.warmupSeconds,
+          timeout: Math.max(30, setup.load.durationSeconds),
+          pipelining: 1,
+        });
+      }
 
       const ttfbSamples = [];
       for (let i = 0; i < 30; i += 1) {
@@ -96,11 +100,13 @@ for (const fw of frameworks) {
         },
         rps: {
           median: round(median(runs.map((r) => r.rps)), 1),
-          p95: round(percentile(runs.map((r) => r.rps), 95), 1),
+          min: round(Math.min(...runs.map((r) => r.rps)), 1),
+          max: round(Math.max(...runs.map((r) => r.rps)), 1),
         },
         latencyMs: {
           p50: round(median(runs.map((r) => r.latency.p50)), 2),
-          p95: round(median(runs.map((r) => r.latency.p95)), 2),
+          p95: round(median(runs.map((r) => r.latency.p97_5 ?? r.latency.p95)), 2),
+          p97_5: round(median(runs.map((r) => r.latency.p97_5 ?? r.latency.p95)), 2),
           p99: round(median(runs.map((r) => r.latency.p99)), 2),
         },
         runs: runs.length,
@@ -135,7 +141,7 @@ for (const fw of frameworks) {
     runs: setup.load.runs,
     routes: perRoute,
     at: new Date().toISOString(),
-    note: "autocannon does not expose exact p95; p97.5 is used as an upper bound.",
+    note: "autocannon does not expose exact p95; p97.5 is used as an upper bound. Percentiles reported are the median of that percentile across runs.",
   });
 }
 
