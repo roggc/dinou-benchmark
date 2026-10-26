@@ -3,7 +3,7 @@ import { check } from "k6";
 
 export const options = {
   vus: Number(__ENV.VUS || 200),
-  duration: __ENV.DURATION || "15s",
+  duration: __ENV.DURATION || "30s",
 };
 
 export default function () {
