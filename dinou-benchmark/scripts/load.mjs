@@ -80,7 +80,7 @@ for (const fw of frameworks) {
 
       const totalRequests = runs.reduce((a, r) => a + (r.totalRequests || 0), 0);
       const timeouts = runs.reduce((a, r) => a + (r.timeouts || 0), 0);
-      const socketErrors = runs.reduce((a, r) => a + (r.errors || 0), 0);
+      const socketErrors = runs.reduce((a, r) => a + Math.max(0, (r.errors || 0) - (r.timeouts || 0)), 0);
       const non2xx = runs.reduce((a, r) => a + (r.non2xx || 0), 0);
       const totalErrors = timeouts + socketErrors + non2xx;
       const errorRatePct = totalRequests > 0 ? round((totalErrors / (totalRequests + timeouts)) * 100, 2) : 0;
