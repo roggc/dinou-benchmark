@@ -2,6 +2,9 @@
 
 > **An empirical investigation into tail latencies, connection bursts, and HTTP performance comparing Dinou 9.0.0 and Next.js 16.4.2 under 200 concurrent connections on route `/` (SSG).**
 
+> [!NOTE]
+> **Disclaimer & Transparency Notice**: This document reflects an empirical investigation conducted in a controlled cloud droplet environment ($n = 1$ diagnostic run per framework). While all figures and calculations have been cross-verified across independent tools (Linux kernel `nstat`, Grafana k6, Autocannon, internal server probes), synthetic benchmarks are subject to hardware-specific characteristics, OS kernel scheduling, and potential inadvertent measurement nuances or errors. Independent replication is encouraged; full reproduction instructions and scripts are provided in [Section 8](#8-appendix-exact-diagnostic-instrumentation-and-reproduction).
+
 ---
 
 ## 1. Executive Summary
@@ -370,3 +373,165 @@ In production web deployments, traffic patterns and infrastructure differ signif
 | :--- | :--- | :--- | :--- |
 | **Build Duration (4 vCPU / 8 GB)** | **4.6 s** | 10.0–11.3 s (range) | **Dinou 2.2–2.5× faster build** |
 | **Client Bundle Size (Brotli)** | **76.9 KiB** | 149.0 KiB | **Dinou 48% smaller client JS** |
+
+---
+
+## 8. Appendix: Exact Diagnostic Instrumentation and Reproduction
+
+### 8.1 Diagnostic Probe Configuration (`apps/dinou-9/dinou.config.js`)
+
+For complete experimental reproducibility and peer review verification, the code below is the exact, verbatim `dinou.config.js` configuration deployed to Dinou 9 during the Phase 3 and Phase 5 diagnostic runs. It captures socket acceptance timestamps via `server.on('connection')`, request parsing wait times on first requests, per-request middleware durations via `res.on('finish')`, and exposes cumulative diagnostic counters via `/__stats`:
+
+```javascript
+let received = 0;
+let finished = 0;
+let maxDurationMs = 0;
+let slowOver1s = 0;
+let totalDurationMs = 0;
+let topSlowInsideNode = [];
+
+let testStartTime = 0;
+let totalConnections = 0;
+let maxWaitBeforeFirstReqMs = 0;
+let maxSocketAcceptedRelMs = 0;
+let slowFirstReqs = [];
+
+export default {
+  plugins: [
+    {
+      name: "tune-keepalive",
+      configureServer({ server, use }) {
+        console.log(`[Dinou Config] configureServer EXECUTED! keepAliveTimeout: ${server.keepAliveTimeout} -> 65000`);
+        server.keepAliveTimeout = 65000;
+        server.headersTimeout = 66000;
+
+        server.on("connection", (socket) => {
+          totalConnections++;
+          const now = Date.now();
+          socket._acceptedAt = now;
+          socket._acceptedRelMs = testStartTime ? Math.max(0, now - testStartTime) : 0;
+          socket._reqCount = 0;
+          if (socket._acceptedRelMs > maxSocketAcceptedRelMs) {
+            maxSocketAcceptedRelMs = socket._acceptedRelMs;
+          }
+        });
+
+        use((req, res, next) => {
+          if (req.url === "/__stats") {
+            res.statusCode = 200;
+            res.setHeader("content-type", "application/json");
+            res.end(
+              JSON.stringify({
+                received,
+                finished,
+                inFlight: received - finished,
+                maxDurationMs,
+                avgDurationMs: finished > 0 ? (totalDurationMs / finished).toFixed(2) : 0,
+                slowOver1s,
+                topSlowInsideNode: topSlowInsideNode.sort((a, b) => b.durationMs - a.durationMs).slice(0, 5),
+                totalConnections,
+                maxSocketAcceptedRelMs,
+                maxWaitBeforeFirstReqMs,
+                slowFirstReqs: slowFirstReqs.sort((a, b) => b.waitMs - a.waitMs).slice(0, 10),
+              })
+            );
+            return;
+          }
+          if (req.url === "/__reset_stats") {
+            testStartTime = Date.now();
+            received = 0;
+            finished = 0;
+            maxDurationMs = 0;
+            slowOver1s = 0;
+            totalDurationMs = 0;
+            topSlowInsideNode = [];
+            totalConnections = 0;
+            maxSocketAcceptedRelMs = 0;
+            maxWaitBeforeFirstReqMs = 0;
+            slowFirstReqs = [];
+            res.statusCode = 200;
+            res.end("ok");
+            return;
+          }
+
+          const reqStart = Date.now();
+          const socket = req.socket;
+          if (socket) {
+            socket._reqCount = (socket._reqCount || 0) + 1;
+            if (socket._reqCount === 1 && socket._acceptedAt) {
+              const waitMs = reqStart - socket._acceptedAt;
+              if (waitMs > maxWaitBeforeFirstReqMs) {
+                maxWaitBeforeFirstReqMs = waitMs;
+              }
+              if (waitMs > 1000) {
+                slowFirstReqs.push({
+                  url: req.url,
+                  waitMs,
+                  acceptedRelMs: socket._acceptedRelMs,
+                });
+              }
+            }
+          }
+
+          received++;
+
+          res.on("finish", () => {
+            finished++;
+            const duration = Date.now() - reqStart;
+            totalDurationMs += duration;
+            if (duration > maxDurationMs) {
+              maxDurationMs = duration;
+            }
+            if (duration > 1000) {
+              slowOver1s++;
+            }
+            if (duration > 100) {
+              topSlowInsideNode.push({ url: req.url, durationMs: duration });
+              if (topSlowInsideNode.length > 20) {
+                topSlowInsideNode.sort((a, b) => b.durationMs - a.durationMs);
+                topSlowInsideNode = topSlowInsideNode.slice(0, 10);
+              }
+            }
+          });
+
+          next();
+        });
+      },
+    },
+  ],
+};
+```
+
+### 8.2 Reproduction Command & Diagnostic Suite Execution
+
+To independently reproduce the k6 diagnostic suite on Ubuntu / Debian:
+
+1. **Install Grafana k6** (if not already installed):
+   ```bash
+   sudo gpg -k
+   sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+   echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+   sudo apt-get update && sudo apt-get install -y k6
+   ```
+
+2. **Configure Diagnostic Probes**:
+   Ensure `apps/dinou-9/dinou.config.js` contains the diagnostic plugin shown above in Section 8.1.
+
+3. **Rebuild Applications**:
+   ```bash
+   pnpm bench:build
+   ```
+
+4. **Run the Diagnostic Suite**:
+   ```bash
+   node scripts/k6-diagnose.mjs
+   ```
+
+The script will automatically:
+- Query Linux kernel TCP listen overflow and drop counters (`nstat -az TcpExtListenOverflows TcpExtListenDrops`).
+- Launch both frameworks (Dinou on port 3103, Next.js on port 3102).
+- Execute `scripts/k6-scenario.js` (200 virtual users looping for 30s over route `/`).
+- Query internal server metrics from `/__stats`.
+- Stream and parse `results/k6-3103.json` and `results/k6-3102.json` to calculate exact request start timestamps and bucket slow requests.
+
+
