@@ -71,14 +71,18 @@ if (verify) {
 if (load) {
   lines.push("## Production · TTFB, Throughput and Latency");
   lines.push("");
-  lines.push("| Route | Type | Framework | TTFB p50 (ms) | TTFB p95 (ms) | req/s | p50 (ms) | p99 (ms) |");
-  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- |");
+  lines.push("| Route | Type | Framework | TTFB p50 (ms) | TTFB p95 (ms) | req/s | p50 (ms) | p99 (ms) | Errors |");
+  lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
   for (const route of routes) {
     for (const id of ids) {
       const entry = byId(load, id)?.routes?.find((r) => r.route === route.id);
       if (!entry) continue;
+      const errText =
+        (entry.errors ?? 0) === 0
+          ? "0 (0%)"
+          : `${entry.errors}${entry.errorRatePct !== undefined ? ` (${entry.errorRatePct}%)` : ""}${entry.timeouts > 0 ? ` · ${entry.timeouts} to` : ""}`;
       lines.push(
-        `| \`${route.path}\` | ${route.kind} | ${label(id)} | ${fmt(entry.ttfbMs.median, 2)} | ${fmt(entry.ttfbMs.p95, 2)} | ${fmt(entry.rps.median, 1)} | ${fmt(entry.latencyMs.p50, 2)} | ${fmt(entry.latencyMs.p99, 2)} |`
+        `| \`${route.path}\` | ${route.kind} | ${label(id)} | ${fmt(entry.ttfbMs.median, 2)} | ${fmt(entry.ttfbMs.p95, 2)} | ${fmt(entry.rps.median, 1)} | ${fmt(entry.latencyMs.p50, 2)} | ${fmt(entry.latencyMs.p99, 2)} | ${errText} |`
       );
     }
   }

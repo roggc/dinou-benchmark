@@ -71,11 +71,19 @@ for (const fw of frameworks) {
         runs.push({
           rps: result.requests.average,
           latency: percentilesOf(result.latency),
+          totalRequests: result.requests.total,
           errors: result.errors,
           non2xx: result.non2xx,
           timeouts: result.timeouts,
         });
       }
+
+      const totalRequests = runs.reduce((a, r) => a + (r.totalRequests || 0), 0);
+      const timeouts = runs.reduce((a, r) => a + (r.timeouts || 0), 0);
+      const socketErrors = runs.reduce((a, r) => a + (r.errors || 0), 0);
+      const non2xx = runs.reduce((a, r) => a + (r.non2xx || 0), 0);
+      const totalErrors = timeouts + socketErrors + non2xx;
+      const errorRatePct = totalRequests > 0 ? round((totalErrors / (totalRequests + timeouts)) * 100, 2) : 0;
 
       const entry = {
         route: route.id,
@@ -95,11 +103,21 @@ for (const fw of frameworks) {
           p99: round(median(runs.map((r) => r.latency.p99)), 2),
         },
         runs: runs.length,
-        errors: runs.reduce((a, r) => a + r.errors + r.non2xx + r.timeouts, 0),
+        totalRequests,
+        errors: totalErrors,
+        timeouts,
+        socketErrors,
+        non2xx,
+        errorRatePct,
       };
 
+      const errSummary =
+        totalErrors === 0
+          ? "· 0 errors (100% OK)"
+          : `· ${totalErrors} err (${errorRatePct}%)${timeouts > 0 ? ` [${timeouts} timeouts]` : ""}`;
+
       console.log(
-        `  ${route.path.padEnd(12)} ttfb ${String(entry.ttfbMs.median).padStart(7)} ms · ${String(entry.rps.median).padStart(7)} req/s · p50 ${entry.latencyMs.p50} / p99 ${entry.latencyMs.p99} ms`
+        `  ${route.path.padEnd(12)} ttfb ${String(entry.ttfbMs.median).padStart(7)} ms · ${String(entry.rps.median).padStart(7)} req/s · p50 ${entry.latencyMs.p50} / p99 ${entry.latencyMs.p99} ms ${errSummary}`
       );
       perRoute.push(entry);
     }
