@@ -10,16 +10,17 @@
 
 Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta:
 
-| Ruta | Tipo | Dinou 9.0.0 | Next.js 16.4.2 | Ventaja req/s | Ventaja p99 |
+| Ruta | Tipo | Dinou 9.0.0 | Next.js 16.4.2 | Ventaja de Dinou (req/s) | Ventaja de Dinou (p99) |
 | :--- | :--- | ---: | ---: | :---: | :---: |
-| `/ppr` | PPR | **638 req/s** · p99 388 ms | 202 req/s · p99 6.030 ms | **3,2×** | **15× menor** |
-| `/messages` | SSR (I/O de disco) | **482 req/s** · p99 870 ms | 197 req/s · p99 5.776 ms | **2,4×** | **6,6× menor** |
-| `/dashboard` | SSR + Suspense | **460 req/s** · p99 574 ms | 195 req/s · p99 7.947 ms | **2,4×** | **14× menor** |
-| `/` | SSG | **1.722 req/s** · p99 138 ms | 806 req/s · p99 380 ms | **2,1×** | **2,8× menor** |
-| `/items/42` | ISR (en caché) | **1.732 req/s** · p99 145 ms | 1.311 req/s · p99 177 ms | **1,3×** | 1,2× menor |
+| `/ppr` | PPR | **638 req/s** · p99 388 ms | 202 req/s · p99 6.030 ms | **3,2× más rápido** | **15× menor latencia** |
+| `/messages` | SSR (I/O de disco) | **482 req/s** · p99 870 ms | 197 req/s · p99 5.776 ms | **2,4× más rápido** | **6,6× menor latencia** |
+| `/dashboard` | SSR + Suspense | **460 req/s** · p99 574 ms | 195 req/s · p99 7.947 ms | **2,4× más rápido** | **14× menor latencia** |
+| `/` | SSG | **1.722 req/s** · p99 138 ms | 806 req/s · p99 380 ms | **2,1× más rápido** | **2,8× menor latencia** |
+| `/items/42` | ISR (en caché) | **1.732 req/s** · p99 145 ms | 1.311 req/s · p99 177 ms | **1,3× más rápido** | **1,2× menor latencia** |
 
+- En las 5 rutas evaluadas, **Dinou supera a Next.js tanto en peticiones por segundo como en latencia**.
 - En las rutas dinámicas y PPR, Dinou sirve entre **2,4 y 3,2 veces más peticiones por segundo** y su latencia p99 es **hasta 15 veces menor**.
-- En **ISR los dos sirven desde caché** y la diferencia es pequeña (1,3×).
+- En **ISR los dos sirven desde caché** y la diferencia es pequeña (1,3× a favor de Dinou).
 - **Dinou 8.1.2 y 9.0.0 rinden de forma equivalente** (las diferencias entran en un ±5 %), sin mostrar regresiones medibles en este benchmark.
 
 ---
@@ -98,17 +99,17 @@ Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta:
 
 ## 5. Reproducibilidad
 
-Esta pasada coincide con una anterior (200 conexiones, 30 s × 3, sin calentamiento a plena concurrencia): **todas las cifras de req/s están dentro de un ±5 %**.
+Esta pasada coincide con una anterior (200 conexiones, 30 s × 1, sin calentamiento a plena concurrencia): **todas las cifras de req/s están dentro de un ±5 %**.
 
-| Ruta | Dinou 9: anterior → oficial | Next 16: anterior → oficial |
-| :--- | :--- | :--- |
-| `/` | 1.658 → 1.722 (+4 %) | 846 → 806 (−5 %) |
-| `/items/42` | 1.699 → 1.732 (+2 %) | 1.362 → 1.311 (−4 %) |
-| `/dashboard` | 436 → 460 (+5 %) | 187 → 195 (+4 %) |
-| `/ppr` | 624 → 638 (+2 %) | 200 → 202 (+1 %) |
-| `/messages` | 491 → 482 (−2 %) | 195 → 197 (+1 %) |
+| Ruta | Dinou 9 (Anterior → Oficial) | Media Dinou 9 | Next 16 (Anterior → Oficial) | Media Next 16 | Ganador (Ventaja media) |
+| :--- | :--- | ---: | :--- | ---: | :---: |
+| `/` | 1.658 → 1.722 req/s (+4 %) | **1.690,0 req/s** | 846 → 806 req/s (−5 %) | 826,0 req/s | **Dinou (2,0× más rápido)** |
+| `/items/42` | 1.699 → 1.732 req/s (+2 %) | **1.715,5 req/s** | 1.362 → 1.311 req/s (−4 %) | 1.336,5 req/s | **Dinou (1,3× más rápido)** |
+| `/dashboard` | 436 → 460 req/s (+5 %) | **448,0 req/s** | 187 → 195 req/s (+4 %) | 191,0 req/s | **Dinou (2,3× más rápido)** |
+| `/ppr` | 624 → 638 req/s (+2 %) | **631,0 req/s** | 200 → 202 req/s (+1 %) | 201,0 req/s | **Dinou (3,1× más rápido)** |
+| `/messages` | 491 → 482 req/s (−2 %) | **486,5 req/s** | 195 → 197 req/s (+1 %) | 196,0 req/s | **Dinou (2,5× más rápido)** |
 
-Además, un cliente de carga distinto (Grafana k6, 200 VUs, 30 s, ruta `/`) dio la misma relación: **1.441,6 frente a 771,3 req/s (1,87×)** y un p95 de **141 frente a 261 ms**, con 0 fallos en los dos.
+Además, un cliente de carga distinto (Grafana k6, 200 VUs, 30 s, ruta `/`) confirmó la ventaja de Dinou con una relación consistente: **Dinou alcanzó 1.441,6 req/s frente a 771,3 req/s de Next.js (1,87× más rápido)**, con un p95 de **141 ms (Dinou) frente a 261 ms (Next.js)**, y 0 fallos en ambos.
 
 ---
 
