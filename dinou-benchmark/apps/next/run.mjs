@@ -5,7 +5,9 @@ const port = process.env.PORT || "3102";
 const isWin = process.platform === "win32";
 const bin = isWin ? "next.cmd" : "next";
 
-const child = spawn(bin, [action, "-p", port], {
+const extraArgs = action === "start" ? ["--keepAliveTimeout", "65000"] : [];
+
+const child = spawn(bin, [action, "-p", port, ...extraArgs], {
   stdio: "inherit",
   shell: isWin,
 });
