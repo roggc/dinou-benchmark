@@ -6,7 +6,9 @@
 
 ## 1. Executive Summary
 
-Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedicated 4 vCPU / 8 GB cloud instance:
+> **Official Run Date:** October 26, 2026 · **Environment:** 4 Dedicated vCPUs / 8 GB RAM (DigitalOcean CPU-Optimized)
+
+Under 200 concurrent connections, 30s per execution, 3 runs per route:
 
 | Route | Type | Dinou 9.0.0 | Next.js 16.4.2 | Throughput Advantage | p99 Latency Advantage |
 | :--- | :--- | ---: | ---: | :---: | :---: |
@@ -18,7 +20,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedi
 
 - On dynamic and PPR routes, Dinou delivers **2.4× to 3.2× higher throughput** (requests per second) while maintaining a p99 latency that is **up to 15× lower**.
 - On **ISR, both frameworks serve directly from cache**, resulting in a narrow gap (1.3×).
-- **Dinou 8.1.2 and 9.0.0 exhibit identical performance** (variance remains within ±5%), showing no measurable performance regression in this benchmark.
+- **Dinou 8.1.2 and 9.0.0 exhibit equivalent performance** (variance remains within ±5%), showing no measurable performance regression in this benchmark.
 
 ---
 
@@ -39,7 +41,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route, on a dedi
 ## 3. Methodology
 
 - **Production Builds Only**: All three applications are measured in production mode (`build` + `start`), never in development.
-- **200 Connections, 30s Duration, 3 Runs per Route**: Every metric represents sustained high-concurrency traffic.
+- **200 Connections, 30s Duration, 3 Runs per Route**: All load metrics represent sustained high-concurrency traffic.
 - **5s Warm-up at Full 200 Connections**: Performed prior to recording each route to warm up the V8 JIT and caches.
 - **Percentile Calculation**: Each published percentile represents the **median of that respective percentile across the 3 independent runs**. Because Autocannon does not record an exact p95, reported "p95" entries represent the **p97.5** upper bound.
 - **Throughput (req/s)**: Median across the 3 runs (minimum and maximum values are preserved in `results/load.json`).
@@ -126,7 +128,7 @@ The exhaustive diagnostic investigation into this behavior is documented in [`an
 ### True Event Loop Saturation on Dynamic Routes in Next.js
 On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (p50) reaches **~900 ms**, with tail queues reaching **6–8 seconds**. In contrast, Dinou maintains a **~300–400 ms p50** and a **sub-second p99 (< 1s)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (200 ms per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
 
-### ISR: Near Parity
+### ISR: Smallest Gap
 Because both frameworks serve ISR responses directly from cache, framework runtime overhead represents a smaller portion of request handling (1.3× throughput difference, near-identical p99 latency).
 
 ---

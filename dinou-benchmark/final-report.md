@@ -6,7 +6,9 @@
 
 ## 1. Resumen
 
-Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta, en 4 vCPU / 8 GB:
+> **Fecha oficial:** 26 de octubre de 2026 · **Entorno:** 4 vCPU dedicadas / 8 GB RAM (DigitalOcean CPU-Optimized)
+
+Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta:
 
 | Ruta | Tipo | Dinou 9.0.0 | Next.js 16.4.2 | Ventaja req/s | Ventaja p99 |
 | :--- | :--- | ---: | ---: | :---: | :---: |
@@ -17,8 +19,8 @@ Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta, en
 | `/items/42` | ISR (en caché) | **1.732 req/s** · p99 145 ms | 1.311 req/s · p99 177 ms | **1,3×** | 1,2× menor |
 
 - En las rutas dinámicas y PPR, Dinou sirve entre **2,4 y 3,2 veces más peticiones por segundo** y su latencia p99 es **hasta 15 veces menor**.
-- En **ISR los dos sirven desde caché** y la diferencia es pequeña (1,3×). Casi un empate.
-- **Dinou 8.1.2 y 9.0.0 rinden igual** (las diferencias entran en un ±5 %), así que la v9 no empeora nada.
+- En **ISR los dos sirven desde caché** y la diferencia es pequeña (1,3×).
+- **Dinou 8.1.2 y 9.0.0 rinden de forma equivalente** (las diferencias entran en un ±5 %), sin mostrar regresiones medibles en este benchmark.
 
 ---
 
@@ -39,7 +41,7 @@ Con 200 conexiones concurrentes, 30 s por ejecución, 3 ejecuciones por ruta, en
 ## 3. Metodología
 
 - **Builds de producción** de las tres apps (`build` + `start`), nunca en modo dev.
-- **200 conexiones**, **30 s por ejecución**, **3 ejecuciones por ruta**.
+- **200 conexiones**, **30 s por ejecución**, **3 ejecuciones por ruta**: Todas las métricas de carga representan tráfico concurrente sostenido.
 - **Calentamiento de 5 s con las mismas 200 conexiones** antes de medir cada ruta.
 - **Percentiles**: cada percentil publicado es la **mediana de ese percentil en las 3 ejecuciones**. autocannon no calcula el p95 exacto, así que donde aparezca "p95" en realidad es el **p97,5**.
 - **req/s**: mediana de las 3 ejecuciones. En `results/load.json` también se guardan el mínimo y el máximo.
@@ -126,7 +128,7 @@ La investigación completa está en [`analysis.md`](./analysis.md).
 ### En las rutas dinámicas, Next está saturado
 En `/dashboard`, `/ppr` y `/messages`, el p50 de Next ronda los **900 ms** y su cola llega a **6-8 s**. Dinou se mantiene en **~300-400 ms de p50** y **menos de 1 s de p99**. Con el mismo tráfico, Dinou sigue respondiendo cerca del retardo de diseño de cada ruta (200 ms por hueco) y Next acumula cola.
 
-### ISR: casi un empate
+### ISR: menor diferencia
 Los dos sirven la página desde caché, así que la diferencia de framework se nota menos (1,3× en req/s, p99 parecido).
 
 ---
