@@ -128,8 +128,8 @@ La investigación completa está en [`analysis.md`](./analysis.md).
 ### En las rutas dinámicas, Next está saturado
 En `/dashboard`, `/ppr` y `/messages`, el p50 de Next ronda los **900 ms** y su cola llega a **6-8 s**. Dinou se mantiene en **~300-400 ms de p50** y **menos de 1 s de p99**. Con el mismo tráfico, Dinou sigue respondiendo cerca del retardo de diseño de cada ruta (200 ms por hueco) y Next acumula cola.
 
-### ISR: menor diferencia
-Los dos sirven la página desde caché, así que la diferencia de framework se nota menos (1,3× en req/s, p99 parecido).
+### ISR: menor diferencia (Dinou por delante por 1,3×)
+Dado que ambos frameworks sirven las respuestas ISR directamente desde la caché sin re-ejecutar componentes en cada petición, la sobrecarga del runtime representa una fracción menor del tiempo total de respuesta. **Dinou se mantiene por delante en todas las métricas** (1.732 frente a 1.311 req/s, un 1,3× de ventaja en throughput; 145 ms frente a 177 ms en latencia p99), si bien es la ruta con la diferencia más estrecha de todo el benchmark.
 
 ---
 

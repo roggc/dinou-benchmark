@@ -128,8 +128,8 @@ The exhaustive diagnostic investigation into this behavior is documented in [`an
 ### True Event Loop Saturation on Dynamic Routes in Next.js
 On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (p50) reaches **~900 ms**, with tail queues reaching **6–8 seconds**. In contrast, Dinou maintains a **~300–400 ms p50** and a **sub-second p99 (< 1s)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (200 ms per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
 
-### ISR: Smallest Gap
-Because both frameworks serve ISR responses directly from cache, framework runtime overhead represents a smaller portion of request handling (1.3× throughput difference, near-identical p99 latency).
+### ISR: Smallest Gap (Dinou Leads by 1.3×)
+Because both frameworks serve cached ISR responses without executing page components on every request, framework runtime overhead represents a smaller portion of total request handling. **Dinou maintains the lead across all metrics** (1,732 vs 1,311 req/s, a 1.3× throughput advantage; 145 ms vs 177 ms p99 latency), but the performance gap is the narrowest among all evaluated routes.
 
 ---
 
