@@ -202,6 +202,23 @@ async function testWithK6(framework, appDir, port) {
           } else {
             console.log(`  Slowest requests recorded inside Node: none exceeded 100 ms!`);
           }
+
+          if (stats.totalConnections !== undefined) {
+            console.log(`\n--- Socket Connection vs Request Timing Diagnostic (${framework}) ---`);
+            console.log(`  Total TCP sockets accepted by Node: ${stats.totalConnections}`);
+            console.log(`  Latest socket accepted into test  : ${(stats.maxSocketAcceptedRelMs / 1000).toFixed(3)}s`);
+            console.log(`  Max wait from accept -> 1st req   : ${(stats.maxWaitBeforeFirstReqMs / 1000).toFixed(3)}s`);
+            if (stats.slowFirstReqs && stats.slowFirstReqs.length > 0) {
+              console.log(`  First requests delayed > 1s after socket accept: ${stats.slowFirstReqs.length}`);
+              for (const r of stats.slowFirstReqs.slice(0, 5)) {
+                console.log(
+                  `    - Wait: ${(r.waitMs / 1000).toFixed(2)}s | Socket accepted at: +${(r.acceptedRelMs / 1000).toFixed(3)}s`
+                );
+              }
+            } else {
+              console.log(`  First requests delayed > 1s after socket accept: 0 (All parsed immediately upon accept!)`);
+            }
+          }
         }
       }
     } catch {
