@@ -141,7 +141,7 @@ pnpm bench
 - **Statistical Median Across Runs.** `load` runs multiple independent iterations (`setup.load.runs`, default 3) and reports the **median** across rounds (with min/max tracking) to eliminate run-to-run variance.
 - **Sequential TTFB (Unloaded Baseline).** TTFB is sampled sequentially across 30 requests (median and p95) prior to the load test, isolating baseline server processing time from client-side concurrent queueing.
 - **HTTP Keep-Alive Parity.** Servers run with HTTP keep-alive timeouts set to 65 seconds (`keepAliveTimeout: 65000`, `headersTimeout: 66000` in Dinou; `--keepAliveTimeout 65000` in Next.js).
-- **Client Timeout & Socket Backlog Accounting.** Autocannon per-request timeout is configured as `Math.max(30, durationSeconds)` so that cold burst socket queueing is captured as tail latency rather than premature client-side aborts. See [analysis.md](analysis.md) for the exhaustive investigation into single-threaded event loop accept backlog mechanics under 200-connection bursts.
+- **Client Timeout & Socket Backlog Accounting.** Autocannon per-request timeout is configured as `Math.max(30, durationSeconds)` so that cold burst socket queueing is captured as tail latency rather than premature client-side aborts. See [deep-dive-investigation.md](deep-dive-investigation.md) for the exhaustive investigation into single-threaded event loop accept backlog mechanics under 200-connection bursts.
 - **PPR Measured via Streaming.** `verify` inspects both the first chunk and full stream: the static shell must arrive immediately, and dynamic slots arrive later in the same response stream.
 - **Real-Browser HMR.** Launches Chromium via Playwright, updates source code on disk, and chronometers until the DOM reflects the change without a full page reload.
 - **Bundle Measurement.** Traverses client-side production assets and compresses each using gzip (-9) and brotli (-11).
@@ -151,7 +151,7 @@ pnpm bench
 
 13 functional checks per framework must pass with 100% success before metrics are recorded: 200 status codes, 50 items rendered, HTML stability in SSG/ISR, semantic 404 responses, dynamic dashboard rendering, Suspense streaming slots, PPR streaming shell + hole, and full mutation lifecycle in a browser (form submit → Server Action → reload → persistent update).
 
-> Note: `autocannon` records latency natively at `p50`, `p97.5`, and `p99` (`p97.5` is used as the conservative upper bound for `p95`). Reported percentiles represent the median of each respective percentile across the 3 independent execution runs. Reported throughput reflects sustainable steady-state capacity; maximum latencies in cold-burst tests reflect initial kernel accept queue dwell times (detailed in [analysis.md](analysis.md)).
+> Note: `autocannon` records latency natively at `p50`, `p97.5`, and `p99` (`p97.5` is used as the conservative upper bound for `p95`). Reported percentiles represent the median of each respective percentile across the 3 independent execution runs. Reported throughput reflects sustainable steady-state capacity; maximum latencies in cold-burst tests reflect initial kernel accept queue dwell times (detailed in [deep-dive-investigation.md](deep-dive-investigation.md)).
 
 ## 6. Documented Framework Differences
 

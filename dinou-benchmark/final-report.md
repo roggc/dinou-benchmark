@@ -124,7 +124,7 @@ Each test execution opens 200 TCP connections simultaneously on localhost. While
 - In Dinou, this queueing affected ~0.04% of requests on `/`, leaving p99 unaffected (138 ms).
 - In Next.js, this affected ~0.7% of requests on `/`. These requests fall close to the 99th percentile, raising Next's p99 on `/` to 380 ms despite a p50 of 188 ms.
 
-The exhaustive diagnostic investigation into this behavior is documented in [`analysis.md`](./analysis.md).
+The exhaustive diagnostic investigation into this behavior is documented in [`deep-dive-investigation.md`](./deep-dive-investigation.md).
 
 ### True Event Loop Saturation on Dynamic Routes in Next.js
 On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (p50) reaches **~900 ms**, with tail queues reaching **6–8 seconds**. In contrast, Dinou maintains a **~300–400 ms p50** and a **sub-second p99 (< 1s)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (200 ms per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
