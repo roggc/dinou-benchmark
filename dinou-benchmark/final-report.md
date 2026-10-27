@@ -134,20 +134,153 @@ Because both frameworks serve cached ISR responses without executing page compon
 
 ---
 
-## 7. Supplementary Project Metrics (Full `pnpm bench` Pipeline)
+## 7. Supplementary Pipeline Metrics (`pnpm bench`)
 
-| Metric | Dinou 9.0.0 | Next.js 16.4.2 | Comparison |
-| :--- | ---: | ---: | :--- |
-| **Production Build Duration** | 4.6 s | 10.0–11.3 s | **2.2–2.5× faster build** |
-| **Build Output Directory Size** | 4.4 MB | 37.5 MB | **8.5× smaller disk footprint** |
-| **Client JS Bundle (Brotli)** | 76.9 KiB | 149.0 KiB | **~48% smaller client bundle** |
-| **Dev Server Cold-Start (Median)** | 1.37 s | 3.51 s | **2.6× faster dev start** |
-| **Browser HMR Edit-to-DOM (Median)** | 206 ms | 331 ms | **1.6× faster HMR** |
-| **Idle Memory (RSS)** | ~273 MB | ~232 MB | Next.js uses 41 MB less at idle |
-| **Peak Memory Under Load (RSS)** | ~391 MB (+118 MB) | ~474 MB (+242 MB) | Dinou expands by half as much |
+Beyond throughput and latency under high-concurrency load, the automated benchmark suite executes an end-to-end evaluation pipeline measuring functional compliance, build performance, bundle delivery, developer experience, and operating system resource consumption on the exact same 4 vCPU / 8 GB cloud hardware.
 
-> *Note on HMR*: Measured **end-to-end**: from file save on disk until the change is visible in the browser, rather than just bundler rebuild time.  
-> *Note on Memory*: Sampled during the standard 50-connection pipeline run.
+### 7.1 Overview Table
+
+| Metric | Dinou 8.1.2 | Dinou 9.0.0 | Next.js 16.4.2 | Category Winner (Advantage) |
+| :--- | ---: | ---: | ---: | :--- |
+| **Functional Verification Gate** | 13/13 (100% OK) | 13/13 (100% OK) | 13/13 (100% OK) | **Tie (13/13 OK)** · Full feature parity |
+| **Production Build Duration (Median)** | 4.95 s (4.5 / 5.4 s) | 4.60 s (4.6 / 4.6 s) | 10.65 s (10.0 / 11.3 s) | **Dinou (2.3× faster build)** |
+| **Output Directory Size on Disk** | 4.4 MB | 4.4 MB | 37.5 MB | **Dinou (8.5× smaller footprint)** |
+| **Client JS Bundle (Brotli)** | 76.8 KiB (17 files) | 76.9 KiB (17 files) | 149.0 KiB (11 files) | **Dinou (~48% smaller client bundle)** |
+| **Dev Server Cold-Start (Median)** | 1.49 s | 1.37 s | 3.51 s | **Dinou (2.6× faster dev start)** |
+| **Real Browser HMR Edit-to-DOM (Median)** | 211 ms | 206 ms | 331 ms | **Dinou (1.6× faster HMR)** |
+| **Idle Memory (RSS)** | 271.9 MB | 272.7 MB | 231.9 MB | **Next.js (40.8 MB lighter at idle)** |
+| **Peak Memory Under Load (RSS)** | 389.3 MB (+117 MB) | 390.9 MB (+118 MB) | 473.5 MB (+242 MB) | **Dinou (expands half as much: +118 vs +242 MB)** |
+| **Post-Load Settled Memory (RSS)** | 388.1 MB | 390.1 MB | 471.5 MB | **Dinou (retains 81.4 MB less RAM)** |
+
+---
+
+### 7.2 Functional Verification Gate (`pnpm bench:verify`)
+
+Prior to recording performance metrics, the automated verification script executes 13 assertions per framework in a real HTTP client and Playwright browser session. All three implementations achieved **100% compliance (13/13 OK)**, verifying functional equivalence across SSG, ISR, SSR, streaming PPR, and full mutation lifecycles.
+
+#### Dinou 8.1.2 (`apps/dinou-8`) — 13/13 Checks OK (Build: 4.5 s)
+
+| Check / Assertion | Status | Measured Timing & Detail |
+| :--- | :---: | :--- |
+| `ssg: / responds 200` | ✅ Pass | 6.0 ms |
+| `ssg: / 50 items listing` | ✅ Pass | 50 items rendered |
+| `ssg: stable HTML across requests` | ✅ Pass | 3 identical requests |
+| `isr: /items/1 responds 200` | ✅ Pass | 5.3 ms |
+| `isr: cached and stable HTML` | ✅ Pass | 2 identical requests |
+| `isr: prerendered route /items/42` | ✅ Pass | Correct content verified |
+| `404: nonexistent routes` | ✅ Pass | `/this-route-does-not-exist=404`, `/items/999=404` |
+| `dashboard: responds 200` | ✅ Pass | 210.1 ms |
+| `dashboard: is dynamic (two requests differ)` | ✅ Pass | Different timestamps verified |
+| `dashboard: streams 3 holes after fallback` | ✅ Pass | 3 fallbacks · 3 holes · 208.4 ms |
+| `ppr: static shell in first chunk` | ✅ Pass | First chunk in **6.01 ms** |
+| `ppr: hole arrives later (streaming)` | ✅ Pass | Shell 4.12 ms · Total stream 205.75 ms |
+| `mutation: Server Function visible in browser` | ✅ Pass | Persisted and rendered (Playwright end-to-end) |
+
+#### Dinou 9.0.0 (`apps/dinou-9`) — 13/13 Checks OK (Build: 4.6 s)
+
+| Check / Assertion | Status | Measured Timing & Detail |
+| :--- | :---: | :--- |
+| `ssg: / responds 200` | ✅ Pass | **4.3 ms** |
+| `ssg: / 50 items listing` | ✅ Pass | 50 items rendered |
+| `ssg: stable HTML across requests` | ✅ Pass | 3 identical requests |
+| `isr: /items/1 responds 200` | ✅ Pass | **3.2 ms** |
+| `isr: cached and stable HTML` | ✅ Pass | 2 identical requests |
+| `isr: prerendered route /items/42` | ✅ Pass | Correct content verified |
+| `404: nonexistent routes` | ✅ Pass | `/this-route-does-not-exist=404`, `/items/999=404` |
+| `dashboard: responds 200` | ✅ Pass | 210.2 ms |
+| `dashboard: is dynamic (two requests differ)` | ✅ Pass | Different timestamps verified |
+| `dashboard: streams 3 holes after fallback` | ✅ Pass | 3 fallbacks · 3 holes · 208.6 ms |
+| `ppr: static shell in first chunk` | ✅ Pass | First chunk in **5.64 ms** |
+| `ppr: hole arrives later (streaming)` | ✅ Pass | Shell 4.13 ms · Total stream 205.61 ms |
+| `mutation: Server Function visible in browser` | ✅ Pass | Persisted and rendered (Playwright end-to-end) |
+
+#### Next.js 16.4.2 (`apps/next`) — 13/13 Checks OK (Build: 5.4 s)
+
+| Check / Assertion | Status | Measured Timing & Detail |
+| :--- | :---: | :--- |
+| `ssg: / responds 200` | ✅ Pass | 9.5 ms |
+| `ssg: / 50 items listing` | ✅ Pass | 50 items rendered |
+| `ssg: stable HTML across requests` | ✅ Pass | 3 identical requests |
+| `isr: /items/1 responds 200` | ✅ Pass | 11.7 ms |
+| `isr: cached and stable HTML` | ✅ Pass | 2 identical requests |
+| `isr: prerendered route /items/42` | ✅ Pass | Correct content verified |
+| `404: nonexistent routes` | ✅ Pass | `/this-route-does-not-exist=404`, `/items/999=404` |
+| `dashboard: responds 200` | ✅ Pass | 238.8 ms |
+| `dashboard: is dynamic (two requests differ)` | ✅ Pass | Different timestamps verified |
+| `dashboard: streams 3 holes after fallback` | ✅ Pass | 3 fallbacks · 3 holes · 211.6 ms |
+| `ppr: static shell in first chunk` | ✅ Pass | First chunk in 11.07 ms |
+| `ppr: hole arrives later (streaming)` | ✅ Pass | Shell 5.80 ms · Total stream 214.43 ms |
+| `mutation: Server Function visible in browser` | ✅ Pass | Persisted and rendered (Playwright end-to-end) |
+
+#### Timed Verification Assertions Comparison
+
+| Assertion | Dinou 8.1.2 | Dinou 9.0.0 | Next.js 16.4.2 | Winner (Dinou 9 Lead) |
+| :--- | ---: | ---: | ---: | :--- |
+| **SSG `/` Response** | 6.0 ms | **4.3 ms** | 9.5 ms | **Dinou (2.2× faster)** |
+| **ISR `/items/1` Response** | 5.3 ms | **3.2 ms** | 11.7 ms | **Dinou (3.6× faster)** |
+| **SSR `/dashboard` Response** | 210.1 ms | **210.2 ms** | 238.8 ms | **Dinou (28.6 ms faster)** |
+| **PPR Shell First Chunk (TTFB)** | 6.01 ms | **5.64 ms** | 11.07 ms | **Dinou (2.0× faster)** |
+| **PPR Full Streaming Completion** | 205.75 ms | **205.61 ms** | 214.43 ms | **Dinou (8.8 ms faster)** |
+
+---
+
+### 7.3 Production Build & Disk Footprint (`pnpm bench:build`)
+
+Measured across repeated production builds (`pnpm run build`), clearing all build outputs and compiler caches before each run:
+
+| Framework | Run 1 | Run 2 | Median Duration | Total Output Size | Winner: Build Speed | Winner: Disk Footprint |
+| :--- | ---: | ---: | ---: | ---: | :---: | :---: |
+| **Dinou 8.1.2** | 5.4 s | 4.5 s | **4.95 s** | **4.4 MB** (`.dinou`) | **Dinou (2.2× faster)** | **Dinou (8.5× smaller)** |
+| **Dinou 9.0.0** | 4.6 s | 4.6 s | **4.60 s** | **4.4 MB** (`.dinou`) | **Dinou (2.3× faster)** | **Dinou (8.5× smaller)** |
+| **Next.js 16.4.2** | 11.3 s | 10.0 s | 10.65 s | 37.5 MB (`.next`) | Next.js (slower) | Next.js (larger) |
+
+- **Build Speed Winner — Dinou 9.0.0 builds 2.3× faster** than Next.js 16.4.2 (4.60 s vs 10.65 s with Turbopack).
+- **Disk Footprint Winner — Dinou generates an 8.5× smaller build output directory** (4.4 MB in `.dinou` vs 37.5 MB in `.next`).
+
+---
+
+### 7.4 Client-Side JavaScript Bundle Delivery (`pnpm bench:bundle`)
+
+Traverses production client bundles and compresses each file using gzip (-9) and Brotli (-11):
+
+| Framework | Client JS Files | Raw Size | Gzip Size (-9) | Brotli Size (-11) | Winner: Transfer Size |
+| :--- | :---: | ---: | ---: | ---: | :---: |
+| **Dinou 8.1.2** | 17 files | 268.6 KiB | 88.4 KiB | **76.8 KiB** | **Dinou (~48% smaller)** |
+| **Dinou 9.0.0** | 17 files | 268.6 KiB | 88.4 KiB | **76.9 KiB** | **Dinou (~48% smaller)** |
+| **Next.js 16.4.2** | 11 files | 558.8 KiB | 171.9 KiB | 149.0 KiB | Next.js (+72.1 KiB larger) |
+
+- **Client Bundle Winner — Dinou transfers ~48% less JavaScript over the wire** (76.9 KiB vs 149.0 KiB over Brotli, a **1.94× smaller payload**) for the identical interactive application.
+
+---
+
+### 7.5 Developer Experience: Cold Start & Real-Browser HMR (`pnpm bench:dev`, `pnpm bench:hmr`)
+
+Measured with real developer workflows on localhost:
+
+| Framework | Dev Cold Start (3 Runs) | Cold Start Median | Winner: Cold Start | Chromium HMR (2 Runs) | HMR Median | Winner: HMR |
+| :--- | :--- | ---: | :---: | :--- | ---: | :---: |
+| **Dinou 8.1.2** | 1.53 s / 1.43 s / 1.49 s | **1.49 s** | **Dinou (2.4× faster)** | 216 ms / 206 ms | **211 ms** | **Dinou (1.6× faster)** |
+| **Dinou 9.0.0** | 1.41 s / 1.35 s / 1.37 s | **1.37 s** | **Dinou (2.6× faster)** | 205 ms / 206 ms | **206 ms** | **Dinou (1.6× faster)** |
+| **Next.js 16.4.2** | 3.68 s / 3.51 s / 3.50 s | 3.51 s | Next.js (slower) | 310 ms / 351 ms | 331 ms | Next.js (slower) |
+
+- **Cold Start Winner — Dinou 9.0.0 starts 2.6× faster** (1.37 s vs 3.51 s) and is ready to accept incoming connections immediately.
+- **Real-Browser HMR Winner — Dinou 9.0.0 is 1.6× faster** (206 ms vs 331 ms). Measured **end-to-end**: Playwright launches headless Chromium, opens the page, edits a text marker in `page.tsx` on disk, and chronometers until the DOM reflects the modification without a full page reload.
+
+---
+
+### 7.6 Memory Footprint & Expansion Dynamics (`pnpm bench:memory`)
+
+Tracks resident set size (RSS) across the complete process tree before, during, and after sustained HTTP load:
+
+| Framework | Idle RSS (5 Samples) | Peak RSS Under Load | Memory Expansion ($\Delta$) | Post-Load Settled RSS | Winner Under Load |
+| :--- | ---: | ---: | ---: | ---: | :---: |
+| **Dinou 8.1.2** | 271.9 MB | **389.3 MB** | **+117.4 MB** | **388.1 MB** | **Dinou (expands half as much)** |
+| **Dinou 9.0.0** | 272.7 MB | **390.9 MB** | **+118.2 MB** | **390.1 MB** | **Dinou (expands half as much)** |
+| **Next.js 16.4.2** | **231.9 MB** | 473.5 MB | +241.6 MB | 471.5 MB | Next.js (double memory expansion) |
+
+- **Idle Footprint Winner — Next.js 16.4.2 is 40.8 MB leaner at rest** prior to receiving traffic (231.9 MB vs 272.7 MB).
+- **Expansion Under Load Winner — Dinou expands by half as much** (+118.2 MB vs +241.6 MB), maintaining predictable memory bounds during traffic bursts.
+- **Peak & Post-Load Winner — Dinou maintains lower memory under load** (390.9 MB peak vs 473.5 MB, an 82.6 MB advantage) and retains **81.4 MB less RAM** after traffic subsides (390.1 MB vs 471.5 MB).
 
 ---
 
@@ -163,26 +296,40 @@ Because both frameworks serve cached ISR responses without executing page compon
 
 ## 9. How to Reproduce
 
+### 9.1 Machine Provisioning (Dedicated Cloud Droplet)
+
+For rigorous, clean reproduction without CPU noisy-neighbor interference, deploy a dedicated cloud instance (e.g. DigitalOcean CPU-Optimized, 4 Dedicated vCPUs / 8 GB RAM on Ubuntu 24.04 LTS) and run the automated provisioning script:
+
 ```bash
 git clone https://github.com/roggc/dinou-benchmark
 cd dinou-benchmark/dinou-benchmark
-pnpm install --frozen-lockfile
-pnpm shared
 
-# 1. Ensure file descriptor limits
-ulimit -n 65535
-
-# 2. Build production artifacts
-pnpm bench:build
-
-# 3. Log exact environment parameters
-{ node -v; pnpm -v; uname -r; nproc; free -h; } > results/env.txt
-
-# 4. Execute official high-concurrency load suite
-LOAD_CONNECTIONS=200 LOAD_DURATION=30 LOAD_WARMUP=5 LOAD_RUNS=3 pnpm bench:load
-
-# 5. Generate Markdown report and vector charts
-pnpm bench:report
+# Provision environment: installs Node 22 LTS, pnpm, Playwright Chromium, 
+# configures 4 GB swap, tunes somaxconn and file descriptor limits:
+sudo bash infra/droplet-setup.sh
 ```
 
-All raw structured metrics are emitted to `results/load.json` and summarized in `results/REPORT.md`.
+### 9.2 Running the Full Benchmark Suite (`pnpm bench`)
+
+To reproduce the complete benchmark pipeline (`build` → `verify` → `bundle` → `dev-start` → `hmr` → `load` → `memory` → `report`):
+
+```bash
+# 1. Log exact hardware and runtime parameters
+mkdir -p results
+{ node -v; pnpm -v; uname -r; nproc; free -h; } > results/env.txt
+
+# 2. Run the complete automated pipeline with official high-concurrency load settings:
+ulimit -n 65535
+LOAD_CONNECTIONS=200 LOAD_DURATION=30 LOAD_WARMUP=5 LOAD_RUNS=3 pnpm bench
+```
+
+> **Note**: You can also run individual phases independently if preferred:
+> - **Functional Verification Gate**: `pnpm bench:verify`
+> - **Production Build & Disk Footprint**: `pnpm bench:build`
+> - **Client JS Bundle Delivery**: `pnpm bench:bundle`
+> - **Developer Experience (Cold Start & HMR)**: `pnpm bench:dev && pnpm bench:hmr`
+> - **High-Concurrency Load Testing**: `LOAD_CONNECTIONS=200 LOAD_DURATION=30 LOAD_WARMUP=5 LOAD_RUNS=3 pnpm bench:load`
+> - **Process-Tree Memory Consumption**: `pnpm bench:memory`
+> - **Markdown Report & Charts**: `pnpm bench:report`
+
+All structured outputs are persisted to JSON under `results/` (`load.json`, `build.json`, `verify.json`, `bundle.json`, `dev-start.json`, `hmr.json`, `memory.json`) and compiled into `results/REPORT.md`.
