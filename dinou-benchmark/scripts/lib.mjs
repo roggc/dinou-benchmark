@@ -83,10 +83,13 @@ export async function waitForPortFree(port, timeoutMs = 30_000) {
  * to respond with <500 status. Returns ready time in ms and a `stop()` handle.
  */
 export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeoutMs = 180_000, env = {} }) {
+  const hmrPort = Number(port) + 1;
+  await waitForPortFree(port, 15_000);
+  await waitForPortFree(hmrPort, 15_000);
   const started = Date.now();
   const child = spawn(cmd, args, {
     cwd,
-    env: { ...process.env, PORT: String(port), NODE_ENV: env.NODE_ENV ?? "production", ...env },
+    env: { ...process.env, PORT: String(port), HMR_PORT: String(hmrPort), NODE_ENV: env.NODE_ENV ?? "production", ...env },
     stdio: ["ignore", "pipe", "pipe"],
     detached: !isWin,
     shell: isWin,
@@ -119,6 +122,7 @@ export async function startServer({ cwd, cmd, args, port, readyPath = "/", timeo
   const stop = async () => {
     killProcessTree(child);
     await waitForPortFree(port, 15_000);
+    await waitForPortFree(hmrPort, 15_000);
   };
 
   if (readyMs === null) {

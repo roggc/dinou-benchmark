@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 
 const action = process.argv[2] || "dev";
-const port = process.env.PORT || "3102";
+const port = process.env.PORT || "3111";
 const isWin = process.platform === "win32";
 const bin = isWin ? "next.cmd" : "next";
 
