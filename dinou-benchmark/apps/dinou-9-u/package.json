@@ -1,0 +1,23 @@
+{
+  "name": "@dinou-benchmark/dinou-9-u",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dinou dev -u",
+    "build": "dinou build -u",
+    "start": "dinou start -u"
+  },
+  "dependencies": {
+    "dinou": "9.0.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
+  }
+}
+

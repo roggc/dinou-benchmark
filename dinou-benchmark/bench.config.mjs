@@ -57,7 +57,7 @@ export const frameworks = [
   {
     id: "dinou-9",
     name: "Dinou",
-    version: "9.0.0",
+    version: "9.0.1",
     dir: "apps/dinou-9",
     port: 3103,
     dev: { cmd: "pnpm", args: ["run", "dev"] },
@@ -67,6 +67,23 @@ export const frameworks = [
     clientAssetHints: ["dist3"],
     hmr: {
       file: "apps/dinou-9/src/page.tsx",
+      find: "HMR_MARKER_DINOU",
+      replace: "HMR_MARKER_DINOU_EDITADO",
+    },
+  },
+  {
+    id: "dinou-9-u",
+    name: "Dinou (-u)",
+    version: "9.0.1",
+    dir: "apps/dinou-9-u",
+    port: 3104,
+    dev: { cmd: "pnpm", args: ["run", "dev"] },
+    build: { cmd: "pnpm", args: ["run", "build"] },
+    start: { cmd: "pnpm", args: ["run", "start"] },
+    outputDirs: [".dinou"],
+    clientAssetHints: ["dist3"],
+    hmr: {
+      file: "apps/dinou-9-u/src/page.tsx",
       find: "HMR_MARKER_DINOU",
       replace: "HMR_MARKER_DINOU_EDITADO",
     },

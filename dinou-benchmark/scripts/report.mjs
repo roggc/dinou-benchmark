@@ -5,7 +5,7 @@
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { ROOT, routes } from "./config.mjs";
+import { ROOT, routes, frameworks } from "./config.mjs";
 
 async function readJson(name) {
   try {
@@ -26,10 +26,11 @@ const [verify, build, dev, hmr, bundle, load, memory] = await Promise.all([
 ]);
 
 const byId = (list, id) => (list ?? []).find((entry) => entry.framework === id);
-const ids = [...new Set((load ?? []).map((l) => l.framework))];
+const ids = (load && load.length > 0) ? [...new Set(load.map((l) => l.framework))] : frameworks.map((f) => f.id);
 const labels = {
   "dinou-8": "Dinou 8.1.2",
-  "dinou-9": "Dinou 9.0.0",
+  "dinou-9": "Dinou 9.0.1",
+  "dinou-9-u": "Dinou 9.0.1 (-u)",
   dinou: "Dinou",
   next: "Next.js 16.4.2",
 };
@@ -151,6 +152,7 @@ function barChart({ title, series, unit, width = 760 }) {
 const colors = {
   "dinou-8": "#6ee7b7",
   "dinou-9": "#10b981",
+  "dinou-9-u": "#059669",
   dinou: "#6ee7b7",
   next: "#7dd3fc",
 };

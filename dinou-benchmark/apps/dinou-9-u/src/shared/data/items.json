@@ -1,0 +1,702 @@
+[
+  {
+    "id": 1,
+    "title": "Resource 001",
+    "category": "infra",
+    "score": 37,
+    "summary": "Demo record number 1. Locally generated content, no network."
+  },
+  {
+    "id": 2,
+    "title": "Resource 002",
+    "category": "design",
+    "score": 74,
+    "summary": "Demo record number 2. Locally generated content, no network."
+  },
+  {
+    "id": 3,
+    "title": "Resource 003",
+    "category": "growth",
+    "score": 11,
+    "summary": "Demo record number 3. Locally generated content, no network."
+  },
+  {
+    "id": 4,
+    "title": "Resource 004",
+    "category": "support",
+    "score": 48,
+    "summary": "Demo record number 4. Locally generated content, no network."
+  },
+  {
+    "id": 5,
+    "title": "Resource 005",
+    "category": "analytics",
+    "score": 85,
+    "summary": "Demo record number 5. Locally generated content, no network."
+  },
+  {
+    "id": 6,
+    "title": "Resource 006",
+    "category": "infra",
+    "score": 22,
+    "summary": "Demo record number 6. Locally generated content, no network."
+  },
+  {
+    "id": 7,
+    "title": "Resource 007",
+    "category": "design",
+    "score": 59,
+    "summary": "Demo record number 7. Locally generated content, no network."
+  },
+  {
+    "id": 8,
+    "title": "Resource 008",
+    "category": "growth",
+    "score": 96,
+    "summary": "Demo record number 8. Locally generated content, no network."
+  },
+  {
+    "id": 9,
+    "title": "Resource 009",
+    "category": "support",
+    "score": 33,
+    "summary": "Demo record number 9. Locally generated content, no network."
+  },
+  {
+    "id": 10,
+    "title": "Resource 010",
+    "category": "analytics",
+    "score": 70,
+    "summary": "Demo record number 10. Locally generated content, no network."
+  },
+  {
+    "id": 11,
+    "title": "Resource 011",
+    "category": "infra",
+    "score": 7,
+    "summary": "Demo record number 11. Locally generated content, no network."
+  },
+  {
+    "id": 12,
+    "title": "Resource 012",
+    "category": "design",
+    "score": 44,
+    "summary": "Demo record number 12. Locally generated content, no network."
+  },
+  {
+    "id": 13,
+    "title": "Resource 013",
+    "category": "growth",
+    "score": 81,
+    "summary": "Demo record number 13. Locally generated content, no network."
+  },
+  {
+    "id": 14,
+    "title": "Resource 014",
+    "category": "support",
+    "score": 18,
+    "summary": "Demo record number 14. Locally generated content, no network."
+  },
+  {
+    "id": 15,
+    "title": "Resource 015",
+    "category": "analytics",
+    "score": 55,
+    "summary": "Demo record number 15. Locally generated content, no network."
+  },
+  {
+    "id": 16,
+    "title": "Resource 016",
+    "category": "infra",
+    "score": 92,
+    "summary": "Demo record number 16. Locally generated content, no network."
+  },
+  {
+    "id": 17,
+    "title": "Resource 017",
+    "category": "design",
+    "score": 29,
+    "summary": "Demo record number 17. Locally generated content, no network."
+  },
+  {
+    "id": 18,
+    "title": "Resource 018",
+    "category": "growth",
+    "score": 66,
+    "summary": "Demo record number 18. Locally generated content, no network."
+  },
+  {
+    "id": 19,
+    "title": "Resource 019",
+    "category": "support",
+    "score": 3,
+    "summary": "Demo record number 19. Locally generated content, no network."
+  },
+  {
+    "id": 20,
+    "title": "Resource 020",
+    "category": "analytics",
+    "score": 40,
+    "summary": "Demo record number 20. Locally generated content, no network."
+  },
+  {
+    "id": 21,
+    "title": "Resource 021",
+    "category": "infra",
+    "score": 77,
+    "summary": "Demo record number 21. Locally generated content, no network."
+  },
+  {
+    "id": 22,
+    "title": "Resource 022",
+    "category": "design",
+    "score": 14,
+    "summary": "Demo record number 22. Locally generated content, no network."
+  },
+  {
+    "id": 23,
+    "title": "Resource 023",
+    "category": "growth",
+    "score": 51,
+    "summary": "Demo record number 23. Locally generated content, no network."
+  },
+  {
+    "id": 24,
+    "title": "Resource 024",
+    "category": "support",
+    "score": 88,
+    "summary": "Demo record number 24. Locally generated content, no network."
+  },
+  {
+    "id": 25,
+    "title": "Resource 025",
+    "category": "analytics",
+    "score": 25,
+    "summary": "Demo record number 25. Locally generated content, no network."
+  },
+  {
+    "id": 26,
+    "title": "Resource 026",
+    "category": "infra",
+    "score": 62,
+    "summary": "Demo record number 26. Locally generated content, no network."
+  },
+  {
+    "id": 27,
+    "title": "Resource 027",
+    "category": "design",
+    "score": 99,
+    "summary": "Demo record number 27. Locally generated content, no network."
+  },
+  {
+    "id": 28,
+    "title": "Resource 028",
+    "category": "growth",
+    "score": 36,
+    "summary": "Demo record number 28. Locally generated content, no network."
+  },
+  {
+    "id": 29,
+    "title": "Resource 029",
+    "category": "support",
+    "score": 73,
+    "summary": "Demo record number 29. Locally generated content, no network."
+  },
+  {
+    "id": 30,
+    "title": "Resource 030",
+    "category": "analytics",
+    "score": 10,
+    "summary": "Demo record number 30. Locally generated content, no network."
+  },
+  {
+    "id": 31,
+    "title": "Resource 031",
+    "category": "infra",
+    "score": 47,
+    "summary": "Demo record number 31. Locally generated content, no network."
+  },
+  {
+    "id": 32,
+    "title": "Resource 032",
+    "category": "design",
+    "score": 84,
+    "summary": "Demo record number 32. Locally generated content, no network."
+  },
+  {
+    "id": 33,
+    "title": "Resource 033",
+    "category": "growth",
+    "score": 21,
+    "summary": "Demo record number 33. Locally generated content, no network."
+  },
+  {
+    "id": 34,
+    "title": "Resource 034",
+    "category": "support",
+    "score": 58,
+    "summary": "Demo record number 34. Locally generated content, no network."
+  },
+  {
+    "id": 35,
+    "title": "Resource 035",
+    "category": "analytics",
+    "score": 95,
+    "summary": "Demo record number 35. Locally generated content, no network."
+  },
+  {
+    "id": 36,
+    "title": "Resource 036",
+    "category": "infra",
+    "score": 32,
+    "summary": "Demo record number 36. Locally generated content, no network."
+  },
+  {
+    "id": 37,
+    "title": "Resource 037",
+    "category": "design",
+    "score": 69,
+    "summary": "Demo record number 37. Locally generated content, no network."
+  },
+  {
+    "id": 38,
+    "title": "Resource 038",
+    "category": "growth",
+    "score": 6,
+    "summary": "Demo record number 38. Locally generated content, no network."
+  },
+  {
+    "id": 39,
+    "title": "Resource 039",
+    "category": "support",
+    "score": 43,
+    "summary": "Demo record number 39. Locally generated content, no network."
+  },
+  {
+    "id": 40,
+    "title": "Resource 040",
+    "category": "analytics",
+    "score": 80,
+    "summary": "Demo record number 40. Locally generated content, no network."
+  },
+  {
+    "id": 41,
+    "title": "Resource 041",
+    "category": "infra",
+    "score": 17,
+    "summary": "Demo record number 41. Locally generated content, no network."
+  },
+  {
+    "id": 42,
+    "title": "Resource 042",
+    "category": "design",
+    "score": 54,
+    "summary": "Demo record number 42. Locally generated content, no network."
+  },
+  {
+    "id": 43,
+    "title": "Resource 043",
+    "category": "growth",
+    "score": 91,
+    "summary": "Demo record number 43. Locally generated content, no network."
+  },
+  {
+    "id": 44,
+    "title": "Resource 044",
+    "category": "support",
+    "score": 28,
+    "summary": "Demo record number 44. Locally generated content, no network."
+  },
+  {
+    "id": 45,
+    "title": "Resource 045",
+    "category": "analytics",
+    "score": 65,
+    "summary": "Demo record number 45. Locally generated content, no network."
+  },
+  {
+    "id": 46,
+    "title": "Resource 046",
+    "category": "infra",
+    "score": 2,
+    "summary": "Demo record number 46. Locally generated content, no network."
+  },
+  {
+    "id": 47,
+    "title": "Resource 047",
+    "category": "design",
+    "score": 39,
+    "summary": "Demo record number 47. Locally generated content, no network."
+  },
+  {
+    "id": 48,
+    "title": "Resource 048",
+    "category": "growth",
+    "score": 76,
+    "summary": "Demo record number 48. Locally generated content, no network."
+  },
+  {
+    "id": 49,
+    "title": "Resource 049",
+    "category": "support",
+    "score": 13,
+    "summary": "Demo record number 49. Locally generated content, no network."
+  },
+  {
+    "id": 50,
+    "title": "Resource 050",
+    "category": "analytics",
+    "score": 50,
+    "summary": "Demo record number 50. Locally generated content, no network."
+  },
+  {
+    "id": 51,
+    "title": "Resource 051",
+    "category": "infra",
+    "score": 87,
+    "summary": "Demo record number 51. Locally generated content, no network."
+  },
+  {
+    "id": 52,
+    "title": "Resource 052",
+    "category": "design",
+    "score": 24,
+    "summary": "Demo record number 52. Locally generated content, no network."
+  },
+  {
+    "id": 53,
+    "title": "Resource 053",
+    "category": "growth",
+    "score": 61,
+    "summary": "Demo record number 53. Locally generated content, no network."
+  },
+  {
+    "id": 54,
+    "title": "Resource 054",
+    "category": "support",
+    "score": 98,
+    "summary": "Demo record number 54. Locally generated content, no network."
+  },
+  {
+    "id": 55,
+    "title": "Resource 055",
+    "category": "analytics",
+    "score": 35,
+    "summary": "Demo record number 55. Locally generated content, no network."
+  },
+  {
+    "id": 56,
+    "title": "Resource 056",
+    "category": "infra",
+    "score": 72,
+    "summary": "Demo record number 56. Locally generated content, no network."
+  },
+  {
+    "id": 57,
+    "title": "Resource 057",
+    "category": "design",
+    "score": 9,
+    "summary": "Demo record number 57. Locally generated content, no network."
+  },
+  {
+    "id": 58,
+    "title": "Resource 058",
+    "category": "growth",
+    "score": 46,
+    "summary": "Demo record number 58. Locally generated content, no network."
+  },
+  {
+    "id": 59,
+    "title": "Resource 059",
+    "category": "support",
+    "score": 83,
+    "summary": "Demo record number 59. Locally generated content, no network."
+  },
+  {
+    "id": 60,
+    "title": "Resource 060",
+    "category": "analytics",
+    "score": 20,
+    "summary": "Demo record number 60. Locally generated content, no network."
+  },
+  {
+    "id": 61,
+    "title": "Resource 061",
+    "category": "infra",
+    "score": 57,
+    "summary": "Demo record number 61. Locally generated content, no network."
+  },
+  {
+    "id": 62,
+    "title": "Resource 062",
+    "category": "design",
+    "score": 94,
+    "summary": "Demo record number 62. Locally generated content, no network."
+  },
+  {
+    "id": 63,
+    "title": "Resource 063",
+    "category": "growth",
+    "score": 31,
+    "summary": "Demo record number 63. Locally generated content, no network."
+  },
+  {
+    "id": 64,
+    "title": "Resource 064",
+    "category": "support",
+    "score": 68,
+    "summary": "Demo record number 64. Locally generated content, no network."
+  },
+  {
+    "id": 65,
+    "title": "Resource 065",
+    "category": "analytics",
+    "score": 5,
+    "summary": "Demo record number 65. Locally generated content, no network."
+  },
+  {
+    "id": 66,
+    "title": "Resource 066",
+    "category": "infra",
+    "score": 42,
+    "summary": "Demo record number 66. Locally generated content, no network."
+  },
+  {
+    "id": 67,
+    "title": "Resource 067",
+    "category": "design",
+    "score": 79,
+    "summary": "Demo record number 67. Locally generated content, no network."
+  },
+  {
+    "id": 68,
+    "title": "Resource 068",
+    "category": "growth",
+    "score": 16,
+    "summary": "Demo record number 68. Locally generated content, no network."
+  },
+  {
+    "id": 69,
+    "title": "Resource 069",
+    "category": "support",
+    "score": 53,
+    "summary": "Demo record number 69. Locally generated content, no network."
+  },
+  {
+    "id": 70,
+    "title": "Resource 070",
+    "category": "analytics",
+    "score": 90,
+    "summary": "Demo record number 70. Locally generated content, no network."
+  },
+  {
+    "id": 71,
+    "title": "Resource 071",
+    "category": "infra",
+    "score": 27,
+    "summary": "Demo record number 71. Locally generated content, no network."
+  },
+  {
+    "id": 72,
+    "title": "Resource 072",
+    "category": "design",
+    "score": 64,
+    "summary": "Demo record number 72. Locally generated content, no network."
+  },
+  {
+    "id": 73,
+    "title": "Resource 073",
+    "category": "growth",
+    "score": 1,
+    "summary": "Demo record number 73. Locally generated content, no network."
+  },
+  {
+    "id": 74,
+    "title": "Resource 074",
+    "category": "support",
+    "score": 38,
+    "summary": "Demo record number 74. Locally generated content, no network."
+  },
+  {
+    "id": 75,
+    "title": "Resource 075",
+    "category": "analytics",
+    "score": 75,
+    "summary": "Demo record number 75. Locally generated content, no network."
+  },
+  {
+    "id": 76,
+    "title": "Resource 076",
+    "category": "infra",
+    "score": 12,
+    "summary": "Demo record number 76. Locally generated content, no network."
+  },
+  {
+    "id": 77,
+    "title": "Resource 077",
+    "category": "design",
+    "score": 49,
+    "summary": "Demo record number 77. Locally generated content, no network."
+  },
+  {
+    "id": 78,
+    "title": "Resource 078",
+    "category": "growth",
+    "score": 86,
+    "summary": "Demo record number 78. Locally generated content, no network."
+  },
+  {
+    "id": 79,
+    "title": "Resource 079",
+    "category": "support",
+    "score": 23,
+    "summary": "Demo record number 79. Locally generated content, no network."
+  },
+  {
+    "id": 80,
+    "title": "Resource 080",
+    "category": "analytics",
+    "score": 60,
+    "summary": "Demo record number 80. Locally generated content, no network."
+  },
+  {
+    "id": 81,
+    "title": "Resource 081",
+    "category": "infra",
+    "score": 97,
+    "summary": "Demo record number 81. Locally generated content, no network."
+  },
+  {
+    "id": 82,
+    "title": "Resource 082",
+    "category": "design",
+    "score": 34,
+    "summary": "Demo record number 82. Locally generated content, no network."
+  },
+  {
+    "id": 83,
+    "title": "Resource 083",
+    "category": "growth",
+    "score": 71,
+    "summary": "Demo record number 83. Locally generated content, no network."
+  },
+  {
+    "id": 84,
+    "title": "Resource 084",
+    "category": "support",
+    "score": 8,
+    "summary": "Demo record number 84. Locally generated content, no network."
+  },
+  {
+    "id": 85,
+    "title": "Resource 085",
+    "category": "analytics",
+    "score": 45,
+    "summary": "Demo record number 85. Locally generated content, no network."
+  },
+  {
+    "id": 86,
+    "title": "Resource 086",
+    "category": "infra",
+    "score": 82,
+    "summary": "Demo record number 86. Locally generated content, no network."
+  },
+  {
+    "id": 87,
+    "title": "Resource 087",
+    "category": "design",
+    "score": 19,
+    "summary": "Demo record number 87. Locally generated content, no network."
+  },
+  {
+    "id": 88,
+    "title": "Resource 088",
+    "category": "growth",
+    "score": 56,
+    "summary": "Demo record number 88. Locally generated content, no network."
+  },
+  {
+    "id": 89,
+    "title": "Resource 089",
+    "category": "support",
+    "score": 93,
+    "summary": "Demo record number 89. Locally generated content, no network."
+  },
+  {
+    "id": 90,
+    "title": "Resource 090",
+    "category": "analytics",
+    "score": 30,
+    "summary": "Demo record number 90. Locally generated content, no network."
+  },
+  {
+    "id": 91,
+    "title": "Resource 091",
+    "category": "infra",
+    "score": 67,
+    "summary": "Demo record number 91. Locally generated content, no network."
+  },
+  {
+    "id": 92,
+    "title": "Resource 092",
+    "category": "design",
+    "score": 4,
+    "summary": "Demo record number 92. Locally generated content, no network."
+  },
+  {
+    "id": 93,
+    "title": "Resource 093",
+    "category": "growth",
+    "score": 41,
+    "summary": "Demo record number 93. Locally generated content, no network."
+  },
+  {
+    "id": 94,
+    "title": "Resource 094",
+    "category": "support",
+    "score": 78,
+    "summary": "Demo record number 94. Locally generated content, no network."
+  },
+  {
+    "id": 95,
+    "title": "Resource 095",
+    "category": "analytics",
+    "score": 15,
+    "summary": "Demo record number 95. Locally generated content, no network."
+  },
+  {
+    "id": 96,
+    "title": "Resource 096",
+    "category": "infra",
+    "score": 52,
+    "summary": "Demo record number 96. Locally generated content, no network."
+  },
+  {
+    "id": 97,
+    "title": "Resource 097",
+    "category": "design",
+    "score": 89,
+    "summary": "Demo record number 97. Locally generated content, no network."
+  },
+  {
+    "id": 98,
+    "title": "Resource 098",
+    "category": "growth",
+    "score": 26,
+    "summary": "Demo record number 98. Locally generated content, no network."
+  },
+  {
+    "id": 99,
+    "title": "Resource 099",
+    "category": "support",
+    "score": 63,
+    "summary": "Demo record number 99. Locally generated content, no network."
+  },
+  {
+    "id": 100,
+    "title": "Resource 100",
+    "category": "analytics",
+    "score": 0,
+    "summary": "Demo record number 100. Locally generated content, no network."
+  }
+]
