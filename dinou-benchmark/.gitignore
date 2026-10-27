@@ -6,6 +6,7 @@ dist/
 .tmp/
 results/*.json
 results/*.svg
+results/*.txt
 results/REPORT.md
 apps/*/data/messages.json
 .DS_Store
