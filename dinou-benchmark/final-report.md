@@ -99,15 +99,15 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route:
 
 ## 5. Reproducibility & Variance Analysis
 
-This official run matches an earlier independent run (200 connections, 30s × 1, without full-concurrency warm-up): **all throughput figures remain within ±5% variance**.
+This official run matches an earlier independent run (200 connections, 30s × 1, without full-concurrency warm-up): **all throughput figures replicate within ±2–5% variance**.
 
-| Route | Dinou 9 (Previous → Official) | Dinou 9 Mean | Next 16 (Previous → Official) | Next 16 Mean | Winner (Overall Mean Lead) |
-| :--- | :--- | ---: | :--- | ---: | :---: |
-| `/` | 1,658 → 1,722 req/s (+4%) | **1,690.0 req/s** | 846 → 806 req/s (−5%) | 826.0 req/s | **Dinou (2.0× faster)** |
-| `/items/42` | 1,699 → 1,732 req/s (+2%) | **1,715.5 req/s** | 1,362 → 1,311 req/s (−4%) | 1,336.5 req/s | **Dinou (1.3× faster)** |
-| `/dashboard` | 436 → 460 req/s (+5%) | **448.0 req/s** | 187 → 195 req/s (+4%) | 191.0 req/s | **Dinou (2.3× faster)** |
-| `/ppr` | 624 → 638 req/s (+2%) | **631.0 req/s** | 200 → 202 req/s (+1%) | 201.0 req/s | **Dinou (3.1× faster)** |
-| `/messages` | 491 → 482 req/s (−2%) | **486.5 req/s** | 195 → 197 req/s (+1%) | 196.0 req/s | **Dinou (2.5× faster)** |
+| Route | Dinou 9 (Preliminary) | Dinou 9 (Official) | Dinou Variance ($\Delta$) | Next.js 16 (Preliminary) | Next.js 16 (Official) | Next.js Variance ($\Delta$) |
+| :--- | ---: | ---: | :---: | ---: | ---: | :---: |
+| `/` (SSG) | 1,658 req/s | 1,722 req/s | +3.9% | 846 req/s | 806 req/s | −4.7% |
+| `/items/42` (ISR) | 1,699 req/s | 1,732 req/s | +1.9% | 1,362 req/s | 1,311 req/s | −3.7% |
+| `/dashboard` (SSR) | 436 req/s | 460 req/s | +5.5% | 187 req/s | 195 req/s | +4.3% |
+| `/ppr` (PPR) | 624 req/s | 638 req/s | +2.2% | 200 req/s | 202 req/s | +1.0% |
+| `/messages` (SSR) | 491 req/s | 482 req/s | −1.8% | 195 req/s | 197 req/s | +1.0% |
 
 Furthermore, an independent load generator (Grafana k6, 200 Virtual Users, 30s duration, route `/`) confirmed Dinou's advantage with a consistent performance ratio: **Dinou delivered 1,441.6 req/s vs Next.js's 771.3 req/s (1.87× faster)**, with a p95 latency of **141 ms (Dinou) vs 261 ms (Next.js)**, and 0 failed checks in both frameworks.
 
