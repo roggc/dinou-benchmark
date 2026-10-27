@@ -1,0 +1,42 @@
+[
+  {
+    "framework": "dinou-8",
+    "version": "8.1.2",
+    "idleBytes": 272748544,
+    "peakBytes": 473059328,
+    "afterLoadBytes": 473141248,
+    "at": "2026-10-27T18:44:13.628Z",
+    "reliable": true,
+    "note": "Process-tree RSS of the server; includes the pnpm wrapper."
+  },
+  {
+    "framework": "dinou-9",
+    "version": "9.0.2",
+    "idleBytes": 272723968,
+    "peakBytes": 473632768,
+    "afterLoadBytes": 473092096,
+    "at": "2026-10-27T18:44:49.500Z",
+    "reliable": true,
+    "note": "Process-tree RSS of the server; includes the pnpm wrapper."
+  },
+  {
+    "framework": "dinou-9-u",
+    "version": "9.0.2",
+    "idleBytes": 273125376,
+    "peakBytes": 477700096,
+    "afterLoadBytes": 477175808,
+    "at": "2026-10-27T18:45:25.348Z",
+    "reliable": true,
+    "note": "Process-tree RSS of the server; includes the pnpm wrapper."
+  },
+  {
+    "framework": "next",
+    "version": "16.4.2",
+    "idleBytes": 232529920,
+    "peakBytes": 1057460224,
+    "afterLoadBytes": 1056022528,
+    "at": "2026-10-27T18:46:01.436Z",
+    "reliable": true,
+    "note": "Process-tree RSS of the server; includes the pnpm wrapper."
+  }
+]
