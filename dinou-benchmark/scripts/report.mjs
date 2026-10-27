@@ -29,8 +29,8 @@ const byId = (list, id) => (list ?? []).find((entry) => entry.framework === id);
 const ids = (load && load.length > 0) ? [...new Set(load.map((l) => l.framework))] : frameworks.map((f) => f.id);
 const labels = {
   "dinou-8": "Dinou 8.1.2",
-  "dinou-9": "Dinou 9.0.1",
-  "dinou-9-u": "Dinou 9.0.1 (-u)",
+  "dinou-9": "Dinou 9.0.2",
+  "dinou-9-u": "Dinou 9.0.2 (-u)",
   dinou: "Dinou",
   next: "Next.js 16.4.2",
 };

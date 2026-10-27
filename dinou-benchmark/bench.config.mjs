@@ -57,7 +57,7 @@ export const frameworks = [
   {
     id: "dinou-9",
     name: "Dinou",
-    version: "9.0.1",
+    version: "9.0.2",
     dir: "apps/dinou-9",
     port: 3121,
     dev: { cmd: "pnpm", args: ["run", "dev"] },
@@ -74,7 +74,7 @@ export const frameworks = [
   {
     id: "dinou-9-u",
     name: "Dinou (-u)",
-    version: "9.0.1",
+    version: "9.0.2",
     dir: "apps/dinou-9-u",
     port: 3131,
     dev: { cmd: "pnpm", args: ["run", "dev"] },

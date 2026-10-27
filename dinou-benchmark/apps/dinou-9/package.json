@@ -9,7 +9,7 @@
     "start": "dinou start"
   },
   "dependencies": {
-    "dinou": "9.0.1",
+    "dinou": "9.0.2",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
