@@ -138,19 +138,24 @@ Because both frameworks serve cached ISR responses without executing page compon
 
 Beyond throughput and latency under high-concurrency load, the automated benchmark suite executes an evaluation pipeline measuring functional compliance, build duration, bundle delivery, developer server metrics, and process-tree memory consumption on the same 4 vCPU / 8 GB cloud instance.
 
+> [!NOTE]
+> **Execution Context & Baseline Configuration**: The pipeline metrics below were recorded on October 25, 2026, during the standard automated suite execution (`pnpm bench`) using its default configuration (`LOAD_CONNECTIONS=50`, `LOAD_DURATION=10s`), prior to the 200-connection keep-alive and backlog saturation tuning applied in Sections 3–5.
+> - **Build, bundle, dev cold-start, and HMR** benchmarks execute independently of HTTP load settings.
+> - **Process-tree memory metrics (Section 7.6)** were sampled during this standard 50-connection pipeline load, distinct from the dedicated 200-connection stress tests in Sections 3–5.
+
 ### 7.1 Overview Table
 
 | Metric | Dinou 8.1.2 | Dinou 9.0.0 | Next.js 16.4.2 | Comparison vs Next.js Baseline |
 | :--- | ---: | ---: | ---: | :--- |
 | **Functional Verification Gate** | 13/13 (100% OK) | 13/13 (100% OK) | 13/13 (100% OK) | **Tie (13/13 passed)** |
-| **Production Build Duration (Median)** | 4.95 s (4.5 / 5.4 s) | 4.60 s (4.6 / 4.6 s) | 10.65 s (10.0 / 11.3 s) | **Dinou 9 (2.3× faster, 4.60 s vs 10.65 s)** |
+| **Production Build Duration (Mean)** | 4.95 s (4.5 / 5.4 s) | 4.60 s (4.6 / 4.6 s) | 10.65 s (10.0 / 11.3 s) | **Dinou 9 (2.3× faster, 4.60 s vs 10.65 s)** |
 | **Output Directory Size on Disk** | 4.4 MB | 4.4 MB | 37.5 MB | **Dinou (8.5× smaller, 4.4 MB vs 37.5 MB)** |
 | **Client JS Bundle (Brotli)** | 76.8 KiB (17 files) | 76.9 KiB (17 files) | 149.0 KiB (11 files) | **Dinou (1.94× smaller payload, -72.1 KiB)** |
 | **Dev Server Cold-Start (Median)** | 1.49 s | 1.37 s | 3.51 s | **Dinou 9 (2.6× faster, 1.37 s vs 3.51 s)** |
-| **Real Browser HMR Edit-to-DOM (Median)** | 211 ms | 206 ms | 331 ms | **Dinou 9 (1.6× faster, 206 ms vs 331 ms)** |
+| **Real Browser HMR Edit-to-DOM (Mean)** | 211 ms (206 / 216 ms) | 206 ms (205 / 206 ms) | 331 ms (310 / 351 ms) | **Dinou 9 (1.6× faster, 206 ms vs 331 ms)** |
 | **Idle Memory (RSS)** | 271.9 MB | 272.7 MB | 231.9 MB | **Next.js (40.8 MB lower idle RSS)** |
-| **Memory Expansion Under Load ($\Delta$)** | +117.4 MB | +118.2 MB | +241.6 MB | **Dinou 9 (+118.2 MB vs +241.6 MB)** |
-| **Peak Memory Under Load (RSS)** | 389.3 MB | 390.9 MB | 473.5 MB | **Dinou 9 (82.6 MB lower peak RSS)** |
+| **Memory Expansion (50 Conn, $\Delta$)** | +117.4 MB | +118.2 MB | +241.6 MB | **Dinou 9 (+118.2 MB vs +241.6 MB)** |
+| **Peak Memory Under Load (50 Conn, RSS)** | 389.3 MB | 390.9 MB | 473.5 MB | **Dinou 9 (82.6 MB lower peak RSS)** |
 | **Post-Load Settled Memory (RSS)** | 388.1 MB | 390.1 MB | 471.5 MB | **Dinou 9 (81.4 MB lower settled RSS)** |
 
 ---
@@ -213,29 +218,19 @@ Prior to recording performance metrics, the automated verification script execut
 | `ppr: hole arrives later (streaming)` | ✅ Pass | Shell 5.80 ms · Total stream 214.43 ms |
 | `mutation: Server Function visible in browser` | ✅ Pass | Persisted and rendered (Playwright end-to-end) |
 
-#### Timed Verification Assertions Comparison
-
-| Assertion | Dinou 8.1.2 | Dinou 9.0.0 | Next.js 16.4.2 | Comparison vs Next.js Baseline |
-| :--- | ---: | ---: | ---: | :--- |
-| **SSG `/` Response** | 6.0 ms | **4.3 ms** | 9.5 ms | **Dinou 9 (2.2× faster)** |
-| **ISR `/items/1` Response** | 5.3 ms | **3.2 ms** | 11.7 ms | **Dinou 9 (3.6× faster)** |
-| **SSR `/dashboard` Response** | **210.1 ms** | 210.2 ms | 238.8 ms | **Dinou 8/9 (~28.6 ms faster)** |
-| **PPR Shell First Chunk (TTFB)** | 6.01 ms | **5.64 ms** | 11.07 ms | **Dinou 9 (2.0× faster)** |
-| **PPR Full Streaming Completion** | 205.75 ms | **205.61 ms** | 214.43 ms | **Dinou 9 (8.8 ms faster)** |
-
 ---
 
 ### 7.3 Production Build & Disk Footprint (`pnpm bench:build`)
 
 Measured across repeated production builds (`pnpm run build`), clearing all build outputs and compiler caches before each run:
 
-| Framework | Run 1 | Run 2 | Median Duration | Total Output Size | Build Duration Comparison | Disk Footprint Comparison |
+| Framework | Run 1 | Run 2 | Mean Duration | Total Output Size | Build Duration Comparison | Disk Footprint Comparison |
 | :--- | ---: | ---: | ---: | ---: | :---: | :---: |
 | **Dinou 8.1.2** | 5.4 s | 4.5 s | **4.95 s** | **4.4 MB** (`.dinou`) | **Dinou (2.2× faster)** | **Dinou (8.5× smaller)** |
 | **Dinou 9.0.0** | 4.6 s | 4.6 s | **4.60 s** | **4.4 MB** (`.dinou`) | **Dinou (2.3× faster)** | **Dinou (8.5× smaller)** |
 | **Next.js 16.4.2** | 11.3 s | 10.0 s | 10.65 s | 37.5 MB (`.next`) | Baseline | Baseline |
 
-- **Build Duration** — Dinou 9.0.0 median build duration is 4.60 s, compared to 10.65 s in Next.js 16.4.2 (2.3× faster).
+- **Build Duration** — Dinou 9.0.0 mean build duration is 4.60 s (4.6 / 4.6 s), compared to 10.65 s (10.0 / 11.3 s) in Next.js 16.4.2 (2.3× faster).
 - **Disk Footprint** — Dinou build output directory occupies 4.4 MB (`.dinou`), compared to 37.5 MB in Next.js 16.4.2 (`.next`) (8.5× smaller).
 
 ---
@@ -258,14 +253,14 @@ Traverses production client bundles and compresses each file using gzip (-9) and
 
 Measured in development mode on localhost:
 
-| Framework | Dev Cold Start (3 Runs) | Cold Start Median | Cold Start Comparison | Chromium HMR (2 Runs) | HMR Median | HMR Comparison |
+| Framework | Dev Cold Start (3 Runs) | Cold Start Median | Cold Start Comparison | Chromium HMR (2 Runs) | HMR Mean | HMR Comparison |
 | :--- | :--- | ---: | :---: | :--- | ---: | :---: |
 | **Dinou 8.1.2** | 1.53 s / 1.43 s / 1.49 s | **1.49 s** | **Dinou (2.4× faster)** | 216 ms / 206 ms | **211 ms** | **Dinou (1.6× faster)** |
 | **Dinou 9.0.0** | 1.41 s / 1.35 s / 1.37 s | **1.37 s** | **Dinou (2.6× faster)** | 205 ms / 206 ms | **206 ms** | **Dinou (1.6× faster)** |
 | **Next.js 16.4.2** | 3.68 s / 3.51 s / 3.50 s | 3.51 s | Baseline | 310 ms / 351 ms | 331 ms | Baseline |
 
 - **Cold Start** — Dinou 9.0.0 median cold start time to first HTTP 200 response is 1.37 s, compared to 3.51 s in Next.js 16.4.2 (2.6× faster).
-- **Real-Browser HMR** — Dinou 9.0.0 median HMR DOM update latency is 206 ms, compared to 331 ms in Next.js 16.4.2 (1.6× faster). Measured end-to-end via Playwright headless Chromium: navigates to the page, modifies a text node in `page.tsx` on disk, and measures elapsed time until the DOM reflects the update without a full page reload.
+- **Real-Browser HMR** — Dinou 9.0.0 mean HMR DOM update latency is 206 ms (205 / 206 ms), compared to 331 ms (310 / 351 ms) in Next.js 16.4.2 (1.6× faster). Measured end-to-end via Playwright headless Chromium: navigates to the page, modifies a text node in `page.tsx` on disk, and measures elapsed time until the DOM reflects the update without a full page reload.
 
 ---
 
@@ -273,14 +268,16 @@ Measured in development mode on localhost:
 
 Tracks resident set size (RSS) across the complete process tree before, during, and after sustained HTTP load:
 
-| Framework | Idle RSS (5 Samples) | Peak RSS Under Load | Expansion ($\Delta$) | Post-Load Settled RSS |
+> **Workload Specification**: Sampled during the standard pipeline execution on October 25, 2026, under default pipeline load (`LOAD_CONNECTIONS=50`, `LOAD_DURATION=10s`), distinct from the dedicated 200-connection saturation stress tests in Sections 3–5.
+
+| Framework | Idle RSS (5 Samples) | Peak RSS Under Load (50 Conn) | Expansion ($\Delta$) | Post-Load Settled RSS |
 | :--- | ---: | ---: | ---: | ---: |
 | **Dinou 8.1.2** | 271.9 MB | **389.3 MB** | **+117.4 MB** | **388.1 MB** |
 | **Dinou 9.0.0** | 272.7 MB | **390.9 MB** | **+118.2 MB** | **390.1 MB** |
 | **Next.js 16.4.2** | **231.9 MB** | 473.5 MB | +241.6 MB | 471.5 MB |
 
 - **Idle Footprint** — Next.js 16.4.2 records 40.8 MB lower RSS at idle prior to receiving traffic (231.9 MB vs 272.7 MB in Dinou 9.0.0).
-- **Memory Expansion Under Load** — Under sustained HTTP load, Dinou 9.0.0 process-tree RSS grows by +118.2 MB, compared to +241.6 MB in Next.js 16.4.2 (a 2.04× difference in expansion).
+- **Memory Expansion Under Load** — Under standard 50-connection load, Dinou 9.0.0 process-tree RSS grows by +118.2 MB, compared to +241.6 MB in Next.js 16.4.2 (a 2.04× difference in expansion).
 - **Peak & Post-Load Settled Memory** — Dinou 9.0.0 reaches a peak RSS of 390.9 MB (82.6 MB lower than Next.js at 473.5 MB) and settles at 390.1 MB post-load (81.4 MB lower than Next.js at 471.5 MB).
 
 ---
@@ -297,7 +294,7 @@ Tracks resident set size (RSS) across the complete process tree before, during, 
 
 ## 9. How to Reproduce
 
-### 9.1 Machine Provisioning (Dedicated Cloud Droplet)
+### 9.1 Machine Provisioning & Environment Setup
 
 For rigorous, clean reproduction without CPU noisy-neighbor interference, deploy a dedicated cloud instance (e.g. DigitalOcean CPU-Optimized, 4 Dedicated vCPUs / 8 GB RAM on Ubuntu 24.04 LTS) and run the automated provisioning script:
 
@@ -305,9 +302,19 @@ For rigorous, clean reproduction without CPU noisy-neighbor interference, deploy
 git clone https://github.com/roggc/dinou-benchmark
 cd dinou-benchmark/dinou-benchmark
 
-# Provision environment: installs Node 22 LTS, pnpm, Playwright Chromium, 
-# configures 4 GB swap, tunes somaxconn and file descriptor limits:
+# Option A: Automated droplet provisioning (recommended)
+# Installs Node 22 LTS, pnpm, Playwright Chromium, configures 4 GB swap,
+# tunes network stack/limits, and runs pnpm install --frozen-lockfile + pnpm shared:
 sudo bash infra/droplet-setup.sh
+```
+
+If reproducing manually or on an already provisioned machine, initialize dependencies and sync shared components explicitly:
+
+```bash
+# Option B: Manual setup
+pnpm install --frozen-lockfile
+pnpm shared
+pnpm exec playwright install --with-deps chromium
 ```
 
 ### 9.2 Running the Full Benchmark Suite (`pnpm bench`)
