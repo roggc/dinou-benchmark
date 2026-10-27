@@ -21,7 +21,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route:
 - Across all 5 evaluated routes, **Dinou outperforms Next.js in both throughput and latency**.
 - On dynamic and PPR routes, Dinou delivers **2.4× to 3.2× higher throughput** while maintaining a p99 latency that is **up to 15× lower**.
 - On **ISR, both frameworks serve directly from cache**, resulting in a narrow gap (1.3× in favor of Dinou).
-- **Dinou 8.1.2 and 9.0.0 exhibit equivalent performance** (variance remains within ±5%), showing no measurable performance regression in this benchmark.
+- **Dinou 8.1.2 and 9.0.0 exhibit equivalent performance** (variance remains within ~2%), showing no measurable performance regression in this benchmark.
 
 ---
 
@@ -99,7 +99,7 @@ Under 200 concurrent connections, 30s per execution, 3 runs per route:
 
 ## 5. Reproducibility & Variance Analysis
 
-This official run matches an earlier independent run (200 connections, 30s × 1, without full-concurrency warm-up): **all throughput figures replicate within ±2–5% variance**.
+This official run matches an earlier independent run (200 connections, 30s × 1, without full-concurrency warm-up): **all throughput figures replicate within 5.5%**.
 
 | Route | Dinou 9 (Preliminary) | Dinou 9 (Official) | Dinou Variance ($\Delta$) | Next.js 16 (Preliminary) | Next.js 16 (Official) | Next.js Variance ($\Delta$) |
 | :--- | ---: | ---: | :---: | ---: | ---: | :---: |
@@ -260,7 +260,7 @@ Measured in development mode on localhost:
 | **Next.js 16.4.2** | 3.68 s / 3.51 s / 3.50 s | 3.51 s | Baseline | 310 ms / 351 ms | 331 ms | Baseline |
 
 - **Cold Start** — Dinou 9.0.0 median cold start time to first HTTP 200 response is 1.37 s, compared to 3.51 s in Next.js 16.4.2 (2.6× faster).
-- **Real-Browser HMR** — Dinou 9.0.0 mean HMR DOM update latency is 206 ms (205 / 206 ms), compared to 331 ms (310 / 351 ms) in Next.js 16.4.2 (1.6× faster). Measured end-to-end via Playwright headless Chromium: navigates to the page, modifies a text node in `page.tsx` on disk, and measures elapsed time until the DOM reflects the update without a full page reload.
+- **Real-Browser HMR** — Dinou 9.0.0 mean HMR DOM update latency is 206 ms (205 / 206 ms), compared to 331 ms (310 / 351 ms) in Next.js 16.4.2 (1.6× faster). Measured end-to-end via Playwright headless Chromium: navigates to the page, modifies a text node in `page.tsx` on disk, and measures elapsed time from disk write until the updated text appears in the browser DOM via Fast Refresh / HMR.
 
 ---
 
@@ -285,7 +285,7 @@ Tracks resident set size (RSS) across the complete process tree before, during, 
 ## 8. Limitations & Boundary Conditions
 
 - **Colocated Client & Server**: The load generator and application servers ran on the same host. With 4 dedicated vCPUs, interference is minimal but non-zero.
-- **Sample Size**: One official publication pass (comprising 3 independent runs per route). Results replicate earlier exploratory runs within ±5%.
+- **Sample Size**: One official publication pass (comprising 3 independent runs per route). Results replicate earlier exploratory runs within 5.5%.
 - **Synthetic Delays**: The 200 ms delays on dynamic routes simulate database latency and third-party API response times.
 - **Single-Process Node.js**: Results reflect single-process Node.js execution. Multi-core deployments (`node:cluster` or container clusters behind Nginx/Envoy) will exhibit different absolute numbers.
 - **Next.js 16 Architecture**: Next.js 16 replaces `experimental.ppr` with `cacheComponents` (`cacheLife`, `connection()`). Both implementations aim to follow each framework's idiomatic conventions.
@@ -330,6 +330,12 @@ mkdir -p results
 ulimit -n 65535
 LOAD_CONNECTIONS=200 LOAD_DURATION=30 LOAD_WARMUP=5 LOAD_RUNS=3 pnpm bench
 ```
+
+> [!NOTE]
+> **Memory Reproduction Notice**: Running the full pipeline with `LOAD_CONNECTIONS=200` executes the memory phase under 200 concurrent connections. The published memory figures in §7.6 were recorded under the default pipeline load (`LOAD_CONNECTIONS=50`, `LOAD_DURATION=10s`). To reproduce the exact §7.6 memory figures, run `pnpm bench:memory` separately without environment overrides:
+> ```bash
+> pnpm bench:memory
+> ```
 
 > **Note**: You can also run individual phases independently if preferred:
 > - **Functional Verification Gate**: `pnpm bench:verify`
