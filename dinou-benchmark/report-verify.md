@@ -7,7 +7,7 @@
 - **Next.js v16.4.3** (`apps/next` with `cacheComponents: true` / `"use cache"` / PPR enabled) — React 19 App Router
 
 > **Methodological Note on Why `dinou-9-u` Is Excluded From Verification Tables:**  
-> While the repository includes `apps/dinou-9-u` (the unvendorized distribution of Dinou) for install-time and disk-size benchmarks, its framework runtime and application code are 100% identical to `apps/dinou-9` (differing only in whether third-party dependencies are resolved from `node_modules` instead of pre-bundled). Including both `dinou-9` and `dinou-9-u` in multi-run verification would subject Dinou's codebase to **twice as many verification passes (`2×`)** as Next.js, creating an asymmetric sample size that would statistically penalize Dinou when evaluating non-deterministic race conditions. Therefore, `scripts/verify.mjs` benchmarks **Dinou v9.0.3 (`dinou-9`)** and **Next.js v16.4.3 (`next`)** head-to-head with the exact same number of executions (**13 full runs × 36 checks = 468 check executions per framework**).
+> While the repository includes `apps/dinou-9-u` (the unvendorized distribution of Dinou) for install-time and disk-size benchmarks, its framework runtime and application code are 100% identical to `apps/dinou-9` (differing only in whether third-party dependencies are resolved from `node_modules` instead of pre-bundled). Including both `dinou-9` and `dinou-9-u` in multi-run verification would subject Dinou's codebase to **twice as many verification passes (`2×`)** as Next.js, creating an asymmetric sample size that would statistically penalize Dinou when evaluating non-deterministic race conditions. Therefore, `scripts/verify.mjs` benchmarks **Dinou v9.0.3 (`dinou-9`)** and **Next.js v16.4.3 (`next`)** head-to-head with the exact same number of executions (**10 full runs × 36 checks = 360 check executions per framework**).
 
 ---
 
@@ -17,14 +17,14 @@ To evaluate both frameworks beyond synthetic happy-path benchmarks, we implement
 
 The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
-### 1.1 Final Verification Scoreboard (36 Checks Across 13 Full Runs = 468 Check Executions per Framework)
+### 1.1 Final Verification Scoreboard (36 Checks Across 10 Full Runs = 360 Check Executions per Framework)
 
-Across **13 complete verification runs** (3 single-pass runs + 10 consecutive passes via `node scripts/verify.mjs --only=dinou-9,next --runs=10`, restoring clean post-build disk artifacts and restarting a fresh server process before every run):
+Across the **10-run consecutive verification stress suite** (`node scripts/verify.mjs --only=dinou-9,next --runs=10`, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run):
 
-| Framework | Version | Baseline Checks (1 to 13) | Core 3D Rigorous Suites (14 to 22) | Deep Stress & Concurrency Edge Cases (23 to 36) | Total Check Executions (`13 × 36`) | Check Breakdown (`36` Total) | Status |
+| Framework | Version | Baseline Checks (1 to 13) | Core 3D Rigorous Suites (14 to 22) | Deep Stress & Concurrency Edge Cases (23 to 36) | Total Check Executions (`10 × 36`) | Check Breakdown (`36` Total) | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 ✅ on 13 runs | 9 ✅ on 13 runs | 14 ✅ on 13 runs | **468 ✅** (`100.0%`) | **36 ✅** | **✅ PASS (100% deterministic, `0` flaky)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ on 13 runs | 9 ✅ on 13 runs | 8 ✅ / 5 ❌ / 1 ⚠️ on 13 runs | **400 ✅ / 68 ❌** (`85.5%`) | **30 ✅ / 5 ❌ / 1 ⚠️** | **❌ FAIL (5 deterministic fails on 13 runs + ⚠️ 1 flaky: `3 Fail of 13 execs`)** |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 ✅ on 10 runs | 9 ✅ on 10 runs | 14 ✅ on 10 runs | **360 ✅** (`100.0%`) | **36 ✅** | **✅ PASS (100% deterministic, `0` flaky)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ on 10 runs | 9 ✅ on 10 runs | 8 ✅ / 5 ❌ / 1 ⚠️ on 10 runs | **308 ✅ / 52 ❌** (`85.6%`) | **30 ✅ / 5 ❌ / 1 ⚠️** | **❌ FAIL (5 deterministic fails on 10 runs + ⚠️ 1 flaky: `2 Fail of 10 execs`)** |
 
 ---
 
@@ -60,7 +60,7 @@ Because the architecture forms a **3D Cube** across three orthogonal axes—**X:
    - **What is verified:**
      - Real-time dynamic bypass (`revalidate={0}`), surgical slot refresh (`refreshSlot` by ID and by tag) inside dynamic layouts/pages without re-executing the host (`999`), shared multi-slot tags, nested `Outer → Inner` slot isolation, preserved client `useState` inside the slot across live `refreshSlot`, and `"use server"` functions passed as props inside a cached slot (**Check 17**).
      - Wildcard `refreshSlot("*", { fresh: true })` and clock-based `1s` slot TTL expiration inside a standalone static host page (`ppr = false`) without re-executing the host page or `3600s` sibling slots (**Check 27** — *Fails 100% on Next.js*).
-     - Cold-miss concurrency stampede protection (`6` simultaneous requests coalesce into `1` slot execution) (**Check 28** — *Flaky `3 Fail of 13 execs` on Next.js*).
+     - Cold-miss concurrency stampede protection (`6` simultaneous requests coalesce into `1` slot execution) (**Check 28** — *Flaky `2 Fail of 10 execs` on Next.js*).
      - Tag-only `<DinouCacheSlot tags={["cs-tag-only"]}>` (no `id` prop) live `refreshSlot` and server `revalidateTag` without re-executing the dynamic host page (**Check 33** — *Fails 100% on Next.js*).
 
 3. **Individual Axis Z — Pure Temporal / Streaming Segmentation (`PPR`: Static Shell + Dynamic `<Suspense>` Holes)**
@@ -96,9 +96,9 @@ Because the architecture forms a **3D Cube** across three orthogonal axes—**X:
 
 ---
 
-## 2. Complete 36-Check Verification Matrix (13 Runs per Framework)
+## 2. Complete 36-Check Verification Matrix (10 Runs per Framework)
 
-| # | Check Name in `scripts/verify.mjs` | Dimension / Suite | Dinou 9.0.3 (`13` runs) | Next.js 16.4.3 (`13` runs) |
+| # | Check Name in `scripts/verify.mjs` | Dimension / Suite | Dinou 9.0.3 (`10` runs) | Next.js 16.4.3 (`10` runs) |
 | :-: | :--- | :--- | :---: | :---: |
 | 1 | `ssg: / responds 200` | Baseline SSG | 100% ✅ PASS | 100% ✅ PASS |
 | 2 | `ssg: / 50 items listing` | Baseline SSG | 100% ✅ PASS | 100% ✅ PASS |
@@ -127,7 +127,7 @@ Because the architecture forms a **3D Cube** across three orthogonal axes—**X:
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | 100% ✅ PASS | 100% ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | 100% ✅ PASS (`280/100`, `281/100`) | 100% ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **100% ✅ PASS** (`hosts=100`) | **100% ❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** | **⚠️ FLAKY** (`76.9% ✅ · 23.1% ❌`) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** | **⚠️ FLAKY** (`80% ✅ · 20% ❌`) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **100% ✅ PASS** (`402/fresh-fast`) | **100% ❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | 100% ✅ PASS (`330/331`, `340/341/342`) | 100% ✅ PASS (`330/331`, `340/341/342`) |
 | 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **100% ✅ PASS** (`0` page RSC reqs) | **100% ❌ FAIL** (`pageRscReqs=1–3`) |
@@ -170,7 +170,7 @@ To connect the technical benchmark assertions above to everyday web development,
 | **25** | **A Broken Third-Party API on One Tab (`error.tsx` Containment & Recovery)** | Only the inner page outlet shows the error fallback; the top navbar/sidebar stays interactive so the user can click another tab and recover immediately. | An error in one sub-page destroys the entire app chrome, stranding the user on a dead screen requiring a manual URL edit or hard reload. |
 | **26** | **Independent Background Expiration of Header Weather (1s TTL) vs. Article Body (1h TTL)** | When the header's TTL expires, only the header regenerates; when the page's TTL expires, only the page regenerates. | Whenever a short-lived header badge expires, the server is forced to re-generate the entire expensive article or catalog page from scratch. |
 | **27** | **"Refresh All Widgets" Button on a Live Dashboard (`refreshSlot('*', { fresh: true })`)** | All cached sub-widgets update in place simultaneously without re-executing the expensive host layout or host page. | **❌ In Next.js (`100% FAIL`):** Refreshing widgets from the client forces a full-route `router.refresh()`, re-executing the dynamic host layout and dynamic host page (`999`). |
-| **28** | **Flash-Sale Traffic Spike When Cache Expires (`6` Concurrent Requests / Stampede Protection)** | When 100 users hit an expired product widget at the exact same millisecond, the database query runs **once** and all users share the result. | **⚠️ In Next.js (`FLAKY — 23.1% FAIL`):** A background `<Suspense>` render from a prior Server Action leaks into the cold window, executing the expensive query multiple times under load. |
+| **28** | **Flash-Sale Traffic Spike When Cache Expires (`6` Concurrent Requests / Stampede Protection)** | When 100 users hit an expired product widget at the exact same millisecond, the database query runs **once** and all users share the result. | **⚠️ In Next.js (`FLAKY — 20% FAIL`):** A background `<Suspense>` render from a prior Server Action leaks into the cold window, executing the expensive query multiple times under load. |
 | **29** | **User Rapidly Clicking Filters: Slow Query (`250ms`) Followed by Fast Query (`10ms`) (`LWW Race`)** | The UI and disk cache deterministically keep the user's **latest** click (`402 / fresh-fast`), discarding the late response from the first click (`401 / stale-slow`). | **❌ In Next.js (`100% FAIL`):** The user clicks Filter B (`10ms`), sees Filter B briefly, and `190ms` later the slow response from Filter A (`250ms`) arrives and **overwrites the screen with stale data**. |
 | **30** | **Micro-Widget Expiration Inside a Static/PPR Page After Server Restart (`1s PPR TTL + Shell Slot`)** | Updating a small "Last Updated" or price slot inside a static page updates only that slot without re-running the static host page, even right after a server deploy/restart. | Without persistent slot shells (or RAM warmup), invalidating a small widget after a server restart triggers a cold miss that re-executes the entire host page. |
 | **31** | **Background Notification Updating Tab A While User Is Viewing Tab B (`Unmounted Slot Refresh`)** | When a live event updates a widget belonging to Tab A while the user is on Tab B, returning to Tab A is instant (`0` page network requests) and shows the updated widget. | **❌ In Next.js (`100% FAIL`):** Invalidating Tab A's widget tag purges the entire client Router Cache, so clicking back to Tab A incurs a full network re-fetch of the page. |
@@ -182,7 +182,7 @@ To connect the technical benchmark assertions above to everyday web development,
 
 ---
 
-## 3. Root-Cause Analysis of the 5 Deterministic Next.js 16.4.3 Failures (`13/13` Runs) + ⚠️ 1 Intrinsic Flaky Race Condition (`3/13` Runs)
+## 3. Root-Cause Analysis of the 5 Deterministic Next.js 16.4.3 Failures (`10/10` Runs) + ⚠️ 1 Intrinsic Flaky Race Condition (`2/10` Runs)
 
 ### 3.0 Synthesis: Two Underlying Architectural Root Causes Explain All 6 Next.js Issues
 
@@ -195,11 +195,11 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### Failure #1 — Check 24 (`13 Fail of 13 execs` — 100% Deterministic): `router.refresh()` Lacks Horizontal Segmentation on the Client
+### Failure #1 — Check 24 (`10 Fail of 10 execs` — 100% Deterministic): `router.refresh()` Lacks Horizontal Segmentation on the Client
 - **Test:** `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard`
 - **Route:** `/rigorous/hs/refresh-lab?filter=active&buildId=custom_b1&v=custom_v1`
 - **Real-World User Impact:** When a user clicks a "Refresh List" button inside a sub-page (e.g., refreshing a table of orders or tickets), **Next.js re-executes every dynamic ancestor layout on the server** (re-running user profile queries, organization permissions, and sidebar counters) instead of refreshing only the page content. In **Dinou v9.0.3**, `router.refresh()` refreshes only the active page (`page.rsc`), keeping parent layouts untouched unless `router.refresh({ layout: true })` is explicitly requested.
-- **Observed Error on Next.js 16.4.3 (`13/13` runs):**
+- **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
   router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270)
   ```
@@ -209,11 +209,11 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### Failure #2 — Check 27 (`13 Fail of 13 execs` — 100% Deterministic): No Sub-Component Client Slot Refresh (`refreshSlot('*', { fresh: true })` Re-Executes Dynamic Host Layout & Page)
+### Failure #2 — Check 27 (`10 Fail of 10 execs` — 100% Deterministic): No Sub-Component Client Slot Refresh (`refreshSlot('*', { fresh: true })` Re-Executes Dynamic Host Layout & Page)
 - **Test:** `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL`
 - **Route:** `/rigorous/cache-slot`
 - **Real-World User Impact:** On a complex dashboard where a user clicks "Refresh Widgets" (or refreshes a single KPI card), **Next.js cannot fetch just the widget's RSC payload from the browser**—it must run a full-route `router.refresh()`, which re-executes the enclosing dynamic layout and dynamic host page on the server, adding latency and unnecessary database load. In **Dinou v9.0.3**, `refreshSlot` updates only the targeted `<DinouCacheSlot>` boundary in place.
-- **Observed Error on Next.js 16.4.3 (`13/13` runs):**
+- **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
   wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999)
   ```
@@ -223,11 +223,11 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### Failure #3 — Check 29 (`13 Fail of 13 execs` — 100% Deterministic): Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
+### Failure #3 — Check 29 (`10 Fail of 10 execs` — 100% Deterministic): Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
 - **Test:** `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)`
 - **Route:** `/rigorous/hs-cache-slot`
 - **Real-World User Impact:** A classic UI bug in interactive apps: a user clicks a filter or refresh button that triggers a slow backend query (`250 ms`), then immediately changes their mind `50 ms` later and clicks a second option that responds quickly (`10 ms`). In **Next.js**, the user briefly sees the correct second result (`402 / fresh-fast`), and then `190 ms` later the old slow request finishes and **overwrites the screen with stale data (`401 / stale-slow`)**. In **Dinou v9.0.3**, monotonic Last-Write-Wins (LWW) guards on both client and server discard the late response automatically.
-- **Observed Error on Next.js 16.4.3 (`13/13` runs):**
+- **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
   LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow
   ```
@@ -244,11 +244,11 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### Failure #4 — Check 31 (`13 Fail of 13 execs` — 100% Deterministic): Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
+### Failure #4 — Check 31 (`10 Fail of 10 execs` — 100% Deterministic): Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
 - **Test:** `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back`
 - **Routes:** `/rigorous/hs-cache-slot` (Page A) $\leftrightarrow$ `/rigorous/hs-cache-slot/page-b` (Page B)
 - **Real-World User Impact:** Suppose a user visits their "Portfolio" tab (Page A), navigates to the "Trade" tab (Page B), executes an action that updates a portfolio summary widget on Page A, and clicks back to "Portfolio" (Page A). In **Dinou v9.0.3**, the widget updates in the background (`slotOverrideCache`) while Page A's route remains in the client `pageCache`, so clicking back to Page A is **instant (`0` page network requests)**. In **Next.js**, invalidating that widget tag wipes out the client Router Cache, forcing a full network re-fetch of Page A when the user navigates back.
-- **Observed Error on Next.js 16.4.3 (`13/13` runs):**
+- **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
   expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3
   ```
@@ -260,11 +260,11 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### Failure #5 — Check 33 (`13 Fail of 13 execs` — 100% Deterministic): Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
+### Failure #5 — Check 33 (`10 Fail of 10 execs` — 100% Deterministic): Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
 - **Test:** `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag`
 - **Route:** `/rigorous/cache-slot`
 - **Real-World User Impact:** When developers wrap a reusable UI component in a cache boundary using only semantic domain tags (e.g., `tags={["cart-summary"]}`) without hardcoding unique `id` props, **Dinou v9.0.3** still allows refreshing that component live in the browser (`refreshSlot("cart-summary")`) without re-running the dynamic page around it. In **Next.js**, refreshing a tag-addressed component from the client forces the entire dynamic host page to re-execute on the server (`999`).
-- **Observed Error on Next.js 16.4.3 (`13/13` runs):**
+- **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
   tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)
   ```
@@ -274,22 +274,22 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`3 Fail of 13 Execs`): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
+### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`2 Fail of 10 Execs` · `80% ✅ / 20% ❌`): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
 - **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution`
 - **Route:** `/rigorous/cache-slot`
-- **Real-World User / Production Impact:** When an admin or webhook triggers a Server Action that invalidates a cached widget on a page with `<Suspense>` streaming, Next.js prematurely resolves the client `await` while secretly continuing to re-render the `<Suspense>` tree in the background on the server. Under concurrent traffic (`6` simultaneous requests), that dangling background render races with subsequent invalidations and requests, causing expensive database/API queries inside `"use cache"` to execute multiple times (`got 2`) instead of coalescing into `1` execution. In **Dinou v9.0.3**, Server Functions are pure RPC calls that never trigger hidden background page renders, guaranteeing `1` execution across `13/13` runs.
-- **Observed Behavior Across All 13 Verification Runs on Next.js 16.4.3 (`⚠️ FLAKY — 3 Fail of 13 execs`):**
-  - Passed in 10 of the 13 runs (`execCount = 1`), and **failed in 3 of the 13 runs** (1 failure in the 3 initial verification runs + 2 failures on `Run 1/10` and `Run 10/10` in the `--runs=10` stress suite = `3 Fail of 13 execs`, `23.1%` failure rate) with:
+- **Real-World User / Production Impact:** When an admin or webhook triggers a Server Action that invalidates a cached widget on a page with `<Suspense>` streaming, Next.js prematurely resolves the client `await` while secretly continuing to re-render the `<Suspense>` tree in the background on the server. Under concurrent traffic (`6` simultaneous requests), that dangling background render races with subsequent invalidations and requests, causing expensive database/API queries inside `"use cache"` to execute multiple times (`got 2`) instead of coalescing into `1` execution. In **Dinou v9.0.3**, Server Functions are pure RPC calls that never trigger hidden background page renders, guaranteeing `1` execution across `10/10` runs.
+- **Observed Behavior Across the 10-Run Stress Suite (`--runs=10`) on Next.js 16.4.3 (`⚠️ FLAKY — 2 Fail of 10 execs` · `80% ✅ / 20% ❌`):**
+  - Passed in 8 of the 10 runs (`Runs 2–9`, `execCount = 1`), and **failed in 2 of the 10 runs** (`Run 1/10` and `Run 10/10` in the `--runs=10` stress suite, in addition to 1 failure during the 3 initial single-pass runs prior to the 10-run batch) with:
     ```text
     expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
     ```
-  - Meanwhile, on **Dinou v9.0.3 (`dinou-9`)**, all 36 checks—including Check 28—passed **`13/13` runs (`468/468` total check executions, `0` failures, `0` flaky checks — 100.0% deterministic)**.
+  - Meanwhile, on **Dinou v9.0.3 (`dinou-9`)**, all 36 checks—including Check 28—passed **`10/10` runs (`360/360` total check executions in `--runs=10`, plus `3/3` in the initial single-pass runs, `0` failures, `0` flaky checks — 100.0% deterministic)**.
 - **Root-Cause Investigation in Next.js 16.4.3 Internals (`revalidate.js`, `action-handler.js`, `use-cache-wrapper.js`):**
   1. **Forced Page Re-Render Inside Server Action `POST`:** When a `"use server"` Server Action invoked from `/rigorous/cache-slot` calls `updateTag(...)` (such as `rigorousResetState()` or `rigorousRevalidateTag("cs-tag-stampede")`), Next.js's `revalidate()` in `next/dist/server/web/spec-extension/revalidate.js` unconditionally sets `store.pathWasRevalidated = ActionDidRevalidateStaticAndDynamic`.
   2. **Automatic RSC Flight Stream on `POST`:** Because `store.pathWasRevalidated` is set, `executeActionAndPrepareForRender()` in `next/dist/server/app-render/action-handler.js` sets `skipPageRendering = false` and immediately starts re-rendering the entire current route (`/rigorous/cache-slot`) as an RSC Flight stream inside the Server Action `POST` response (`generateFlight`).
   3. **Premature Client `await` Resolution Due to `<Suspense>` Streaming:** Because the body of `/rigorous/cache-slot` (`CacheSlotDynamicBody`) is wrapped in `<Suspense>` and awaits `connection()`, React Flight flushes **Chunk #1** of the `POST` response (containing the Server Action's return value `actionResult` and the `<Suspense>` fallback) **immediately**, while on the Node.js server `CacheSlotDynamicBody` and its child `"use cache"` slots (including `<CsStampedeSlotContent />`) are still executing asynchronously in the background.
   4. **The Intrinsic Race Window:** On the client, `await resetState()` resolves as soon as Chunk #1 arrives—making the client code believe the Server Action has completely finished when in fact the server still has a dangling background `<Suspense>` render in flight from that `POST`. In Check 28, the client immediately calls `await mutateState({ csStampedeExecCount: 0, csStampedeDelayMs: 150 })`, followed by `await revalidateTag("cs-tag-stampede")` and 6 concurrent `fetch("/rigorous/cache-slot")` calls. Depending on millisecond-level CPU scheduling, the dangling `<Suspense>` stream from the previous `POST` reaches `<CsStampedeSlotContent />` right *after* `mutateState` sets `csStampedeExecCount = 0` (**Execution #1**) and right *before* `revalidateTag("cs-tag-stampede")` expires the tag again and triggers the coalesced fill for the 6 concurrent `GET` requests (**Execution #2**, yielding `execCount = 2` instead of `1`).
-- **Why Dinou v9.0.3 Is 100% Deterministic (`13/13` Runs, `1` Execution in Every Run):**
+- **Why Dinou v9.0.3 Is 100% Deterministic (`10/10` Runs, `1` Execution in Every Run):**
   - In **Dinou v9.0.3**, Server Functions are pure RPC calls (`POST /____server_fn____`). Calling `resetState()` or `revalidateTag("cs-tag-stampede")` updates the server state/cache and returns a clean JSON response without ever launching an implicit background `<Suspense>` page render behind the developer's back. When `await` resolves in the browser, the Dinou server is 100% idle, and the subsequent 6 concurrent `GET` requests deterministically coalesce in `inflightSlotRenders` into **1** execution every single time.
 
 ---
