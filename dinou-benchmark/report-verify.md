@@ -100,14 +100,14 @@ Because the architecture forms a **3D Cube** across three orthogonal axes—**X:
 
 | # | Check Name in `scripts/verify.mjs` | Dimension / Suite | Dinou 9.0.3 (`13` runs) | Next.js 16.4.3 (`13` runs) |
 | :-: | :--- | :--- | :---: | :---: |
-| 1 | `ssg: / responds 200` | Baseline SSG | 100% ✅ PASS (4.6 ms) | 100% ✅ PASS (4.3 ms) |
+| 1 | `ssg: / responds 200` | Baseline SSG | 100% ✅ PASS | 100% ✅ PASS |
 | 2 | `ssg: / 50 items listing` | Baseline SSG | 100% ✅ PASS | 100% ✅ PASS |
 | 3 | `ssg: stable HTML across requests` | Baseline SSG | 100% ✅ PASS | 100% ✅ PASS |
 | 4 | `isr: /items/1 responds 200` | Baseline ISR | 100% ✅ PASS | 100% ✅ PASS |
 | 5 | `isr: cached and stable HTML` | Baseline ISR | 100% ✅ PASS | 100% ✅ PASS |
 | 6 | `isr: prerendered route /items/42` | Baseline ISR | 100% ✅ PASS | 100% ✅ PASS |
 | 7 | `404: nonexistent & validateParams/allowISG routes` | Baseline + HS Guards | 100% ✅ PASS | 100% ✅ PASS |
-| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | 100% ✅ PASS (231.6 ms) | 100% ✅ PASS (240.7 ms) |
+| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | 100% ✅ PASS | 100% ✅ PASS |
 | 9 | `dashboard: is dynamic (two requests differ)` | Baseline Dynamic SSR | 100% ✅ PASS | 100% ✅ PASS |
 | 10 | `dashboard: streams 3 holes after fallback` | Baseline Streaming | 100% ✅ PASS | 100% ✅ PASS |
 | 11 | `ppr: static shell in first chunk` | Baseline PPR | 100% ✅ PASS | 100% ✅ PASS |
