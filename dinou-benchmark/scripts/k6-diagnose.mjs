@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * Advanced k6 diagnostic suite:
- * 1. 30-second duration to verify if max latency tracks test duration (connection starvation).
- * 2. Linux kernel TCP listen queue monitoring (TcpExtListenOverflows, TcpExtListenDrops, somaxconn).
- * 3. Server-side internal request duration measurement (measures if Node/Dinou took 14s or if it was network).
- * 4. k6 JSON output streaming parser to find exact start timestamps and buckets of slow requests (> 1s).
+ * 1. Configurable target route via ROUTE=/rigorous/cache-slot or --route=/rigorous/cache-slot.
+ * 2. 30-second duration (with 60s k6 per-request timeout) to see exact max latency when > 30s.
+ * 3. Linux kernel TCP listen queue monitoring (TcpExtListenOverflows, TcpExtListenDrops, somaxconn).
+ * 4. Server-side internal request duration & socket accept measurement via DIAGNOSE=1 (/ __stats).
+ * 5. k6 JSON output streaming parser to find exact start timestamps and buckets of slow requests (> 1s).
  */
 import { execSync, spawn } from "node:child_process";
 import { createReadStream, rmSync, existsSync, mkdirSync } from "node:fs";
@@ -15,6 +16,8 @@ import { startServer } from "./lib.mjs";
 
 const k6Script = path.join(ROOT, "scripts", "k6-scenario.js");
 const duration = process.env.DURATION || "30s";
+const cliRoute = process.argv.find((a) => a.startsWith("--route="))?.split("=")[1];
+const routePath = process.env.ROUTE || cliRoute || "/rigorous/cache-slot";
 
 function getKernelStats() {
   if (process.platform !== "linux") return null;
@@ -67,7 +70,7 @@ async function analyzeSlowRequestsInK6Json(jsonFile, testStartedAt) {
   const baseTime = minStartedAt !== Infinity ? minStartedAt : testStartedAt;
 
   console.log(`\n------------------------------------------------------------`);
-  console.log(`k6 SLOW REQUESTS & START TIMESTAMP ANALYSIS`);
+  console.log(`k6 SLOW REQUESTS & START TIMESTAMP ANALYSIS (${routePath})`);
   console.log(`------------------------------------------------------------`);
   console.log(`Total HTTP requests evaluated: ${totalRequests}`);
 
@@ -76,17 +79,21 @@ async function analyzeSlowRequestsInK6Json(jsonFile, testStartedAt) {
     return;
   }
 
+  const over30s = slowRequests.filter((r) => r.durationMs >= 30000);
   console.log(
-    `Total requests taking > 1.0s: ${slowRequests.length} (${((slowRequests.length / totalRequests) * 100).toFixed(2)}%)`
+    `Total requests taking > 1.0s : ${slowRequests.length} (${((slowRequests.length / totalRequests) * 100).toFixed(2)}%)`
+  );
+  console.log(
+    `Total requests taking >= 30s : ${over30s.length} (these become timeouts in Autocannon with 30s timeout)`
   );
 
   // Bucket slow requests by when they were sent
   const buckets = [
-    { label: "Burst Window  [0.0s - 1.0s] ", min: 0, max: 1, count: 0, maxDur: 0 },
-    { label: "Steady Window [1.0s - 5.0s] ", min: 1, max: 5, count: 0, maxDur: 0 },
-    { label: "Steady Window [5.0s - 15.0s]", min: 5, max: 15, count: 0, maxDur: 0 },
-    { label: "Steady Window [15.0s - 30.0s]", min: 15, max: 30, count: 0, maxDur: 0 },
-    { label: "Wrap-up Window [> 30.0s]     ", min: 30, max: Infinity, count: 0, maxDur: 0 },
+    { label: "Burst Window  [0.0s - 1.0s] ", min: 0, max: 1, count: 0, over30s: 0, maxDur: 0 },
+    { label: "Steady Window [1.0s - 5.0s] ", min: 1, max: 5, count: 0, over30s: 0, maxDur: 0 },
+    { label: "Steady Window [5.0s - 15.0s]", min: 5, max: 15, count: 0, over30s: 0, maxDur: 0 },
+    { label: "Steady Window [15.0s - 30.0s]", min: 15, max: 30, count: 0, over30s: 0, maxDur: 0 },
+    { label: "Wrap-up Window [> 30.0s]     ", min: 30, max: Infinity, count: 0, over30s: 0, maxDur: 0 },
   ];
 
   for (const r of slowRequests) {
@@ -94,6 +101,7 @@ async function analyzeSlowRequestsInK6Json(jsonFile, testStartedAt) {
     r.relSec = relSec;
     const bucket = buckets.find((b) => relSec >= b.min && relSec < b.max) || buckets[buckets.length - 1];
     bucket.count++;
+    if (r.durationMs >= 30000) bucket.over30s++;
     if (r.durationMs > bucket.maxDur) bucket.maxDur = r.durationMs;
   }
 
@@ -101,7 +109,7 @@ async function analyzeSlowRequestsInK6Json(jsonFile, testStartedAt) {
   for (const b of buckets) {
     if (b.count > 0) {
       console.log(
-        `  → ${b.label}: ${b.count.toString().padStart(4, " ")} slow requests | Max duration: ${(b.maxDur / 1000).toFixed(2)}s`
+        `  → ${b.label}: ${b.count.toString().padStart(4, " ")} slow (>1s) | ${b.over30s.toString().padStart(3, " ")} (>=30s) | Max duration: ${(b.maxDur / 1000).toFixed(2)}s`
       );
     } else {
       console.log(`  → ${b.label}:    0 slow requests`);
@@ -122,7 +130,7 @@ async function analyzeSlowRequestsInK6Json(jsonFile, testStartedAt) {
 
 async function testWithK6(framework, appDir, port) {
   console.log(`\n============================================================`);
-  console.log(`K6 LOAD TEST: ${framework} (Port ${port})`);
+  console.log(`K6 LOAD TEST: ${framework} (Port ${port}) — Route: ${routePath}`);
   console.log(`200 Concurrent VUs for ${duration} (Go HTTP Network Stack)`);
   console.log(`============================================================`);
 
@@ -138,6 +146,7 @@ async function testWithK6(framework, appDir, port) {
     args: ["run", "start"],
     port,
     readyPath: "/",
+    env: { DIAGNOSE: "1" },
   });
 
   const resultsDir = path.join(ROOT, "results");
@@ -146,8 +155,9 @@ async function testWithK6(framework, appDir, port) {
   const jsonOut = path.join(resultsDir, `k6-${port}.json`);
   if (existsSync(jsonOut)) rmSync(jsonOut, { force: true });
 
-  // Reset server stats if endpoint exists
+  // Warmup the target route before resetting stats and running k6
   try {
+    await fetch(`http://127.0.0.1:${port}${routePath}`);
     await fetch(`http://127.0.0.1:${port}/__reset_stats`);
   } catch {}
 
@@ -162,7 +172,7 @@ async function testWithK6(framework, appDir, port) {
           "--env",
           `DURATION=${duration}`,
           "--env",
-          `TARGET_URL=http://127.0.0.1:${port}/`,
+          `TARGET_URL=http://127.0.0.1:${port}${routePath}`,
           "--out",
           `json=${jsonOut}`,
           k6Script,
@@ -235,9 +245,9 @@ async function testWithK6(framework, appDir, port) {
   }
 }
 
-console.log(`Starting Advanced K6 + Kernel Diagnostic Suite (Duration: ${duration})...\n`);
-await testWithK6("Dinou 9.0.0", "apps/dinou-9", 3103);
-await testWithK6("Next.js 16.4.2", "apps/next", 3102);
+console.log(`Starting Advanced K6 + Kernel Diagnostic Suite (Route: ${routePath}, Duration: ${duration})...\n`);
+await testWithK6("Dinou 9.0.3", "apps/dinou-9", 3121);
+await testWithK6("Next.js 16.4.3", "apps/next", 3111);
 
 console.log("\n============================================================");
 console.log("Advanced Diagnostic Completed for both frameworks.");
