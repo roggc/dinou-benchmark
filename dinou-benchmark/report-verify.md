@@ -18,9 +18,9 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 | Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–35) | Total Passed | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **PASS (100%)** |
-| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **PASS (100%)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 8 / 13 | **30 / 35** | **FAIL (5 failures)** |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **✅ PASS (100%)** |
+| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **✅ PASS (100%)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 8 / 13 | **30 / 35** | **❌ FAIL (5 failures)** |
 
 ---
 
@@ -28,41 +28,41 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 | # | Check Name in `scripts/verify.mjs` | Dimension / Suite | Dinou 9.0.3 | Dinou 9.0.3 (`-u`) | Next.js 16.4.3 |
 | :-: | :--- | :--- | :---: | :---: | :---: |
-| 1 | `ssg: / responds 200` | Baseline SSG | PASS (7.2 ms) | PASS (7.7 ms) | PASS (14.0 ms) |
-| 2 | `ssg: / 50 items listing` | Baseline SSG | PASS | PASS | PASS |
-| 3 | `ssg: stable HTML across requests` | Baseline SSG | PASS | PASS | PASS |
-| 4 | `isr: /items/1 responds 200` | Baseline ISR | PASS (7.3 ms) | PASS (6.5 ms) | PASS (58.8 ms) |
-| 5 | `isr: cached and stable HTML` | Baseline ISR | PASS | PASS | PASS |
-| 6 | `isr: prerendered route /items/42` | Baseline ISR | PASS | PASS | PASS |
-| 7 | `404: nonexistent & validateParams/allowISG routes` | Baseline + HS Guards | PASS | PASS | PASS |
-| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | PASS (237.1 ms) | PASS (239.2 ms) | PASS (234.5 ms) |
-| 9 | `dashboard: is dynamic (two requests differ)` | Baseline Dynamic SSR | PASS | PASS | PASS |
-| 10 | `dashboard: streams 3 holes after fallback` | Baseline Streaming | PASS | PASS | PASS |
-| 11 | `ppr: static shell in first chunk` | Baseline PPR | PASS (6.08 ms) | PASS (5.34 ms) | PASS (8.89 ms) |
-| 12 | `ppr: hole arrives later (streaming)` | Baseline PPR | PASS (5.00 ms shell) | PASS (3.98 ms shell) | PASS (2.40 ms shell) |
-| 13 | `mutation: Server Function visible in browser` | Baseline Server Actions | PASS | PASS | PASS |
-| 14 | `rigorous-hs: sibling soft nav preserves layout client state & mountId` | Suite 1 · HS | PASS (`layoutFetches=0`) | PASS (`layoutFetches=0`) | PASS (`layoutFetches=0`) |
-| 15 | `rigorous-hs: nested L2 layout, @badge slot, dynamic [deptId], locked [code] & escape hatches` | Suite 1 · HS | PASS | PASS | PASS |
-| 16 | `rigorous-hs: surgical revalidatePage vs revalidateLayout & lazy HTML re-composition` | Suite 1 · HS | PASS (`0` hydr. errors) | PASS (`0` hydr. errors) | PASS (`0` hydr. errors) |
-| 17 | `rigorous-cache-slot: dynamic bypass, surgical slot refresh, shared tag, nested slots & server action prop` | Suite 2 · Cache-Slot | PASS | PASS | PASS |
-| 18 | `rigorous-ppr: static shell, collapsed static Suspense, concurrent holes, inherited/opt-out & XSS guard` | Suite 3 · PPR | PASS (`XSS safe`) | PASS (`XSS safe`) | PASS (`XSS safe`) |
-| 19 | `rigorous-ppr-cache-slot: shell slots vs dynamic hole slots & nested hole slot isolation` | Suite 4 · PPR + Slot | PASS | PASS | PASS |
-| 20 | `rigorous-hs-cache-slot: cross-axis shared tag, round-trip A->B->A slot persistence & LWW race` | Suite 5 · HS + Slot | PASS | PASS | PASS |
-| 21 | `rigorous-hs-ppr: L1 PPR layout + @sidebar hole + PPR pages + surgical revalidateLayout/Page` | Suite 6 · HS + PPR | PASS | PASS | PASS |
-| 22 | `rigorous-triple: 3D matrix surgical isolation (HS + Cache-Slot + PPR + 1s clock TTL)` | Suite 7 · Triple Synergy | PASS (`0` hydr. errors) | PASS (`0` hydr. errors) | PASS (`0` hydr. errors) |
-| 23 | `rigorous-hs: client pageCache deduplication vs <Link fresh> bypass` | Deep Stress #1 · HS | PASS (`0` reqs on cached) | PASS (`0` reqs on cached) | PASS (`0` reqs on cached) |
-| 24 | `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard` | Deep Stress #2 · HS | **PASS** (`layout=100, page=270`) | **PASS** (`layout=100, page=270`) | **FAIL** (`layout=270`) |
-| 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | PASS | PASS | PASS |
-| 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | PASS (`280/100`, `281/100`) | PASS (`280/100`, `281/100`) | PASS (`280/100`, `281/100`) |
-| 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **PASS** (`hosts=100`) | **PASS** (`hosts=100`) | **FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | PASS (`1` execution) | PASS (`1` execution) | PASS (`1` execution) |
-| 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **PASS** (`402/fresh-fast`) | **PASS** (`402/fresh-fast`) | **FAIL** (`401/stale-slow`) |
-| 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | PASS (`330/331`, `340/341/342`) | PASS (`330/331`, `340/341/342`) | PASS (`330/331`, `340/341/342`) |
-| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **PASS** (`0` page RSC reqs) | **PASS** (`0` page RSC reqs) | **FAIL** (`pageRscReqs=1`) |
-| 32 | `rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()` | Deep Stress #10 · HS + Slot | PASS (`420 → 421`, state=1) | PASS (`420 → 421`, state=1) | PASS (`420 → 421`, state=1) |
-| 33 | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | Deep Stress #11 · Slot | **PASS** (`host=100, slot=430`) | **PASS** (`host=100, slot=430`) | **FAIL** (`host=999`) |
-| 34 | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | Deep Stress #12 · Triple Cascade | PASS (`L1=440`, children=`100`) | PASS (`L1=440`, children=`100`) | PASS (`L1=440`, children=`100`) |
-| 35 | `rigorous-hs-concurrent-reval: simultaneous revalidateLayout + revalidatePage serialization & F5 hydration` | Deep Stress #13 · Concurrency | PASS (`450/451`, `0` hydr. err) | PASS (`450/451`, `0` hydr. err) | PASS (`450/451`, `0` hydr. err) |
+| 1 | `ssg: / responds 200` | Baseline SSG | ✅ PASS (7.2 ms) | ✅ PASS (7.7 ms) | ✅ PASS (14.0 ms) |
+| 2 | `ssg: / 50 items listing` | Baseline SSG | ✅ PASS | ✅ PASS | ✅ PASS |
+| 3 | `ssg: stable HTML across requests` | Baseline SSG | ✅ PASS | ✅ PASS | ✅ PASS |
+| 4 | `isr: /items/1 responds 200` | Baseline ISR | ✅ PASS (7.3 ms) | ✅ PASS (6.5 ms) | ✅ PASS (58.8 ms) |
+| 5 | `isr: cached and stable HTML` | Baseline ISR | ✅ PASS | ✅ PASS | ✅ PASS |
+| 6 | `isr: prerendered route /items/42` | Baseline ISR | ✅ PASS | ✅ PASS | ✅ PASS |
+| 7 | `404: nonexistent & validateParams/allowISG routes` | Baseline + HS Guards | ✅ PASS | ✅ PASS | ✅ PASS |
+| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | ✅ PASS (237.1 ms) | ✅ PASS (239.2 ms) | ✅ PASS (234.5 ms) |
+| 9 | `dashboard: is dynamic (two requests differ)` | Baseline Dynamic SSR | ✅ PASS | ✅ PASS | ✅ PASS |
+| 10 | `dashboard: streams 3 holes after fallback` | Baseline Streaming | ✅ PASS | ✅ PASS | ✅ PASS |
+| 11 | `ppr: static shell in first chunk` | Baseline PPR | ✅ PASS (6.08 ms) | ✅ PASS (5.34 ms) | ✅ PASS (8.89 ms) |
+| 12 | `ppr: hole arrives later (streaming)` | Baseline PPR | ✅ PASS (5.00 ms shell) | ✅ PASS (3.98 ms shell) | ✅ PASS (2.40 ms shell) |
+| 13 | `mutation: Server Function visible in browser` | Baseline Server Actions | ✅ PASS | ✅ PASS | ✅ PASS |
+| 14 | `rigorous-hs: sibling soft nav preserves layout client state & mountId` | Suite 1 · HS | ✅ PASS (`layoutFetches=0`) | ✅ PASS (`layoutFetches=0`) | ✅ PASS (`layoutFetches=0`) |
+| 15 | `rigorous-hs: nested L2 layout, @badge slot, dynamic [deptId], locked [code] & escape hatches` | Suite 1 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
+| 16 | `rigorous-hs: surgical revalidatePage vs revalidateLayout & lazy HTML re-composition` | Suite 1 · HS | ✅ PASS (`0` hydr. errors) | ✅ PASS (`0` hydr. errors) | ✅ PASS (`0` hydr. errors) |
+| 17 | `rigorous-cache-slot: dynamic bypass, surgical slot refresh, shared tag, nested slots & server action prop` | Suite 2 · Cache-Slot | ✅ PASS | ✅ PASS | ✅ PASS |
+| 18 | `rigorous-ppr: static shell, collapsed static Suspense, concurrent holes, inherited/opt-out & XSS guard` | Suite 3 · PPR | ✅ PASS (`XSS safe`) | ✅ PASS (`XSS safe`) | ✅ PASS (`XSS safe`) |
+| 19 | `rigorous-ppr-cache-slot: shell slots vs dynamic hole slots & nested hole slot isolation` | Suite 4 · PPR + Slot | ✅ PASS | ✅ PASS | ✅ PASS |
+| 20 | `rigorous-hs-cache-slot: cross-axis shared tag, round-trip A->B->A slot persistence & LWW race` | Suite 5 · HS + Slot | ✅ PASS | ✅ PASS | ✅ PASS |
+| 21 | `rigorous-hs-ppr: L1 PPR layout + @sidebar hole + PPR pages + surgical revalidateLayout/Page` | Suite 6 · HS + PPR | ✅ PASS | ✅ PASS | ✅ PASS |
+| 22 | `rigorous-triple: 3D matrix surgical isolation (HS + Cache-Slot + PPR + 1s clock TTL)` | Suite 7 · Triple Synergy | ✅ PASS (`0` hydr. errors) | ✅ PASS (`0` hydr. errors) | ✅ PASS (`0` hydr. errors) |
+| 23 | `rigorous-hs: client pageCache deduplication vs <Link fresh> bypass` | Deep Stress #1 · HS | ✅ PASS (`0` reqs on cached) | ✅ PASS (`0` reqs on cached) | ✅ PASS (`0` reqs on cached) |
+| 24 | `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard` | Deep Stress #2 · HS | **✅ PASS** (`layout=100, page=270`) | **✅ PASS** (`layout=100, page=270`) | **❌ FAIL** (`layout=270`) |
+| 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
+| 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) |
+| 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **✅ PASS** (`hosts=100`) | **✅ PASS** (`hosts=100`) | **❌ FAIL** (`hosts=999`) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | ✅ PASS (`1` execution) | ✅ PASS (`1` execution) | ✅ PASS (`1` execution) |
+| 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **✅ PASS** (`402/fresh-fast`) | **✅ PASS** (`402/fresh-fast`) | **❌ FAIL** (`401/stale-slow`) |
+| 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) |
+| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **✅ PASS** (`0` page RSC reqs) | **✅ PASS** (`0` page RSC reqs) | **❌ FAIL** (`pageRscReqs=1`) |
+| 32 | `rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()` | Deep Stress #10 · HS + Slot | ✅ PASS (`420 → 421`, state=1) | ✅ PASS (`420 → 421`, state=1) | ✅ PASS (`420 → 421`, state=1) |
+| 33 | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | Deep Stress #11 · Slot | **✅ PASS** (`host=100, slot=430`) | **✅ PASS** (`host=100, slot=430`) | **❌ FAIL** (`host=999`) |
+| 34 | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | Deep Stress #12 · Triple Cascade | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) |
+| 35 | `rigorous-hs-concurrent-reval: simultaneous revalidateLayout + revalidatePage serialization & F5 hydration` | Deep Stress #13 · Concurrency | ✅ PASS (`450/451`, `0` hydr. err) | ✅ PASS (`450/451`, `0` hydr. err) | ✅ PASS (`450/451`, `0` hydr. err) |
 
 ---
 
@@ -142,18 +142,81 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-## 4. Deep-Dive Discovery: Next.js 16.4.3 Server Action `updateTag` Flush Timing & Ephemeral `"use cache"` Store
+## 4. Deep-Dive Analysis: Why `"use cache"` Warmup Is Only Needed in Next.js 16.4.3 (and Never in Dinou 9.0.3)
 
-While investigating **Check 30** (`rigorous-hs-ppr-ttl & triple-shell-slot`) and **Check 34** (`rigorous-triple-cascade`), we uncovered two subtle internal behaviors of Next.js 16.4.3 (`cacheComponents: true`):
+While investigating **Check 30** (`rigorous-hs-ppr-ttl & triple-shell-slot`) and **Check 34** (`rigorous-triple-cascade`), we uncovered a fundamental architectural divergence in how **Dinou v9.0.3** and **Next.js v16.4.3** persist and invalidate sub-route caches between `build` and `start`. Specifically, **Next.js 16.4.3 required a dedicated two-phase RAM warmup helper (`warmNextUseCacheBaseline`) inside `resetState()`, whereas Dinou 9.0.3 required zero warmup.**
 
-1. **Deferred `updateTag` Flush at Server Action Return (`workStore.pendingRevalidatedTags`):**
-   - In Next.js 16.4.3, calling `updateTag(tag)` inside a `"use server"` Action does **not** synchronously call `CacheHandler.expireTags([tag])` at the call site. Instead, it appends `tag` to `workStore.pendingRevalidatedTags`, which Next.js flushes to `CacheHandler.expireTags` **only after the Server Action function returns**.
-   - Consequently, if a Server Action calls `updateTag(tag)` and then calls a `"use cache"` function within the **same** Server Action turn to pre-warm the cache, the warmed cache entry receives a timestamp *earlier* than the end-of-action `expireTags` flush and is **immediately evicted as soon as the Server Action returns**.
-   - Once we separated Next.js's test baseline reset into two sequential Server Action turns (`await rigorousResetState()` to flush `updateTag`, followed by `await rigorousWarmBaseline()` in a subsequent turn), Next.js 16.4.3 passed both **Check 30** and **Check 34**.
+### 4.1 How Dinou v9.0.3 Works (Granular Disk Persistence at `build` + Eager Revalidation)
 
-2. **Ephemeral In-Memory `DefaultCacheHandler` vs. Dinou's Persistent `.dinou/dist2` Store:**
-   - **Dinou v9.0.3** persists both host shells (`shell.page.json`, `shell.layout.json`) and individual `<DinouCacheSlot>` payloads (`slots/<id>/slot.json`) to disk during `dinou build`. When `dinou start` boots in a new OS process, all layout, page, and slot caches are immediately warm on disk.
-   - **Next.js v16.4.3** persists only whole-route HTML/RSC files to `.next/server/app/` during `next build`. Individual `"use cache"` function entries use `DefaultCacheHandler` (an in-memory `Map`) that starts cold when `next start` boots in a new process.
+When `dinou build` (Process #1) runs, Dinou pre-renders static, ISR, and PPR routes and persists **every 3D segment separately on disk** inside `.dinou/dist2/`:
+- **Layouts:** `layout.rsc` and `shell.layout.json`
+- **Host Pages:** `page.rsc` and `shell.page.json`
+- **Individual `<DinouCacheSlot>` Boundaries:** `slots/<slotId>/slot.json`
+- **Composed Route HTML:** `index.html` / `shell.html`
+
+When `dinou build` exits and `dinou start` boots in a brand-new OS process (Process #2):
+1. **100% Warm Granular Disk Cache on Boot:** Every layout shell, page shell, and individual `<DinouCacheSlot>` payload already exists on disk at baseline `100`.
+2. **Surgical Eager Regeneration Without Host Re-Execution:** If external data changes to `999` on the very first millisecond after `dinou start` boots and `revalidateTag("ts-tag-static-b-slot")` is called (invalidating *only* an inner slot inside a static page), Dinou reads `shell.page.json` from disk (still `100`), re-executes **only** the targeted slot (`slots/ts-static-b-slot/slot.json`), and eagerly splices the new slot payload into `index.html` and `page.rsc` on disk. The static host page (`static-b/page.tsx`) **never** re-executes.
+3. **Eager Baseline Restoration Between Tests:** When `resetState()` resets counters to `100` and triggers revalidation in Dinou, Dinou immediately writes the regenerated `100` artifacts to disk before returning.
+
+---
+
+### 4.2 Why Next.js v16.4.3 Required `"use cache"` Warmup (`warmNextUseCacheBaseline`)
+
+In **Next.js v16.4.3** (`cacheComponents: true` / `"use cache"`), caching is split across two disconnected layers:
+
+1. **On Disk (`.next/server/app/` — Unified Whole-Route Files Only):**
+   - During `next build` (Process #1), Next.js does **not** persist individual `"use cache"` function outputs as separate files on disk. Instead, it writes a single combined route file (e.g., `static-b.html` / `static-b.rsc`) tagged with the **union of all `cacheTag()` strings** invoked anywhere during that route's render (both the host page tag `"ts-static-b-tag"` and the inner slot tag `"ts-tag-static-b-slot"`).
+2. **In RAM (`DefaultCacheHandler` — Ephemeral Per-Process `Map`):**
+   - Individual `"use cache"` functions (such as `getTsStaticBHostState()`, `getTsL1ShellState()`, etc.) are stored in Next.js's `DefaultCacheHandler`, which is an **in-memory JavaScript `Map` inside the current Node.js process's RAM** (`next/dist/server/lib/cache-handlers/default.js`).
+   - When `next build` (Process #1) terminates, that RAM `Map` is destroyed. When `next start` (Process #2) boots, the `"use cache"` `Map` in RAM starts **completely empty (cold)**.
+
+#### What Happens on `next start` (or After `resetState()`) Without RAM Warmup:
+1. **Lazy Eviction:** In Next.js, `updateTag(tag)` is **lazy**—it marks the tag as expired in RAM without re-executing the `"use cache"` function until a future HTTP request renders a route that calls it.
+2. **Whole-Route Disk Invalidation on Slot Tag Update:** In **Check 30**, the test poisons the host page counter in memory (`tsStaticBHostSeq = 999`), updates the slot counter (`tsStaticBSlotSeq = 342`), and calls `revalidateTag("ts-tag-static-b-slot")` to verify that invalidating only the slot does not re-execute the Static B host page.
+3. **Cold Miss in `DefaultCacheHandler`:** When the browser requests `/rigorous/triple/static-b`:
+   - Next.js sees that the on-disk route file `static-b.html` carries `"ts-tag-static-b-slot"` and marks the entire on-disk route file stale.
+   - Next.js then re-renders `TripleStaticPageB()`, calling `getTsStaticBHostState()` (host page) and `getTsStaticBSlotState()` (slot).
+   - If `getTsStaticBHostState()` is not currently warm in the `next start` process's RAM `Map` (either because `next start` booted cold or because `resetState()` lazily evicted all tags), `getTsStaticBHostState()` suffers a **cold RAM miss**, executes for the first time while `tsStaticBHostSeq` is poisoned at `999`, and leaks `999` into the host page!
+4. **Deferred `updateTag` Flush at Server Action Return (`workStore.pendingRevalidatedTags`):**
+   - Even subtler: inside a Next.js `"use server"` Action, calling `updateTag(tag)` does **not** flush `CacheHandler.expireTags([tag])` at the line where `updateTag` is called. Next.js queues `tag` in `workStore.pendingRevalidatedTags` and flushes `expireTags` **only after the Server Action function returns**.
+   - Therefore, calling `updateTag(tag)` and `warmNextUseCacheBaseline()` inside the **same** Server Action caused the end-of-action `expireTags` flush to immediately evict the entries that `warmNextUseCacheBaseline()` had just populated milliseconds earlier!
+   - To make Next.js's in-memory `"use cache"` store warm at baseline `100` before each test, we had to split Next.js's `resetState()` in `rigorous-controls.tsx` into **two sequential Server Action turns**:
+     1. `await rigorousResetState()` — resets state to `100`, calls `updateTag(tag)` for all tags, and **returns** so Next.js flushes `expireTags`.
+     2. `await rigorousWarmBaseline()` — runs in a **new Server Action turn** after `expireTags` has completed, invoking `warmNextUseCacheBaseline()` so all `"use cache"` entries are stored in RAM with a timestamp strictly newer than the `expireTags` flush.
+
+---
+
+### 4.3 Real-World Production Implications: Dinou 9.0.3 vs. Next.js 16.4.3
+
+| Architectural Dimension | Dinou v9.0.3 | Next.js v16.4.3 (`"use cache"`) |
+| :--- | :--- | :--- |
+| **Where pre-rendered sub-segments & slots live after `build`** | **On disk** (`.dinou/dist2/slots/<id>/slot.json`, `shell.page.json`, `shell.layout.json`, `layout.rsc`, `page.rsc`). Survives process restarts (`dinou start`). | **In RAM** (`DefaultCacheHandler` `Map`). Disk (`.next/server/app/`) only stores unified whole-route files; the `"use cache"` `Map` starts empty on every `next start`. |
+| **Revalidation execution model (`revalidateTag` / `Layout` / `Page`)** | **Eager (immediate):** regenerates and writes only the affected slot or segment to disk immediately, splicing it into cached host shells on disk. | **Lazy (deferred):** only marks tags as expired in RAM (flushed at the end of the Server Action); nothing is regenerated until an HTTP request arrives. |
+| **Needs warmup after server restart or tag reset?** | **No (0% warmup):** granular `.json`/`.rsc` shells and slot files are already on disk from `dinou build`. | **Yes:** if you invalidate a single child slot tag after `next start` before the host `"use cache"` function has populated RAM, the whole on-disk route file is invalidated and the host page suffers a cold RAM miss. |
+| **Impact on Checks 1–30 vs. Checks 1–35** | **30/30** and **35/35** with zero warmup. | Improved from **26/30 (4 failures)** to **27/30 (3 failures)** once two-phase RAM warmup resolved Check 30 (and Check 34 in the 35-check suite). |
+
+---
+
+### 4.4 Why Not Needing Warmup (Dinou 9.0.3) Is Strictly Superior in Production to Needing Warmup (Next.js 16.4.3)
+
+In this benchmark, we purposefully built `warmNextUseCacheBaseline()` (`apps/next/src/app/rigorous/next-cached-segments.ts`) to give Next.js 16.4.3 the most charitable possible conditions to pass **Check 30** and **Check 34**. Without that custom warmup crutch, Next.js 16.4.3 failed both checks out of the box.
+
+In real-world production deployments, **not needing a warmup phase (Dinou 9.0.3) provides four decisive advantages over requiring RAM warmup (Next.js 16.4.3):**
+
+1. **Zero Cold-Start Penalty After Deploys, Container Restarts, or Auto-Scaling:**
+   - **Dinou v9.0.3:** Every time `dinou start` boots (after a rolling deploy, Docker/Kubernetes pod restart, or PM2 reload), all pre-rendered layouts (`shell.layout.json`), pages (`shell.page.json`), and `<DinouCacheSlot>` payloads (`slots/<id>/slot.json`) are already persisted on disk from `dinou build`. Surgical invalidation works from the first millisecond of server uptime.
+   - **Next.js v16.4.3:** Every time `next start` boots or a container restarts, `DefaultCacheHandler`'s in-memory `Map` starts completely empty. If a webhook or Server Action invalidates a single small slot tag (`updateTag("my-slot")`) before the parent route has re-executed in RAM, Next.js invalidates the entire on-disk route file and **re-executes the entire parent page/layout and all of its expensive data queries from scratch** (*cold RAM miss*).
+
+2. **Zero Manual Pre-Warming Boilerplate or Maintenance Burden:**
+   - In a production application with dozens or hundreds of routes and cached subtrees, developers should not have to maintain a centralized warmup registry that imports and invokes every `"use cache"` function across two sequential Server Action turns on startup or after tag resets. In **Dinou v9.0.3**, granular persistence is automatic at build time with zero userland boilerplate.
+
+3. **First-Visitor Latency Protection (*Eager* Regeneration vs. *Lazy* Eviction):**
+   - **Dinou v9.0.3 (*Eager*):** When `revalidateTag`, `revalidatePage`, or `revalidateLayout` is called, Dinou immediately regenerates only the affected piece and splices it into the cached on-disk shells. The very next user who requests the page receives an instant cache hit (`~6–7 ms`).
+   - **Next.js v16.4.3 (*Lazy*):** `updateTag` only marks the entry expired in RAM; the first user who visits the page after an invalidation pays the full server re-execution latency on the critical path.
+
+4. **Lower Baseline RAM Pressure:**
+   - Because Dinou persists pre-rendered segment shells and slot payloads in `.dinou/dist2/` on disk rather than relying exclusively on an in-memory `Map` to preserve sub-route isolation, Dinou achieves surgical 3D isolation without needing every cached function pre-loaded into RAM at server startup.
 
 ---
 
