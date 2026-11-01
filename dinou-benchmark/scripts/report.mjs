@@ -26,19 +26,19 @@ const [verify, build, dev, hmr, bundle, load, memory] = await Promise.all([
 ]);
 
 const byId = (list, id) => (list ?? []).find((entry) => entry.framework === id);
-const ids = (load && load.length > 0) ? [...new Set(load.map((l) => l.framework))] : frameworks.map((f) => f.id);
+const configuredIds = frameworks.map((f) => f.id);
+const ids = configuredIds;
 const labels = {
-  "dinou-8": "Dinou 8.1.2",
-  "dinou-9": "Dinou 9.0.2",
-  "dinou-9-u": "Dinou 9.0.2 (-u)",
-  dinou: "Dinou",
-  next: "Next.js 16.4.2",
+  "dinou-9": "Dinou 9.0.3",
+  "dinou-9-u": "Dinou 9.0.3 (-u)",
+  dinou: "Dinou 9.0.3",
+  next: "Next.js 16.4.3",
 };
 const label = (id) => labels[id] ?? id;
 const fmt = (n, digits = 1) => (n === undefined || n === null ? "—" : Number(n).toFixed(digits));
 
 const lines = [];
-lines.push("# Benchmark Results");
+lines.push("# Benchmark Results: Dinou v9.0.3 vs. Next.js v16.4.3");
 lines.push("");
 lines.push(`Generated: ${new Date().toISOString()}`);
 lines.push("");
@@ -48,13 +48,13 @@ lines.push(
 lines.push("");
 
 if (verify) {
-  lines.push("## Functional Verification");
+  lines.push("## Functional & Rigorous 3D Caching Verification");
   lines.push("");
-  lines.push("| Framework | Checks Passed | Status |");
-  lines.push("| --- | --- | --- |");
+  lines.push("| Framework | Version | Checks Passed | Status |");
+  lines.push("| --- | --- | --- | --- |");
   for (const entry of verify) {
     lines.push(
-      `| ${label(entry.framework)} | ${entry.passed}/${entry.total} | ${entry.passed === entry.total ? "✅" : "⚠️"} |`
+      `| ${label(entry.framework)} | \`${entry.version}\` | ${entry.passed}/${entry.total} | ${entry.passed === entry.total ? "✅" : "⚠️"} |`
     );
   }
   lines.push("");
@@ -70,7 +70,7 @@ if (verify) {
 }
 
 if (load) {
-  lines.push("## Production · TTFB, Throughput and Latency");
+  lines.push("## Production · TTFB, Throughput and Latency (Baseline + 7 Rigorous 3D Caching Suites)");
   lines.push("");
   lines.push("| Route | Type | Framework | TTFB p50 (ms) | TTFB p95 (ms) | req/s | p50 (ms) | p99 (ms) | Errors |");
   lines.push("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
@@ -128,13 +128,13 @@ function barChart({ title, series, unit, width = 760 }) {
   const top = 54;
   const height = top + series.length * (barH + gap) + 24;
   const max = Math.max(...series.map((s) => s.value), 1);
-  const left = 200;
+  const left = 240;
   const usable = width - left - 90;
   const bars = series
     .map((s, i) => {
       const y = top + i * (barH + gap);
       const w = Math.max(2, (s.value / max) * usable);
-      return `<text x="0" y="${y + 17}" font-family="ui-sans-serif" font-size="13" fill="#8d99a8">${s.label}</text>
+      return `<text x="0" y="${y + 17}" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">${s.label}</text>
   <rect x="${left}" y="${y}" width="${w}" height="${barH}" rx="5" fill="${s.color || "#6ee7b7"}" opacity="0.9"/>
   <text x="${left + w + 8}" y="${y + 17}" font-family="ui-monospace" font-size="12" fill="#e7ecf3">${s.value.toFixed(1)} ${unit}</text>`;
     })
@@ -150,7 +150,6 @@ function barChart({ title, series, unit, width = 760 }) {
 }
 
 const colors = {
-  "dinou-8": "#6ee7b7",
   "dinou-9": "#10b981",
   "dinou-9-u": "#059669",
   dinou: "#6ee7b7",

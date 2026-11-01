@@ -6,7 +6,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Dinou 9.0.0 · benchmark</title>
+        <title>Dinou 9.0.3 (-u) · benchmark</title>
         <meta name="description" content="Identical benchmark application for Dinou and Next.js" />
         {/* Same global.css as Next.js app, served from public/. */}
         <link rel="stylesheet" href="/global.css" />
@@ -15,4 +15,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
-

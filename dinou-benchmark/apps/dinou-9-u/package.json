@@ -9,7 +9,7 @@
     "start": "dinou start -u"
   },
   "dependencies": {
-    "dinou": "9.0.2",
+    "dinou": "9.0.3",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -20,4 +20,3 @@
     "typescript": "5.9.3"
   }
 }
-

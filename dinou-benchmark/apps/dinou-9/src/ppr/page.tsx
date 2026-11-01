@@ -1,10 +1,13 @@
 import { Suspense } from "react";
+import { getContext } from "dinou";
 import { HoleCard, PageHeader, Shell, Skeleton } from "@/shared/components/ui";
 import { sleep, stamp } from "@/shared/lib/data";
 
 const DELAY = 200;
 
 async function LiveQuote() {
+  const ctx = getContext();
+  void ctx?.req?.headers?.["user-agent"];
   await sleep(DELAY);
   return (
     <HoleCard
@@ -37,4 +40,3 @@ export default function PprPage({ shellStamp }: { shellStamp: string }) {
     </Shell>
   );
 }
-

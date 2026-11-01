@@ -7,6 +7,13 @@ export function SiteNav() {
     ["/dashboard", "Dashboard"],
     ["/ppr", "PPR"],
     ["/messages", "Server Function"],
+    ["/rigorous/hs", "1·HS"],
+    ["/rigorous/cache-slot", "2·CacheSlot"],
+    ["/rigorous/ppr", "3·PPR-Rig"],
+    ["/rigorous/ppr-cache-slot", "4·PPR+Slot"],
+    ["/rigorous/hs-cache-slot", "5·HS+Slot"],
+    ["/rigorous/hs-ppr", "6·HS+PPR"],
+    ["/rigorous/triple", "7·Triple"],
   ] as const;
 
   return (
@@ -92,4 +99,3 @@ export function HoleCard({
     </div>
   );
 }
-

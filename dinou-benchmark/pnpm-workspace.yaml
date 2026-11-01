@@ -1,5 +1,7 @@
 packages:
-  - "apps/*"
+  - "apps/dinou-9"
+  - "apps/dinou-9-u"
+  - "apps/next"
 
 # Dinou resolves its own dependencies (react-server-dom-webpack, babel, rollup,
 # postcss...) from flat node_modules. With pnpm's isolated linker, the Dinou runtime
@@ -10,6 +12,7 @@ nodeLinker: hoisted
 minimumReleaseAge: 0
 minimumReleaseAgeExclude:
   - dinou
+  - next
 
 allowBuilds:
   '@swc/core': true

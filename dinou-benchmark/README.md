@@ -1,6 +1,6 @@
 # dinou-benchmark
 
-Reproducible benchmark suite comparing **Dinou 9.0.0**, **Dinou 8.1.2**, and **Next.js 16.4.2** running **the exact same application**: identical local data, identical React components, and identical CSS. The goal is not to "win", but to measure with an explicit, transparent methodology and document everything that **cannot** be matched between different frameworks.
+Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and `dinou-9-u` unvendorized `-u`) and **Next.js 16.4.3** running **the exact same application**: identical local data, identical React 19 components, identical CSS, and the full 3D caching & revalidation matrix defined in the `rigurous-*.md` specification documents.
 
 > **Honesty Notice.** Results included in `results/` (if any) are produced in a single-core shared sandbox environment. They serve to verify that the benchmark harness works properly, **not** to publish definitive comparisons. Any publishable figures should come from `pnpm bench` executed on the dedicated hardware described in `infra/` with the load generator isolated.
 
@@ -8,7 +8,7 @@ Reproducible benchmark suite comparing **Dinou 9.0.0**, **Dinou 8.1.2**, and **N
 
 ## 1. What Is Compared
 
-A single full-stack app, idiomatically implemented across each framework:
+### 1.1. Baseline Routes (5 Core Rendering Strategies)
 
 | Route | Strategy | Behavior |
 | --- | --- | --- |
@@ -18,15 +18,26 @@ A single full-stack app, idiomatically implemented across each framework:
 | `/ppr` | PPR | Static shell + one 200ms dynamic slot streamed in the same HTTP response |
 | `/messages` | SSR + Mutation | Server Function / Server Action writing to local JSON and revalidating the route |
 
+### 1.2. Rigorous 3D Caching & Revalidation Suites (7 Suites from `rigurous-*.md`)
+
+| Route | Dimension / Synergy | What Is Verified & Benchmarked |
+| --- | --- | --- |
+| `/rigorous/hs` | **1. Horizontal Segmentation (HS)** | Independent `layout.rsc` vs `page.rsc`, sibling soft navigation with 0 layout remounts/fetches, nested `L2` layouts + `@badge` parallel slot, dynamic `[deptId]` (`validateParams`), static-locked `[code]` (`allowISG = false`), `reset_layout` & `no_layout` escape hatches, surgical `revalidatePage` vs `revalidateLayout` with lazy `index.html` re-composition, and independent 1s clock-based TTL expiration |
+| `/rigorous/cache-slot` | **2. Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"`)** | Subtree Micro-ISR inside dynamic (`revalidate = 0`) and static (`3600s`) hosts, `revalidate={0}` slot cache bypass, surgical `refreshSlot`, shared multi-slot tag invalidation, nested slots (`Outer -> Inner`), `"use server"` action prop serialization inside cached slots, and 1s slot TTL expiration |
+| `/rigorous/ppr` | **3. Partial Prerendering (PPR)** | Static `shell.html` + build-time collapsed static `<Suspense>` + concurrent dynamic holes (`cookies`, `query`, `headers`), client widget inside streamed hole, nested `<Suspense>` (outer static + inner dynamic & outer dynamic + deep inner dynamic), `React.memo` hole, inherited PPR & child `ppr = false` opt-out, `</template><script>` XSS guard, and 1s shell TTL |
+| `/rigorous/ppr-cache-slot` | **4. Pairwise Synergy #1: PPR + Cache-Slot** | Cached slots inside the PPR static shell (`inStaticShell: true`), inside collapsed static `<Suspense>`, and inside streamed dynamic `<Suspense>` holes (`inStaticShell: false`), nested hole slots, and slot before sibling cookie reader |
+| `/rigorous/hs-cache-slot` | **5. Pairwise Synergy #2: HS + Cache-Slot** | Slots across `L1` layout, `@sidebar` parallel route, sibling pages (`Page A` / `Page B`), and `L2` nested layout; cross-axis shared tag invalidation; round-trip `Page A -> Page B -> Page A` slot persistence; and Last-Write-Wins (LWW) out-of-order refresh race protection |
+| `/rigorous/hs-ppr` | **6. Pairwise Synergy #3: HS + PPR** | `L1` PPR layout + `@sidebar` dynamic hole + sibling PPR pages + `ppr = false` static child opt-out + `L2` nested PPR layout; surgical `revalidatePage` vs `revalidateLayout` with lazy `shell.html` re-composition; and 1s layout/page PPR TTL |
+| `/rigorous/triple` | **7. Triple Synergy: HS + Cache-Slot + PPR** | Full 3D caching matrix combining `L1`/`L2` PPR layouts, PPR & static child pages, static-shell slots, dynamic-hole slots, nested hole slots, surgical tag/page/layout revalidation, and 1s clock-based TTL expiration |
+
 No external network calls, no third-party databases, no CDN: all measured latency and throughput reflect framework runtime performance.
 
 ## 2. Fixed Package Versions
 
 | Package | Version |
 | --- | --- |
-| `dinou` (v9) | **9.0.0** (npm) |
-| `dinou` (v8) | **8.1.2** (npm) |
-| `next` | **16.4.2** (npm) |
+| `dinou` (`dinou-9` & `dinou-9-u`) | **9.0.3** (npm) |
+| `next` | **16.4.3** (npm) |
 | `react` / `react-dom` | **19.3.1** (identical across all apps) |
 | `typescript` | 5.9.3 |
 | `@types/react` | 19.2.7 |
@@ -36,25 +47,23 @@ No external network calls, no third-party databases, no CDN: all measured latenc
 | `playwright` | 1.64.1 |
 | `pnpm` (`packageManager`) | 12.15.0 |
 
-Pinned versions, zero ranges: `pnpm-lock.yaml` is included so anyone gets an identical dependency tree.
-
 ## 3. Repository Structure
 
 ```
 dinou-benchmark/
 ├── apps/
-│   ├── dinou-8/                # Idiomatic Dinou 8.1.2 app (src/, page_functions.ts)
-│   ├── dinou-9/                # Idiomatic Dinou 9.0.0 app (src/, page_functions.ts)
-│   └── next/                   # Idiomatic Next.js app (src/app/)
+│   ├── dinou-9/                # Idiomatic Dinou 9.0.3 app (vendorized build)
+│   ├── dinou-9-u/              # Idiomatic Dinou 9.0.3 app (unvendorized -u build)
+│   └── next/                   # Idiomatic Next.js 16.4.3 app (cacheComponents: true)
 ├── shared/                     # Single source of truth
-│   ├── components/             # Identical React components
-│   ├── lib/                    # Data helpers + local JSON store
+│   ├── components/             # Identical React components + rigorous client probes
+│   ├── lib/                    # Data helpers + deterministic rigorous state store
 │   ├── data/                   # items.json and messages.json
 │   └── styles/global.css       # Identical CSS across all apps
 ├── scripts/
-│   ├── sync-shared.mjs         # Copies shared/ to each app & verifies byte-for-byte match
+│   ├── sync-shared.mjs         # Copies shared/ to each app & mirrors rigorous suites
 │   ├── build.mjs               # Measures production build time + output size
-│   ├── verify.mjs              # 13 functional verification checks per framework
+│   ├── verify.mjs              # 22 functional & 3D caching E2E checks per framework
 │   ├── dev-start.mjs           # Dev server cold-start time
 │   ├── hmr.mjs                 # Real Chromium HMR edit-to-DOM measurement
 │   ├── bundle.mjs              # Client JS gzip & brotli bundle analysis
@@ -62,20 +71,10 @@ dinou-benchmark/
 │   ├── memory.mjs              # Idle and peak RSS memory consumption
 │   ├── report.mjs              # Generates results/REPORT.md + charts.svg
 │   └── bench.mjs               # Main pipeline orchestrator
+├── rigurous-*.md               # 11 architectural & E2E specification documents
 ├── results/                    # Execution JSON files + generated reports & charts
-├── bench.config.mjs            # Single source of truth for framework configurations
-├── infra/droplet-setup.sh      # DigitalOcean setup script (Dedicated CPU)
-└── .github/workflows/bench.yml # CI pipeline validation
+└── bench.config.mjs            # Single source of truth for framework configurations
 ```
-
-### Adding a Framework
-
-`bench.config.mjs` is the only point of coupling. To add another framework (e.g. Waku, Remix/React Router):
-
-1. Create `apps/<name>` with the equivalent app (same routes and components from `shared/`).
-2. Add an entry to `frameworks` with its `dev`/`build`/`start` commands, port, output directories, and HMR target.
-
-Neither `verify.mjs`, `load.mjs`, nor `report.mjs` need to change.
 
 ## 4. How to Run
 
@@ -91,11 +90,11 @@ Individual phases:
 
 ```bash
 pnpm bench:build     # Build time and output size
-pnpm bench:verify    # 13 functional checks per framework
+pnpm bench:verify    # 22 functional & rigorous E2E checks per framework
 pnpm bench:dev       # Dev cold start time
 pnpm bench:hmr       # HMR in real browser
 pnpm bench:bundle    # Client bundle size (raw, gzip, brotli)
-pnpm bench:load      # autocannon throughput & latency
+pnpm bench:load      # autocannon throughput & latency across all 12 routes
 pnpm bench:memory    # RSS memory idle & peak under load
 pnpm bench:report    # Regenerates report and SVG charts from results/*.json
 ```
@@ -107,72 +106,18 @@ pnpm bench:load --only=dinou-9
 pnpm bench:verify --only=dinou-9,next
 ```
 
-Quick smoke testing:
+## 5. Documented Framework Differences (Dinou 9.0.3 vs. Next.js 16.4.3)
 
-```bash
-LOAD_DURATION=5 LOAD_RUNS=2 LOAD_CONNECTIONS=40 pnpm bench:load
-```
+1. **Horizontal Segmentation (`layout.rsc` vs. `page.rsc`) & Lazy HTML Re-Composition.**
+   - **Dinou 9.0.3** persists `layout.rsc` + `layout.metadata.json` independently from `page.rsc` + `metadata.json`. Calling `revalidateLayout(path)` regenerates only `layout.rsc`; on the next request to any static or PPR child route, Dinou detects `leafLayout.generatedAt > page.generatedAt` and lazily re-composes `index.html` / `shell.html` in $O(1)$ without re-executing the child's `page.tsx`.
+   - **Next.js 16.4.3** (`cacheComponents: true`) caches segment computations via `"use cache"` + `cacheTag` / `cacheLife` and invalidates via `revalidatePath(path, 'layout' | 'page')` and `updateTag`.
+2. **Vertical Segmentation (`<DinouCacheSlot>` + `refreshSlot` vs. `"use cache"` + `updateTag`).**
+   - **Dinou 9.0.3** provides `<DinouCacheSlot id="..." tags={[...]} revalidate={N}>` and a surgical client router primitive `refreshSlot(idOrTag, { fresh })` that fetches `/____rsc_slot____/:id` and reconciles only that slot's fiber subtree without re-rendering the enclosing page or layout. On the server, `revalidateTag(slotTag)` refreshes static/PPR-shell hosts via `{ onlyRefreshSlots: true }` without re-executing `page.tsx` or `layout.tsx`, and evicts only `slots/<id>` for dynamic-hole slots (`inStaticShell: false`) to preserve `0ms` static shell TTFB.
+   - **Next.js 16.4.3** caches component subtrees via `"use cache"` functions/components with `cacheTag` and `cacheLife` (composing nested slots via `<OuterSlot><InnerSlot /></OuterSlot>`). Refreshing a slot from the client requires a Server Action (`updateTag`) followed by `router.refresh()`.
+3. **Partial Prerendering (PPR) & Static `<Suspense>` Collapse.**
+   - **Dinou 9.0.3** enables PPR via `export const ppr = true` in `page_functions.ts` or `layout_functions.ts` (with automatic inheritance to child routes and `export const ppr = false` child opt-out). During build-time Pass A, any `<Suspense>` boundary whose subtree does not access request context (`ctx.req.cookies`, `headers`, `query`) or `useSearchParams()` collapses automatically into `shell.html` for instant TTFB, while request-dependent boundaries emit `$PPR_HOLE` markers and stream concurrently at request time.
+   - **Next.js 16.4.3** enables PPR globally via `cacheComponents: true`, collapsing `"use cache"` subtrees into the static shell and streaming `<Suspense>` subtrees that call `await connection()`, `await cookies()`, `await headers()`, or `await searchParams`.
 
-> **Cross-Platform:** The benchmark runner is fully cross-platform and runs natively on Windows, macOS, and Linux.
-
-### GitHub Actions
-
-`.github/workflows/bench.yml` runs installation, builds all apps, and runs `verify`. **It does not publish performance numbers**: it serves as a CI quality gate, because shared cloud runners are not controlled benchmark environments.
-
-### Dedicated Cloud Droplet (Publishable Results)
-
-For definitive, publishable comparisons:
-
-1. Create an **Ubuntu 24.04** droplet on DigitalOcean with **CPU-Optimized (Dedicated vCPUs)** (e.g. 4 Dedicated vCPUs / 8 GB RAM, `c-4`).
-2. Clone the repo and run the automated setup:
-
-```bash
-cd /opt
-git clone <REPO_URL> dinou-benchmark
-cd dinou-benchmark
-bash infra/droplet-setup.sh
-pnpm bench
-```
-
-## 5. Methodology
-
-- **Production Only.** No performance numbers are recorded in development mode. Load and memory tests execute against production builds (`pnpm build` + `pnpm start`).
-- **Warmup at Full Target Concurrency.** Each route receives a dedicated warm-up phase (`setup.load.warmupSeconds` at `setup.load.connections`) before recorded runs begin to warm the V8 JIT, route handlers, and kernel socket allocations.
-- **Statistical Median Across Runs.** `load` runs multiple independent iterations (`setup.load.runs`, default 3) and reports the **median** across rounds (with min/max tracking) to eliminate run-to-run variance.
-- **Sequential TTFB (Unloaded Baseline).** TTFB is sampled sequentially across 30 requests (median and p95) prior to the load test, isolating baseline server processing time from client-side concurrent queueing.
-- **HTTP Keep-Alive Parity.** Servers run with HTTP keep-alive timeouts set to 65 seconds (`keepAliveTimeout: 65000`, `headersTimeout: 66000` in Dinou; `--keepAliveTimeout 65000` in Next.js).
-- **Client Timeout & Socket Backlog Accounting.** Autocannon per-request timeout is configured as `Math.max(30, durationSeconds)` so that cold burst socket queueing is captured as tail latency rather than premature client-side aborts. See [deep-dive-investigation.md](deep-dive-investigation.md) for the exhaustive investigation into single-threaded event loop accept backlog mechanics under 200-connection bursts.
-- **PPR Measured via Streaming.** `verify` inspects both the first chunk and full stream: the static shell must arrive immediately, and dynamic slots arrive later in the same response stream.
-- **Real-Browser HMR.** Launches Chromium via Playwright, updates source code on disk, and chronometers until the DOM reflects the change without a full page reload.
-- **Bundle Measurement.** Traverses client-side production assets and compresses each using gzip (-9) and brotli (-11).
-- **Process-Tree Memory.** Inspects RSS memory across the entire process tree: idle (5 samples) and peak under load.
-
-### Verification Gate (`pnpm bench:verify`)
-
-13 functional checks per framework must pass with 100% success before metrics are recorded: 200 status codes, 50 items rendered, HTML stability in SSG/ISR, semantic 404 responses, dynamic dashboard rendering, Suspense streaming slots, PPR streaming shell + hole, and full mutation lifecycle in a browser (form submit → Server Action → reload → persistent update).
-
-> Note: `autocannon` records latency natively at `p50`, `p97.5`, and `p99` (`p97.5` is used as the conservative upper bound for `p95`). Reported percentiles represent the median of each respective percentile across the 3 independent execution runs. Reported throughput reflects sustainable steady-state capacity; maximum latencies in cold-burst tests reflect initial kernel accept queue dwell times (detailed in [deep-dive-investigation.md](deep-dive-investigation.md)).
-
-## 6. Documented Framework Differences
-
-These differences are intrinsic to framework design. They are documented so observers know what is being compared:
-
-1. **Caching Primitives.** Dinou defines cache lifetimes with `export const revalidate` (in seconds) in `page_functions.ts`. Next.js 16 with `cacheComponents` defines ISR with `'use cache'` + `cacheLife({ revalidate: 60 })` and 404s with `notFound()`. The semantics are equivalent; the syntax and engine differ.
-2. **Partial Prerendering (PPR).** Dinou declares PPR per segment with `export const ppr = true`. Next.js 16 declares PPR through `cacheComponents: true` combined with `connection()` boundaries inside `<Suspense>`.
-3. **Flat Linker.** Dinou resolves internal tools via flat module resolution. The workspace specifies `nodeLinker: hoisted` in `pnpm-workspace.yaml`.
-4. **CSS Delivery.** The identical `global.css` is served statically from `public/` in all apps to ensure clean comparison of framework runtime overhead without varying bundler CSS injection strategies.
-5. **Production Bundler.** Next.js 16 utilizes Turbopack for production builds; Dinou utilizes esbuild with its Node orchestration layer.
-
-## 7. Results
-
-`pnpm bench` generates:
-
-- `results/*.json`: Structured machine-readable results per framework and phase.
-- `results/REPORT.md`: Comprehensive Markdown comparative tables.
-- `results/charts.svg`, `results/ttfb.svg`, `results/bundle.svg`: Zero-dependency vector charts.
-
-The JSON results are ignored by Git by default. The Markdown report is committed whenever you decide to publish.
-
-## 8. License
+## 6. License
 
 MIT. The benchmark apps are demo implementations; frameworks belong to their respective authors.

@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 /**
  * Copies `shared/` into each app, byte-for-byte.
- *
- * All frameworks consume exactly the same components, the same
- * data library, and the same CSS. The apps only provide the router-specific
- * "glue" (page.tsx / page_functions.ts and form action handling).
+ * Also mirrors `apps/dinou-9/src/rigorous` into `apps/dinou-9-u/src/rigorous`
+ * so the vendorized and unvendorized Dinou 9.0.3 apps remain 100% identical.
  */
-import { cp, mkdir, readFile, writeFile, access } from "node:fs/promises";
+import { cp, mkdir, readFile, access } from "node:fs/promises";
 import { constants } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -64,6 +62,12 @@ for (const app of frameworks) {
   hashes[app.id] = await hashDir(targetShared);
 }
 
+const dinou9Rigorous = path.join(ROOT, "apps/dinou-9/src/rigorous");
+const dinou9uRigorous = path.join(ROOT, "apps/dinou-9-u/src/rigorous");
+if (await exists(dinou9Rigorous)) {
+  await cp(dinou9Rigorous, dinou9uRigorous, { recursive: true, force: true });
+}
+
 // Byte-for-byte equality check across apps.
 const [first, ...rest] = Object.values(hashes);
 for (const other of rest) {
@@ -82,4 +86,3 @@ console.log(
     : `shared/ synchronized with ${mismatches} differences.`
 );
 if (mismatches > 0) process.exitCode = 1;
-

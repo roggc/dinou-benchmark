@@ -7,7 +7,7 @@
  */
 import path from "node:path";
 import autocannon from "autocannon";
-import { ROOT, routes, setup, selectedFrameworks } from "./config.mjs";
+import { ROOT, routes, setup, frameworks as allConfiguredFrameworks, selectedFrameworks } from "./config.mjs";
 import { startServer, timedFetch, writeJson, readJson, round, median, percentile } from "./lib.mjs";
 
 const frameworks = selectedFrameworks();
@@ -124,7 +124,7 @@ for (const fw of frameworks) {
           : `· ${totalErrors} err (${errorRatePct}%)${timeouts > 0 ? ` [${timeouts} timeouts]` : ""}`;
 
       console.log(
-        `  ${route.path.padEnd(12)} ttfb ${String(entry.ttfbMs.median).padStart(7)} ms · ${String(entry.rps.median).padStart(7)} req/s · p50 ${entry.latencyMs.p50} / p99 ${entry.latencyMs.p99} ms ${errSummary}`
+        `  ${route.path.padEnd(26)} ttfb ${String(entry.ttfbMs.median).padStart(7)} ms · ${String(entry.rps.median).padStart(7)} req/s · p50 ${entry.latencyMs.p50} / p99 ${entry.latencyMs.p99} ms ${errSummary}`
       );
       perRoute.push(entry);
     }
@@ -146,7 +146,10 @@ for (const fw of frameworks) {
 }
 
 // Preserve results from frameworks not executed in this run.
+const validIds = new Set(allConfiguredFrameworks.map((f) => f.id));
 const previous = (await readJson(path.join(ROOT, "results", "load.json"), [])) ?? [];
-const merged = [...previous.filter((p) => !results.some((r) => r.framework === p.framework)), ...results];
+const merged = [
+  ...previous.filter((p) => validIds.has(p.framework) && !results.some((r) => r.framework === p.framework)),
+  ...results,
+];
 await writeJson(path.join(ROOT, "results", "load.json"), merged.sort((a, b) => a.framework.localeCompare(b.framework)));
-
