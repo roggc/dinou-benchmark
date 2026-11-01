@@ -13,8 +13,16 @@ import { warmNextUseCacheBaseline } from "./next-cached-segments";
 const RESET_TAGS = [
   "hs-l1-layout-tag",
   "layout:/rigorous/hs",
+  "hs-sibling-a-tag",
+  "page:/rigorous/hs/sibling-a",
   "hs-sibling-b-tag",
   "page:/rigorous/hs/sibling-b",
+  "page:/rigorous/hs/ttl-layout",
+  "cs-static-page-tag",
+  "page:/rigorous/cache-slot/static-host",
+  "cs-tag-static-slot",
+  "cs-tag-stampede",
+  "slot:cs-slot-stampede",
   "hscs-l1-layout-tag",
   "layout:/rigorous/hs-cache-slot",
   "hscs-page-a-tag",
@@ -28,6 +36,16 @@ const RESET_TAGS = [
   "layout:/rigorous/hs-ppr",
   "hsppr-page-a-tag",
   "page:/rigorous/hs-ppr",
+  "page:/rigorous/hs-ppr/ttl-ppr",
+  "ts-l1-layout-tag",
+  "layout:/rigorous/triple",
+  "ts-tag-layout-shell-slot",
+  "ts-ppr-a-tag",
+  "page:/rigorous/triple",
+  "ts-tag-ppr-a-shell-slot",
+  "ts-static-b-tag",
+  "page:/rigorous/triple/static-b",
+  "ts-tag-static-b-slot",
 ];
 
 export async function rigorousGetState(): Promise<RigorousState> {

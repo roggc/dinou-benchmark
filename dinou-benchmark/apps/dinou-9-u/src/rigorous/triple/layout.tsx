@@ -26,16 +26,12 @@ function TsLayoutShellSlotContent() {
   );
 }
 
-async function TsL1DynamicHole() {
-  const ctx = getContext();
-  const rawUser = ctx?.req?.cookies?.ts_user;
-  const user = typeof rawUser === "string" && rawUser ? rawUser : "ts-guest";
-  await sleep(20);
+function TsL1DynamicHole() {
   const s = getRigorousState();
   return (
     <div id="ts-l1-hole">
       L1 Hole Seq: <strong id="ts-l1-hole-seq">{s.tsL1HoleSeq}</strong> | User:{" "}
-      <span id="ts-l1-hole-user">{user}</span>
+      <span id="ts-l1-hole-user">ts-guest</span>
     </div>
   );
 }

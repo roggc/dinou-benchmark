@@ -5,7 +5,7 @@ import { rigorousSlotServerPing } from "../rigorous-actions";
 import { sleep } from "../../shared/lib/data";
 
 async function HscsPageASlotContent() {
-  const s = getRigorousState();
+  const s = { ...getRigorousState() };
   if (s.hscsPageASlotDelayMs > 0) {
     await sleep(s.hscsPageASlotDelayMs);
   }

@@ -5,12 +5,13 @@ import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe, RigorousSlotWidget } from "@/shared/components/rigorous-ui";
 import { rigorousSlotServerPing } from "../rigorous-actions";
 import { sleep } from "@/shared/lib/data";
+import {
+  getTsPprAShellSlotState,
+  getTsPprAShellState,
+} from "../next-cached-segments";
 
 async function TsPprAShellSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-ppr-a-shell-slot", "slot:ts-ppr-a-shell-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsPprAShellSlotState();
   return (
     <div id="ts-ppr-a-shell-slot-box" style={{ border: "1px solid #c62828", padding: 6 }}>
       <div>
@@ -129,13 +130,6 @@ async function TsPprADynamicHole({
       <TsPprATtlHoleSlotContent />
     </div>
   );
-}
-
-async function getTsPprAShellState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-ppr-a-tag", "page:/rigorous/triple", "subtree:/rigorous/triple");
-  return getRigorousState();
 }
 
 export default async function TripleSynergyPageA({

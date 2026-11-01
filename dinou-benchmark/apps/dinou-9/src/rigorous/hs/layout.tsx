@@ -17,6 +17,9 @@ const HS_LINKS = [
   ["/rigorous/hs/locked/alpha", "Locked Alpha"],
   ["/rigorous/hs/ttl-layout", "TTL Layout"],
   ["/rigorous/hs/ttl-page", "TTL Page"],
+  ["/rigorous/hs/refresh-lab?filter=active&buildId=custom_b1&v=custom_v1", "Refresh Lab"],
+  ["/rigorous/hs/error-isolation/healthy", "Error Healthy"],
+  ["/rigorous/hs/error-isolation/broken", "Error Broken"],
   ["/rigorous/hs/reset-branch", "Reset Layout"],
   ["/rigorous/hs/no-layout-page", "No Layout"],
 ] as const;

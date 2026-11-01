@@ -1,12 +1,4 @@
-import { cacheLife, cacheTag } from "next/cache";
-import { getRigorousState } from "@/shared/lib/rigorous-state";
-
-async function getHsTtlChildPageState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("page:/rigorous/hs/ttl-layout");
-  return getRigorousState();
-}
+import { getHsTtlChildPageState } from "../../../next-cached-segments";
 
 export default async function HsTtlChildPage() {
   const s = await getHsTtlChildPageState();
@@ -19,4 +11,3 @@ export default async function HsTtlChildPage() {
     </div>
   );
 }
-

@@ -160,6 +160,15 @@ export function RigorousControls({
             <Link
               key={`${href}-${label}-${isFresh ? "fresh" : "cached"}`}
               href={href}
+              onClick={
+                isFresh
+                  ? (e) => {
+                      e.preventDefault();
+                      router.push(href);
+                      router.refresh();
+                    }
+                  : undefined
+              }
               className="nav-link"
               data-testid={`nav-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
             >

@@ -26,6 +26,9 @@ export type RigorousState = {
   hsResetLayoutSeq: number;
   hsResetPageSeq: number;
   hsNoLayoutSeq: number;
+  hsRefreshLabLayoutSeq: number;
+  hsRefreshLabPageSeq: number;
+  hsTriggerBrokenPage: boolean;
 
   // Suite 2: Vertical Segmentation / Cache-Slot (/rigorous/cache-slot)
   csLayoutHostSeq: number;
@@ -43,6 +46,8 @@ export type RigorousState = {
   csNestedOuterSeq: number;
   csNestedInnerSeq: number;
   csFastSeq: number;
+  csStampedeExecCount: number;
+  csStampedeDelayMs: number;
   csStaticHostSeq: number;
   csStaticSlotSeq: number;
   csStaticFastSeq: number;
@@ -215,6 +220,9 @@ export function createDefaultRigorousState(): RigorousState {
     hsResetLayoutSeq: 100,
     hsResetPageSeq: 100,
     hsNoLayoutSeq: 100,
+    hsRefreshLabLayoutSeq: 100,
+    hsRefreshLabPageSeq: 100,
+    hsTriggerBrokenPage: false,
 
     csLayoutHostSeq: 100,
     csBannerSeq: 100,
@@ -231,6 +239,8 @@ export function createDefaultRigorousState(): RigorousState {
     csNestedOuterSeq: 100,
     csNestedInnerSeq: 100,
     csFastSeq: 100,
+    csStampedeExecCount: 0,
+    csStampedeDelayMs: 0,
     csStaticHostSeq: 100,
     csStaticSlotSeq: 100,
     csStaticFastSeq: 100,

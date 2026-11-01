@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { sleep } from "@/shared/lib/data";
+import { getHsPprTtlChildShellState } from "../../next-cached-segments";
 
 async function HsPprTtlChildHole() {
   await connection();
@@ -13,13 +13,6 @@ async function HsPprTtlChildHole() {
       TTL Child Hole Seq: <span id="hsppr-ttl-child-hole-seq">{s.hspprTtlChildHoleSeq}</span>
     </div>
   );
-}
-
-async function getHsPprTtlChildShellState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("page:/rigorous/hs-ppr/ttl-ppr");
-  return getRigorousState();
 }
 
 export default async function HsPprTtlChildPage() {
@@ -36,4 +29,3 @@ export default async function HsPprTtlChildPage() {
     </div>
   );
 }
-

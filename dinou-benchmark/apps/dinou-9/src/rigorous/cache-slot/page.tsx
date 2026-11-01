@@ -2,6 +2,7 @@ import { DinouCacheSlot } from "dinou/server";
 import { getRigorousState } from "../../shared/lib/rigorous-state";
 import { RigorousClientProbe, RigorousSlotWidget } from "../../shared/components/rigorous-ui";
 import { rigorousSlotServerPing } from "../rigorous-actions";
+import { sleep } from "../../shared/lib/data";
 
 function CsAlphaSlotContent() {
   const s = getRigorousState();
@@ -90,6 +91,19 @@ function CsFastTtlSlotContent() {
   );
 }
 
+async function CsStampedeSlotContent() {
+  const s = getRigorousState();
+  if (s.csStampedeDelayMs > 0) {
+    await sleep(s.csStampedeDelayMs);
+  }
+  s.csStampedeExecCount = (Number(s.csStampedeExecCount) || 0) + 1;
+  return (
+    <div id="cs-stampede-slot">
+      Stampede Exec Count: <span id="cs-stampede-exec">{s.csStampedeExecCount}</span>
+    </div>
+  );
+}
+
 export default function CacheSlotDynamicPage() {
   const s = getRigorousState();
   return (
@@ -127,6 +141,10 @@ export default function CacheSlotDynamicPage() {
 
         <DinouCacheSlot id="cs-slot-fast" tags={["cs-tag-fast"]} revalidate={1}>
           <CsFastTtlSlotContent />
+        </DinouCacheSlot>
+
+        <DinouCacheSlot id="cs-slot-stampede" tags={["cs-tag-stampede"]} revalidate={3600}>
+          <CsStampedeSlotContent />
         </DinouCacheSlot>
       </div>
     </div>

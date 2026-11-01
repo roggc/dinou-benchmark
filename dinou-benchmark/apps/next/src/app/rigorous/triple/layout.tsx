@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
-import { cacheLife, cacheTag } from "next/cache";
 import { cookies } from "next/headers";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe, RigorousSlotWidget } from "@/shared/components/rigorous-ui";
 import { RigorousControls } from "../rigorous-controls";
 import { rigorousSlotServerPing } from "../rigorous-actions";
 import { sleep } from "@/shared/lib/data";
+import {
+  getTsL1ShellState,
+  getTsLayoutShellSlotState,
+} from "../next-cached-segments";
 
 async function TsLayoutShellSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-layout-shell-slot", "slot:ts-layout-shell-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsLayoutShellSlotState();
   return (
     <div id="ts-layout-shell-slot-box">
       <span>
@@ -42,13 +42,6 @@ async function TsL1DynamicHole() {
       <span id="ts-l1-hole-user">{user}</span>
     </div>
   );
-}
-
-async function getTsL1ShellState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-l1-layout-tag", "layout:/rigorous/triple", "subtree:/rigorous/triple");
-  return getRigorousState();
 }
 
 export default async function TripleSynergyLayout({ children }: { children: ReactNode }) {

@@ -44,14 +44,25 @@ function countOccurrences(haystack, needle) {
 
 async function waitForText(page, selector, expected, timeout = 12_000) {
   const target = String(expected);
-  await page.waitForFunction(
-    ({ sel, exp }) => {
-      const el = document.querySelector(sel);
-      return el && (el.textContent ?? "").trim() === exp;
-    },
-    { sel: selector, exp: target },
-    { timeout }
-  );
+  try {
+    await page.waitForFunction(
+      ({ sel, exp }) => {
+        const el = document.querySelector(sel);
+        return el && (el.textContent ?? "").trim() === exp;
+      },
+      { sel: selector, exp: target },
+      { timeout }
+    );
+  } catch (err) {
+    let actual = "<missing>";
+    try {
+      actual = await page.evaluate((sel) => {
+        const el = document.querySelector(sel);
+        return el ? (el.textContent ?? "").trim() : "<missing>";
+      }, selector);
+    } catch {}
+    throw new Error(`waitForText(${selector} === "${target}") timed out (actual="${actual}"): ${err.message}`);
+  }
 }
 
 async function readText(page, selector) {
@@ -364,7 +375,11 @@ for (const fw of frameworks) {
           await waitForText(page, "#hs-sibling-b-seq", "101");
           assert(hydrationErrors.length === 0, `hydration errors: ${hydrationErrors.join("; ")}`);
 
-          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
+            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-b");
+          });
           return "page=101 preserved · layout=102 recomposed · 0 hydration errors";
         } finally {
           await page.close();
@@ -429,7 +444,12 @@ for (const fw of frameworks) {
           await waitForText(page, "#cs-nested-inner-seq", "110");
           assert((await readText(page, "#cs-nested-outer-seq")) === "100", "nested outer slot should stay 100");
 
-          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-shared");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-nested-inner");
+          });
           return "alpha/shared/nested slots + server action prop OK";
         } finally {
           await page.close();
@@ -598,7 +618,11 @@ for (const fw of frameworks) {
           await waitForText(page, "#hsppr-l1-shell-seq", "141");
           assert((await readText(page, "#hsppr-page-a-shell-seq")) === "140", "Page A PPR shell should stay 140");
 
-          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs-ppr");
+            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs-ppr");
+          });
           return "L1 PPR=141 · Page A PPR=140 · @sidebar hole OK";
         } finally {
           await page.close();
@@ -677,6 +701,530 @@ for (const fw of frameworks) {
 
           await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
           return "3D isolation + 1s TTL slots + nested L2 + 0 hydration errors";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 23: Deep Stress #1 — Client pageCache deduplication vs <Link fresh> bypass
+    checks.push(
+      await check("rigorous-hs: client pageCache deduplication vs <Link fresh> bypass", async () => {
+        const page = await browser.newPage();
+        const backChannel = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/hs`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await backChannel.goto(`${base}/rigorous/hs`, { waitUntil: "networkidle" });
+          await backChannel.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+
+          await page.click("#hs-l1-client-btn");
+          await waitForText(page, "#hs-l1-client-count", "1");
+          const l1Mount = await readText(page, "#hs-l1-client-mount");
+
+          // 1. Soft-navigate to Sibling A (populates client pageCache with seq=100)
+          await page.click('[data-testid="nav-sibling-a"]');
+          await waitForText(page, "#hs-sibling-a-seq", "100");
+
+          // 2. Soft-navigate away to Sibling B
+          await page.click('[data-testid="nav-sibling-b"]');
+          await waitForText(page, "#hs-sibling-b-seq", "100");
+
+          // 3. Out-of-band server mutation + revalidatePage("/rigorous/hs/sibling-a")
+          await backChannel.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsL1LayoutSeq: 999,
+              hsSiblingASeq: 260,
+            });
+            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-a");
+          });
+
+          // 4. Normal <Link href="/rigorous/hs/sibling-a"> must reuse client pageCache (100) with 0 server fetches
+          let siblingARequestsOnCachedLink = 0;
+          const onReq = (req) => {
+            if (req.url().includes("sibling-a")) siblingARequestsOnCachedLink += 1;
+          };
+          page.on("request", onReq);
+          await page.click('[data-testid="nav-sibling-a"]');
+          await page.waitForSelector("#hs-sibling-a-seq");
+          page.off("request", onReq);
+
+          const seqFromCache = await readText(page, "#hs-sibling-a-seq");
+          assert(
+            seqFromCache === "100" && siblingARequestsOnCachedLink === 0,
+            `expected normal <Link> to serve 100 from client pageCache with 0 requests, got seq=${seqFromCache} reqs=${siblingARequestsOnCachedLink}`
+          );
+
+          // 5. <Link href="/rigorous/hs/sibling-a" fresh> must bypass client pageCache and fetch 260 while keeping L1 layout at 100
+          await page.click('[data-testid="nav-sibling-b"]');
+          await waitForText(page, "#hs-sibling-b-seq", "100");
+          await page.click('[data-testid="nav-sibling-a-fresh"]');
+          await waitForText(page, "#hs-sibling-a-seq", "260");
+          assert((await readText(page, "#hs-l1-seq")) === "100", "L1 layout seq should stay 100 on <Link fresh>");
+          assert((await readText(page, "#hs-l1-client-mount")) === l1Mount, "L1 mount should persist");
+          assert((await readText(page, "#hs-l1-client-count")) === "1", "L1 client state should persist");
+
+          await backChannel.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-a");
+          });
+          return "normal <Link>=100 (0 reqs) · <Link fresh>=260 · L1=100 preserved";
+        } finally {
+          await backChannel.close();
+          await page.close();
+        }
+      })
+    );
+
+    // Check 24: Deep Stress #2 — router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v query guard
+    checks.push(
+      await check("rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(
+            `${base}/rigorous/hs/refresh-lab?filter=active&buildId=custom_b1&v=custom_v1`,
+            { waitUntil: "networkidle" }
+          );
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await waitForText(page, "#hs-refresh-layout-seq", "100");
+          await waitForText(page, "#hs-refresh-page-seq", "100");
+          assert((await readText(page, "#hs-refresh-query-filter")) === "active", "query filter=active");
+          assert((await readText(page, "#hs-refresh-query-buildid")) === "custom_b1", "query buildId=custom_b1");
+          assert((await readText(page, "#hs-refresh-query-v")) === "custom_v1", "query v=custom_v1");
+
+          await page.click("#hs-refresh-lab-client-btn");
+          await page.click("#hs-l1-client-btn");
+          await waitForText(page, "#hs-refresh-lab-client-count", "1");
+          await waitForText(page, "#hs-l1-client-count", "1");
+          const layoutMount = await readText(page, "#hs-refresh-lab-client-mount");
+          const l1Mount = await readText(page, "#hs-l1-client-mount");
+
+          // Mutate both dynamic layout seq and dynamic page seq to 270
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsRefreshLabLayoutSeq: 270,
+              hsRefreshLabPageSeq: 270,
+            });
+          });
+
+          // 1. Page-only router.refresh() must update page to 270 while keeping dynamic layout at 100
+          await page.click("#btn-refresh-page");
+          await waitForText(page, "#hs-refresh-page-seq", "270");
+          const layoutSeqAfterPageRefresh = await readText(page, "#hs-refresh-layout-seq");
+          assert(
+            layoutSeqAfterPageRefresh === "100",
+            `router.refresh() (page-only) must NOT re-execute layout (expected 100, got ${layoutSeqAfterPageRefresh})`
+          );
+          assert(
+            (await readText(page, "#hs-refresh-query-buildid")) === "custom_b1" &&
+              (await readText(page, "#hs-refresh-query-v")) === "custom_v1",
+            "user ?buildId and ?v query params must not be clobbered on router.refresh()"
+          );
+          assert((await readText(page, "#hs-refresh-lab-client-mount")) === layoutMount, "refresh-lab layout mount preserved");
+          assert((await readText(page, "#hs-l1-client-mount")) === l1Mount, "L1 layout mount preserved");
+
+          // 2. router.refresh({ layout: true }) must now update layout to 270 while preserving client state
+          await page.click("#btn-refresh-layout");
+          await waitForText(page, "#hs-refresh-layout-seq", "270");
+          assert((await readText(page, "#hs-refresh-lab-client-count")) === "1", "refresh-lab layout state preserved");
+          assert((await readText(page, "#hs-l1-client-count")) === "1", "L1 layout state preserved");
+
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          return "page-only refresh (layout=100, page=270) · layout refresh (270) · ?buildId/?v intact";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 25: Deep Stress #3 — Page error.tsx containment inside outlet & soft-nav recovery
+    checks.push(
+      await check("rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/hs/error-isolation/healthy`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await page.waitForSelector("#hs-error-healthy-page");
+          await page.click("#hs-l1-client-btn");
+          await waitForText(page, "#hs-l1-client-count", "1");
+          const l1Mount = await readText(page, "#hs-l1-client-mount");
+
+          // Trigger broken page and soft-navigate to /rigorous/hs/error-isolation/broken
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({ hsTriggerBrokenPage: true });
+          });
+          await page.click('[data-testid="nav-error-broken"]');
+          await page.waitForSelector("#hs-page-error-boundary");
+
+          assert((await readText(page, "#hs-l1-client-mount")) === l1Mount, "L1 layout mount must survive child page error");
+          assert((await readText(page, "#hs-l1-client-count")) === "1", "L1 layout state must survive child page error");
+
+          // Soft-navigate back to healthy sibling and verify recovery without remounting L1 layout
+          await page.click('[data-testid="nav-error-healthy"]');
+          await page.waitForSelector("#hs-error-healthy-page");
+          assert((await readText(page, "#hs-l1-client-mount")) === l1Mount, "L1 layout mount preserved after error recovery");
+          assert((await readText(page, "#hs-l1-client-count")) === "1", "L1 layout state preserved after error recovery");
+
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          return "error.tsx contained in outlet · L1 state=1 preserved across break & recovery";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 26: Deep Stress #4 — Clock-based 1s Layout TTL vs 1s Page TTL surgical expiration (Table 1 Scenarios 1.1 & 1.4)
+    checks.push(
+      await check("rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration", async () => {
+        const page = await browser.newPage();
+        try {
+          // Part A: 1s Layout TTL + 3600s Child Page (/rigorous/hs/ttl-layout)
+          await page.goto(`${base}/rigorous/hs/ttl-layout`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await waitForText(page, "#hs-ttl-layout-seq", "100");
+          await waitForText(page, "#hs-ttl-child-page-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsTtlLayoutSeq: 280,
+              hsTtlChildPageSeq: 999,
+            });
+          });
+
+          await new Promise((r) => setTimeout(r, 1300));
+          await page.reload({ waitUntil: "networkidle" });
+          if ((await readText(page, "#hs-ttl-layout-seq")) !== "280") {
+            await new Promise((r) => setTimeout(r, 250));
+            await page.reload({ waitUntil: "networkidle" });
+          }
+          await waitForText(page, "#hs-ttl-layout-seq", "280");
+          assert(
+            (await readText(page, "#hs-ttl-child-page-seq")) === "100",
+            "3600s child page must stay 100 when 1s layout TTL expires"
+          );
+
+          // Part B: 3600s L1 Layout + 1s Child Page TTL (/rigorous/hs/ttl-page)
+          await page.goto(`${base}/rigorous/hs/ttl-page`, { waitUntil: "networkidle" });
+          await waitForText(page, "#hs-l1-seq", "100");
+          await waitForText(page, "#hs-ttl-page-only-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsL1LayoutSeq: 999,
+              hsTtlPageOnlySeq: 281,
+            });
+          });
+
+          await new Promise((r) => setTimeout(r, 1300));
+          await page.reload({ waitUntil: "networkidle" });
+          if ((await readText(page, "#hs-ttl-page-only-seq")) !== "281") {
+            await new Promise((r) => setTimeout(r, 250));
+            await page.reload({ waitUntil: "networkidle" });
+          }
+          await waitForText(page, "#hs-ttl-page-only-seq", "281");
+          assert(
+            (await readText(page, "#hs-l1-seq")) === "100",
+            "3600s L1 layout must stay 100 when 1s child page TTL expires"
+          );
+
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          return "1s layout TTL=280 (child=100) · 1s page TTL=281 (L1=100)";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 27: Deep Stress #5 — Wildcard refreshSlot("*", { fresh: true }), layout banner slot & static-host 1s slot TTL
+    checks.push(
+      await check("rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+          });
+          await page.reload({ waitUntil: "networkidle" });
+
+          await waitForText(page, "#cs-layout-host-seq", "100");
+          await waitForText(page, "#cs-dynamic-host-seq", "100");
+          await waitForText(page, "#cs-banner-seq", "100");
+          await waitForText(page, "#cs-alpha-seq", "100");
+          await waitForText(page, "#cs-beta-seq", "100");
+
+          await page.click("#cs-layout-client-btn");
+          await page.click("#cs-page-client-btn");
+          await waitForText(page, "#cs-layout-client-count", "1");
+          await waitForText(page, "#cs-page-client-count", "1");
+
+          // Mutate dynamic host counters (999) + slot counters (301, 302, 303) and trigger wildcard slot refresh
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              csLayoutHostSeq: 999,
+              csDynamicHostSeq: 999,
+              csBannerSeq: 301,
+              csAlphaSeq: 302,
+              csBetaSeq: 303,
+            });
+          });
+          await page.click("#btn-refresh-all-slots");
+          await waitForText(page, "#cs-banner-seq", "301");
+          await waitForText(page, "#cs-alpha-seq", "302");
+          await waitForText(page, "#cs-beta-seq", "303");
+
+          const layoutHostAfterWildcard = await readText(page, "#cs-layout-host-seq");
+          const pageHostAfterWildcard = await readText(page, "#cs-dynamic-host-seq");
+          assert(
+            layoutHostAfterWildcard === "100" && pageHostAfterWildcard === "100",
+            `wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=${layoutHostAfterWildcard}, page=${pageHostAfterWildcard})`
+          );
+          assert((await readText(page, "#cs-layout-client-count")) === "1", "layout client state preserved");
+          assert((await readText(page, "#cs-page-client-count")) === "1", "page client state preserved");
+
+          // Part B: /rigorous/cache-slot/static-host (1s slot TTL inside 3600s static host page)
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          await page.goto(`${base}/rigorous/cache-slot/static-host`, { waitUntil: "networkidle" });
+          await waitForText(page, "#cs-static-host-seq", "100");
+          await waitForText(page, "#cs-static-slot-seq", "100");
+          await waitForText(page, "#cs-static-fast-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              csStaticHostSeq: 999,
+              csStaticSlotSeq: 999,
+              csStaticFastSeq: 305,
+            });
+          });
+
+          await new Promise((r) => setTimeout(r, 1300));
+          await page.reload({ waitUntil: "networkidle" });
+          if ((await readText(page, "#cs-static-fast-seq")) !== "305") {
+            await new Promise((r) => setTimeout(r, 250));
+            await page.reload({ waitUntil: "networkidle" });
+          }
+          await waitForText(page, "#cs-static-fast-seq", "305");
+          assert((await readText(page, "#cs-static-host-seq")) === "100", "3600s static host page must stay 100");
+          assert((await readText(page, "#cs-static-slot-seq")) === "100", "3600s sibling slot must stay 100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+          });
+          return "wildcard refreshSlot('*')=301/302/303 (hosts=100) · static-host 1s slot=305 (host=100)";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 28: Deep Stress #6 — Concurrency stampede protection (6 simultaneous cold-miss requests execute 150ms slot once)
+    checks.push(
+      await check("rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          const execCount = await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              csStampedeExecCount: 0,
+              csStampedeDelayMs: 150,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-stampede");
+            await Promise.all(
+              Array.from({ length: 6 }, () =>
+                fetch("/rigorous/cache-slot", { cache: "no-store" }).then((r) => r.text())
+              )
+            );
+            const s = await window.__BENCH_RIGOROUS__.getState();
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-stampede");
+            return s.csStampedeExecCount;
+          });
+
+          assert(
+            execCount === 1,
+            `expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got ${execCount}`
+          );
+          return `6 concurrent cold requests -> ${execCount} slot execution`;
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 29: Deep Stress #7 — Out-of-order Last-Write-Wins (LWW) concurrency race on slot refresh
+    checks.push(
+      await check("rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/hs-cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+          });
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#hscs-page-a-slot-seq", "100");
+
+          // Fire Request #1 (slow 250ms, seq=401, label="stale-slow") then 50ms later Request #2 (fast 10ms, seq=402, label="fresh-fast")
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hscsPageASlotSeq: 401,
+              hscsPageASlotLabel: "stale-slow",
+              hscsPageASlotDelayMs: 250,
+            });
+            // Do not await Request #1 before firing Request #2
+            const p1 = Promise.resolve(window.__BENCH_RIGOROUS__.refreshSlot("hscs-page-a-slot", true));
+            await new Promise((r) => setTimeout(r, 50));
+
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hscsPageASlotSeq: 402,
+              hscsPageASlotLabel: "fresh-fast",
+              hscsPageASlotDelayMs: 10,
+            });
+            const p2 = Promise.resolve(window.__BENCH_RIGOROUS__.refreshSlot("hscs-page-a-slot", true));
+            await Promise.allSettled([p1, p2]);
+            await new Promise((r) => setTimeout(r, 400));
+          });
+
+          const domSeq = await readText(page, "#hscs-page-a-slot-seq");
+          const domLabel = await readText(page, "#hscs-page-a-slot-label");
+          assert(
+            domSeq === "402" && domLabel === "fresh-fast",
+            `LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=${domSeq} label=${domLabel}`
+          );
+
+          // Reload to verify server-side slot cache also retained 402/fresh-fast
+          await page.reload({ waitUntil: "networkidle" });
+          const reloadedSeq = await readText(page, "#hscs-page-a-slot-seq");
+          const reloadedLabel = await readText(page, "#hscs-page-a-slot-label");
+          assert(
+            reloadedSeq === "402" && reloadedLabel === "fresh-fast",
+            `LWW race failed in server cache: got seq=${reloadedSeq} label=${reloadedLabel}`
+          );
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+          });
+          return "LWW race won by Request #2 (402/fresh-fast) in both DOM and server cache";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 30: Deep Stress #8 — 1s PPR layout/page clock TTLs + surgical static-shell slot revalidateTag across PPR & static children
+    checks.push(
+      await check("rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag", async () => {
+        const page = await browser.newPage();
+        try {
+          // Part A: 1s PPR Layout TTL + 3600s PPR Child Page (/rigorous/hs-ppr/ttl-ppr)
+          await page.goto(`${base}/rigorous/hs-ppr/ttl-ppr`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await waitForText(page, "#hsppr-ttl-layout-shell-seq", "100");
+          await waitForText(page, "#hsppr-ttl-child-shell-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hspprTtlLayoutShellSeq: 330,
+              hspprTtlChildShellSeq: 999,
+            });
+          });
+          await new Promise((r) => setTimeout(r, 1300));
+          await page.reload({ waitUntil: "networkidle" });
+          if ((await readText(page, "#hsppr-ttl-layout-shell-seq")) !== "330") {
+            await new Promise((r) => setTimeout(r, 250));
+            await page.reload({ waitUntil: "networkidle" });
+          }
+          await waitForText(page, "#hsppr-ttl-layout-shell-seq", "330");
+          assert(
+            (await readText(page, "#hsppr-ttl-child-shell-seq")) === "100",
+            "3600s PPR child shell must stay 100 when 1s PPR layout TTL expires"
+          );
+
+          // Part B: 3600s PPR L1 Layout + 1s PPR Page TTL (/rigorous/hs-ppr/page-ttl-ppr)
+          await page.goto(`${base}/rigorous/hs-ppr/page-ttl-ppr`, { waitUntil: "networkidle" });
+          await waitForText(page, "#hsppr-l1-shell-seq", "100");
+          await waitForText(page, "#hsppr-page-ttl-shell-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hspprL1ShellSeq: 999,
+              hspprPageTtlShellSeq: 331,
+            });
+          });
+          await new Promise((r) => setTimeout(r, 1300));
+          await page.reload({ waitUntil: "networkidle" });
+          if ((await readText(page, "#hsppr-page-ttl-shell-seq")) !== "331") {
+            await new Promise((r) => setTimeout(r, 250));
+            await page.reload({ waitUntil: "networkidle" });
+          }
+          await waitForText(page, "#hsppr-page-ttl-shell-seq", "331");
+          assert(
+            (await readText(page, "#hsppr-l1-shell-seq")) === "100",
+            "3600s PPR L1 layout shell must stay 100 when 1s PPR page TTL expires"
+          );
+
+          // Part C: Surgical revalidateTag on static-shell slots in Triple Synergy without re-executing layout.tsx or page.tsx
+          await page.goto(`${base}/rigorous/triple`, { waitUntil: "networkidle" });
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+          await waitForText(page, "#ts-l1-shell-seq", "100");
+          await waitForText(page, "#ts-layout-shell-slot-seq", "100");
+          await waitForText(page, "#ts-ppr-a-shell-seq", "100");
+          await waitForText(page, "#ts-ppr-a-shell-slot-seq", "100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              tsL1ShellSeq: 999,
+              tsPprAShellSeq: 999,
+              tsStaticBHostSeq: 999,
+              tsLayoutShellSlotSeq: 340,
+              tsPprAShellSlotSeq: 341,
+              tsStaticBSlotSeq: 342,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-layout-shell-slot");
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-ppr-a-shell-slot");
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-static-b-slot");
+          });
+
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#ts-layout-shell-slot-seq", "340");
+          await waitForText(page, "#ts-ppr-a-shell-slot-seq", "341");
+          assert((await readText(page, "#ts-l1-shell-seq")) === "100", "L1 PPR shell must stay 100 on slot-only revalidateTag");
+          assert((await readText(page, "#ts-ppr-a-shell-seq")) === "100", "Page A PPR shell must stay 100 on slot-only revalidateTag");
+
+          await page.goto(`${base}/rigorous/triple/static-b`, { waitUntil: "networkidle" });
+          await waitForText(page, "#ts-layout-shell-slot-seq", "340");
+          await waitForText(page, "#ts-static-b-slot-seq", "342");
+          assert((await readText(page, "#ts-l1-shell-seq")) === "100", "L1 shell on Static B must stay 100");
+          assert((await readText(page, "#ts-static-b-host-seq")) === "100", "Static B host page must stay 100");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-layout-shell-slot");
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-ppr-a-shell-slot");
+            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-static-b-slot");
+          });
+          return "PPR TTLs (330/331) · shell slots=340/341/342 (hosts=100)";
         } finally {
           await page.close();
         }

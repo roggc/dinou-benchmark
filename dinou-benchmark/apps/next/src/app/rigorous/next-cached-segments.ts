@@ -9,10 +9,42 @@ export async function getHsL1LayoutState() {
   return getRigorousState();
 }
 
+export async function getHsSiblingAState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("hs-sibling-a-tag", "page:/rigorous/hs/sibling-a", "subtree:/rigorous/hs/sibling-a");
+  return getRigorousState();
+}
+
 export async function getHsSiblingBState() {
   "use cache";
   cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
   cacheTag("hs-sibling-b-tag", "page:/rigorous/hs/sibling-b", "subtree:/rigorous/hs/sibling-b");
+  return getRigorousState();
+}
+
+export async function getHsTtlChildPageState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("page:/rigorous/hs/ttl-layout");
+  return getRigorousState();
+}
+
+export async function getCsStaticHostPageState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "cs-static-page-tag",
+    "page:/rigorous/cache-slot/static-host",
+    "subtree:/rigorous/cache-slot/static-host"
+  );
+  return getRigorousState();
+}
+
+export async function getCsStaticHostSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-static-slot", "slot:cs-slot-static-host", "slot:*");
   return getRigorousState();
 }
 
@@ -89,10 +121,11 @@ export async function getHscsPageASlotState() {
   cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
   cacheTag("hscs-tag-page-a-slot", "slot:hscs-page-a-slot", "slot:*");
   const s = getRigorousState();
-  if (s.hscsPageASlotDelayMs > 0) {
-    await sleep(s.hscsPageASlotDelayMs);
+  const snap = { ...s };
+  if (snap.hscsPageASlotDelayMs > 0) {
+    await sleep(snap.hscsPageASlotDelayMs);
   }
-  return s;
+  return snap;
 }
 
 export async function getHscsPageASharedSlotState() {
@@ -171,10 +204,63 @@ export async function getHsPprPageAStaticSuspenseState() {
   return getRigorousState();
 }
 
+export async function getHsPprTtlChildShellState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("page:/rigorous/hs-ppr/ttl-ppr");
+  return getRigorousState();
+}
+
+export async function getTsL1ShellState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-l1-layout-tag", "layout:/rigorous/triple", "subtree:/rigorous/triple");
+  return getRigorousState();
+}
+
+export async function getTsLayoutShellSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-layout-shell-slot", "slot:ts-layout-shell-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsPprAShellState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-ppr-a-tag", "page:/rigorous/triple", "subtree:/rigorous/triple");
+  return getRigorousState();
+}
+
+export async function getTsPprAShellSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-ppr-a-shell-slot", "slot:ts-ppr-a-shell-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsStaticBHostState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-static-b-tag", "page:/rigorous/triple/static-b", "subtree:/rigorous/triple/static-b");
+  return getRigorousState();
+}
+
+export async function getTsStaticBSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-static-b-slot", "slot:ts-static-b-slot", "slot:*");
+  return getRigorousState();
+}
+
 export async function warmNextUseCacheBaseline() {
   await Promise.all([
     getHsL1LayoutState(),
+    getHsSiblingAState(),
     getHsSiblingBState(),
+    getHsTtlChildPageState(),
+    getCsStaticHostPageState(),
+    getCsStaticHostSlotState(),
     getHscsL1LayoutState(),
     getHscsL1SlotState(),
     getHscsL1SharedSlotState(),
@@ -193,6 +279,12 @@ export async function warmNextUseCacheBaseline() {
     getHsPprSidebarShellState(),
     getHsPprPageAShellState(),
     getHsPprPageAStaticSuspenseState(),
+    getHsPprTtlChildShellState(),
+    getTsL1ShellState(),
+    getTsLayoutShellSlotState(),
+    getTsPprAShellState(),
+    getTsPprAShellSlotState(),
+    getTsStaticBHostState(),
+    getTsStaticBSlotState(),
   ]);
 }
-

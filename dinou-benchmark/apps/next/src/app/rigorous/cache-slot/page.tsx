@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe, RigorousSlotWidget } from "@/shared/components/rigorous-ui";
 import { rigorousSlotServerPing } from "../rigorous-actions";
+import { sleep } from "@/shared/lib/data";
 
 async function CsAlphaSlotContent() {
   "use cache";
@@ -111,6 +112,22 @@ async function CsFastTtlSlotContent() {
   );
 }
 
+async function CsStampedeSlotContent() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-stampede", "slot:cs-slot-stampede", "slot:*");
+  const s = getRigorousState();
+  if (s.csStampedeDelayMs > 0) {
+    await sleep(s.csStampedeDelayMs);
+  }
+  s.csStampedeExecCount = (Number(s.csStampedeExecCount) || 0) + 1;
+  return (
+    <div id="cs-stampede-slot">
+      Stampede Exec Count: <span id="cs-stampede-exec">{s.csStampedeExecCount}</span>
+    </div>
+  );
+}
+
 async function CacheSlotDynamicBody() {
   await connection();
   const s = getRigorousState();
@@ -132,6 +149,7 @@ async function CacheSlotDynamicBody() {
           <CsNestedInnerSlotContent />
         </CsNestedOuterSlotContent>
         <CsFastTtlSlotContent />
+        <CsStampedeSlotContent />
       </div>
     </div>
   );

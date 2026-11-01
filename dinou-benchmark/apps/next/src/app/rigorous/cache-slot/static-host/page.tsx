@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
+import {
+  getCsStaticHostPageState,
+  getCsStaticHostSlotState,
+} from "../../next-cached-segments";
 
 async function CsStaticHostSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-static-slot", "slot:cs-slot-static-host", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsStaticHostSlotState();
   return (
     <div id="cs-static-host-slot">
       Static Host Slot Seq: <span id="cs-static-slot-seq">{s.csStaticSlotSeq}</span>
@@ -26,17 +27,6 @@ async function CsStaticFastSlotContent() {
   );
 }
 
-async function getCsStaticHostPageState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag(
-    "cs-static-page-tag",
-    "page:/rigorous/cache-slot/static-host",
-    "subtree:/rigorous/cache-slot/static-host"
-  );
-  return getRigorousState();
-}
-
 export default async function CacheSlotStaticHostPage() {
   const s = await getCsStaticHostPageState();
   return (
@@ -52,4 +42,3 @@ export default async function CacheSlotStaticHostPage() {
     </div>
   );
 }
-
