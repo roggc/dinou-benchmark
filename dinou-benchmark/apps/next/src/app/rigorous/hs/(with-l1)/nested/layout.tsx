@@ -1,19 +1,6 @@
 import type { ReactNode } from "react";
-import { cacheLife, cacheTag } from "next/cache";
-import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe } from "@/shared/components/rigorous-ui";
-
-async function getHsNestedLayoutState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag(
-    "hs-l2-layout-tag",
-    "layout:/rigorous/hs/nested",
-    "subtree:/rigorous/hs/nested",
-    "subtree:/rigorous/hs"
-  );
-  return getRigorousState();
-}
+import { getHsNestedLayoutState } from "../../../next-cached-segments";
 
 export default async function HsNestedLayout({
   children,

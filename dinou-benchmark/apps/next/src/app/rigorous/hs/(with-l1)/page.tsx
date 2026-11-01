@@ -1,13 +1,5 @@
-import { cacheLife, cacheTag } from "next/cache";
 import { RigorousClientProbe } from "@/shared/components/rigorous-ui";
-import { getRigorousState } from "@/shared/lib/rigorous-state";
-
-async function getHsIndexPageState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("hs-index-page-tag", "page:/rigorous/hs", "subtree:/rigorous/hs");
-  return getRigorousState();
-}
+import { getHsIndexPageState } from "../../next-cached-segments";
 
 export default async function HsIndexPage() {
   const s = await getHsIndexPageState();

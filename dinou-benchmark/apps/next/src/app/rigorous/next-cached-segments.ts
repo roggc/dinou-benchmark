@@ -9,6 +9,43 @@ export async function getHsL1LayoutState() {
   return getRigorousState();
 }
 
+export async function getHsIndexPageState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("hs-index-page-tag", "page:/rigorous/hs", "subtree:/rigorous/hs");
+  return getRigorousState();
+}
+
+export async function getHsNestedLayoutState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "hs-l2-layout-tag",
+    "layout:/rigorous/hs/nested",
+    "subtree:/rigorous/hs/nested",
+    "subtree:/rigorous/hs"
+  );
+  return getRigorousState();
+}
+
+export async function getHsNestedPage1State() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("hs-nested-page1-tag", "page:/rigorous/hs/nested", "subtree:/rigorous/hs/nested");
+  return getRigorousState();
+}
+
+export async function getHsNestedPage2State() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "hs-nested-page2-tag",
+    "page:/rigorous/hs/nested/page-2",
+    "subtree:/rigorous/hs/nested/page-2"
+  );
+  return getRigorousState();
+}
+
 export async function getHsSiblingAState() {
   "use cache";
   cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
@@ -402,6 +439,10 @@ export async function getTsNestedStaticSlotState() {
 export async function warmNextUseCacheBaseline() {
   await Promise.all([
     getHsL1LayoutState(),
+    getHsIndexPageState(),
+    getHsNestedLayoutState(),
+    getHsNestedPage1State(),
+    getHsNestedPage2State(),
     getHsSiblingAState(),
     getHsSiblingBState(),
     getHsTtlChildPageState(),

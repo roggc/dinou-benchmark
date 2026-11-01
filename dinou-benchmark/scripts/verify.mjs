@@ -1527,6 +1527,142 @@ for (const fw of frameworks) {
         }
       })
     );
+
+    // Check 36: Deep Stress #14 — Lazy index.html regeneration & 0 hydration errors on hard reload / direct URL access for co-located page & descendant pages after revalidateLayout
+    checks.push(
+      await check("rigorous-hs-lazy-html-hydration: revalidateLayout lazy index.html recomposition & 0 hydration errors on co-located & child pages (hard nav)", async () => {
+        const page = await browser.newPage();
+        const hydrationErrors = [];
+        page.on("console", (msg) => {
+          const text = msg.text();
+          if (
+            (msg.type() === "error" || msg.type() === "warning") &&
+            (/hydrat|did not match|server rendered html|react\.dev\/errors\/(418|425)/i.test(text))
+          ) {
+            hydrationErrors.push(text);
+          }
+        });
+        page.on("pageerror", (err) => {
+          if (/hydrat|418|425/i.test(err.message)) {
+            hydrationErrors.push(err.message);
+          }
+        });
+        try {
+          await page.goto(`${base}/rigorous/hs`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await waitForText(page, "#hs-l1-seq", "100");
+          await waitForText(page, "#hs-index-seq", "100");
+
+          // Part 1: Revalidate L1 layout (/rigorous/hs) to 460 while poisoning co-located index page (999), direct child sibling-a (999), L2 co-located page-1 (999), and deep child page-2 (999)
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsL1LayoutSeq: 460,
+              hsL1PropsSeq: 460,
+              hsIndexPageSeq: 999,
+              hsIndexPropsSeq: 999,
+              hsSiblingASeq: 999,
+              hsNestedPage1Seq: 999,
+              hsNestedPage2Seq: 999,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
+          });
+
+          // 1A. Hard reload on co-located page (/rigorous/hs next to /rigorous/hs/layout.tsx)
+          const resColocatedL1 = await page.reload({ waitUntil: "networkidle" });
+          const htmlColocatedL1 = await resColocatedL1.text();
+          assert(
+            htmlColocatedL1.includes("460") && !htmlColocatedL1.includes(">999<"),
+            "co-located /rigorous/hs SSR HTML must contain updated L1=460 and cached page=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          assert((await readText(page, "#hs-index-seq")) === "100", "co-located index page must stay 100");
+          assert((await readText(page, "#hs-index-props-seq")) === "100", "co-located index props must stay 100");
+
+          // 1B. Direct hard URL navigation (page.goto) to direct child page (/rigorous/hs/sibling-a)
+          const resSiblingA = await page.goto(`${base}/rigorous/hs/sibling-a`, { waitUntil: "networkidle" });
+          const htmlSiblingA = await resSiblingA.text();
+          assert(
+            htmlSiblingA.includes("460") && !htmlSiblingA.includes(">999<"),
+            "direct child /rigorous/hs/sibling-a SSR HTML must lazily recompose L1=460 with cached sibling-a=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          assert((await readText(page, "#hs-sibling-a-seq")) === "100", "direct child sibling-a must stay 100");
+
+          // 1C. Direct hard URL navigation (page.goto) to child route with L2 layout + co-located page (/rigorous/hs/nested)
+          const resNestedP1 = await page.goto(`${base}/rigorous/hs/nested`, { waitUntil: "networkidle" });
+          const htmlNestedP1 = await resNestedP1.text();
+          assert(
+            htmlNestedP1.includes("460") && !htmlNestedP1.includes(">999<"),
+            "child /rigorous/hs/nested SSR HTML must lazily recompose L1=460 with cached L2=100 & page1=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          assert((await readText(page, "#hs-l2-seq")) === "100", "L2 layout must stay 100");
+          assert((await readText(page, "#hs-nested-page1-seq")) === "100", "nested co-located page-1 must stay 100");
+
+          // 1D. Direct hard URL navigation (page.goto) to deep child page (/rigorous/hs/nested/page-2)
+          const resNestedP2 = await page.goto(`${base}/rigorous/hs/nested/page-2`, { waitUntil: "networkidle" });
+          const htmlNestedP2 = await resNestedP2.text();
+          assert(
+            htmlNestedP2.includes("460") && !htmlNestedP2.includes(">999<"),
+            "deep child /rigorous/hs/nested/page-2 SSR HTML must lazily recompose L1=460 with cached L2=100 & page2=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          assert((await readText(page, "#hs-l2-seq")) === "100", "L2 layout on page-2 must stay 100");
+          assert((await readText(page, "#hs-nested-page2-seq")) === "100", "deep child page-2 must stay 100");
+
+          // Part 2: Revalidate nested L2 layout (/rigorous/hs/nested) to 461 while poisoning co-located & child pages (999)
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsL2Seq: 461,
+              hsIndexPageSeq: 999,
+              hsNestedPage1Seq: 999,
+              hsNestedPage2Seq: 999,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs/nested");
+          });
+
+          // 2A. Hard reload on deep child page (/rigorous/hs/nested/page-2)
+          const resNestedP2AfterL2 = await page.reload({ waitUntil: "networkidle" });
+          const htmlNestedP2AfterL2 = await resNestedP2AfterL2.text();
+          assert(
+            htmlNestedP2AfterL2.includes("461") && !htmlNestedP2AfterL2.includes(">999<"),
+            "deep child /rigorous/hs/nested/page-2 SSR HTML must lazily recompose L2=461 with cached L1=460 & page2=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          await waitForText(page, "#hs-l2-seq", "461");
+          assert((await readText(page, "#hs-nested-page2-seq")) === "100", "deep child page-2 must stay 100 after L2 reval");
+
+          // 2B. Direct hard URL navigation (page.goto) to co-located L2 page (/rigorous/hs/nested)
+          const resNestedP1AfterL2 = await page.goto(`${base}/rigorous/hs/nested`, { waitUntil: "networkidle" });
+          const htmlNestedP1AfterL2 = await resNestedP1AfterL2.text();
+          assert(
+            htmlNestedP1AfterL2.includes("461") && !htmlNestedP1AfterL2.includes(">999<"),
+            "co-located /rigorous/hs/nested SSR HTML must lazily recompose L2=461 with cached L1=460 & page1=100"
+          );
+          await waitForText(page, "#hs-l1-seq", "460");
+          await waitForText(page, "#hs-l2-seq", "461");
+          assert((await readText(page, "#hs-nested-page1-seq")) === "100", "co-located L2 page-1 must stay 100 after L2 reval");
+
+          assert(
+            hydrationErrors.length === 0,
+            `expected 0 hydration errors across co-located & child hard navigations, got: ${hydrationErrors.join("; ")}`
+          );
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs/nested");
+            }
+          });
+          return "co-located (/rigorous/hs, /nested) & child (/nested/page-2) lazy HTML recomposed (L1=460, L2=461, pages=100) · 0 hydration errors";
+        } finally {
+          await page.close();
+        }
+      })
+    );
   } finally {
     await browser.close();
   }

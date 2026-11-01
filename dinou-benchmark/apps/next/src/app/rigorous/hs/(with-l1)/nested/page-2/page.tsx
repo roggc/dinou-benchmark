@@ -1,16 +1,4 @@
-import { cacheLife, cacheTag } from "next/cache";
-import { getRigorousState } from "@/shared/lib/rigorous-state";
-
-async function getHsNestedPage2State() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag(
-    "hs-nested-page2-tag",
-    "page:/rigorous/hs/nested/page-2",
-    "subtree:/rigorous/hs/nested/page-2"
-  );
-  return getRigorousState();
-}
+import { getHsNestedPage2State } from "../../../../next-cached-segments";
 
 export default async function HsNestedPage2() {
   const s = await getHsNestedPage2State();

@@ -10,36 +10,36 @@
 
 ## 1. Executive Summary
 
-To evaluate both frameworks beyond synthetic happy-path benchmarks, we implemented the complete **3D Caching & Streaming Matrix** defined across the eight `rigurous-*.md` reference specifications (`rigurous-hs.md`, `rigurous-cache-slot.md`, `rigurous-ppr.md`, `rigurous-sinergy.md`, `rigurous-sinergy-hs-cache-slot.md`, `rigurous-sinergy-hs-ppr.md`, `rigurous-triple-sinergy.md`, and `rigurous-revalidation-scenarios.md`) and expanded `scripts/verify.mjs` from **13 baseline checks** to **35 end-to-end Playwright & HTTP verification checks**.
+To evaluate both frameworks beyond synthetic happy-path benchmarks, we implemented the complete **3D Caching & Streaming Matrix** defined across the eight `rigurous-*.md` reference specifications (`rigurous-hs.md`, `rigurous-cache-slot.md`, `rigurous-ppr.md`, `rigurous-sinergy.md`, `rigurous-sinergy-hs-cache-slot.md`, `rigurous-sinergy-hs-ppr.md`, `rigurous-triple-sinergy.md`, and `rigurous-revalidation-scenarios.md`) and expanded `scripts/verify.mjs` from **13 baseline checks** to **36 end-to-end Playwright & HTTP verification checks**.
 
-The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, and simultaneous revalidation queues.
+The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
-### Final Verification Scoreboard (35 Checks)
+### Final Verification Scoreboard (36 Checks)
 
-| Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–35) | Total Passed | Status |
+| Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–36) | Total Passed | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **✅ PASS (100%)** |
-| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 13 / 13 | **35 / 35** | **✅ PASS (100%)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 8 / 13 | **30 / 35** | **❌ FAIL (5 failures)** |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100%)** |
+| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100%)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 8 / 14 | **30 / 36** | **❌ FAIL (6 failures)** |
 
 ---
 
-## 2. Complete 35-Check Verification Matrix
+## 2. Complete 36-Check Verification Matrix
 
 | # | Check Name in `scripts/verify.mjs` | Dimension / Suite | Dinou 9.0.3 | Dinou 9.0.3 (`-u`) | Next.js 16.4.3 |
 | :-: | :--- | :--- | :---: | :---: | :---: |
-| 1 | `ssg: / responds 200` | Baseline SSG | ✅ PASS (7.2 ms) | ✅ PASS (7.7 ms) | ✅ PASS (14.0 ms) |
+| 1 | `ssg: / responds 200` | Baseline SSG | ✅ PASS (5.3 ms) | ✅ PASS (8.0 ms) | ✅ PASS (11.6 ms) |
 | 2 | `ssg: / 50 items listing` | Baseline SSG | ✅ PASS | ✅ PASS | ✅ PASS |
 | 3 | `ssg: stable HTML across requests` | Baseline SSG | ✅ PASS | ✅ PASS | ✅ PASS |
-| 4 | `isr: /items/1 responds 200` | Baseline ISR | ✅ PASS (7.3 ms) | ✅ PASS (6.5 ms) | ✅ PASS (58.8 ms) |
+| 4 | `isr: /items/1 responds 200` | Baseline ISR | ✅ PASS (8.2 ms) | ✅ PASS (6.4 ms) | ✅ PASS (20.8 ms) |
 | 5 | `isr: cached and stable HTML` | Baseline ISR | ✅ PASS | ✅ PASS | ✅ PASS |
 | 6 | `isr: prerendered route /items/42` | Baseline ISR | ✅ PASS | ✅ PASS | ✅ PASS |
 | 7 | `404: nonexistent & validateParams/allowISG routes` | Baseline + HS Guards | ✅ PASS | ✅ PASS | ✅ PASS |
-| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | ✅ PASS (237.1 ms) | ✅ PASS (239.2 ms) | ✅ PASS (234.5 ms) |
+| 8 | `dashboard: responds 200` | Baseline Dynamic SSR | ✅ PASS (234.8 ms) | ✅ PASS (217.7 ms) | ✅ PASS (267.2 ms) |
 | 9 | `dashboard: is dynamic (two requests differ)` | Baseline Dynamic SSR | ✅ PASS | ✅ PASS | ✅ PASS |
 | 10 | `dashboard: streams 3 holes after fallback` | Baseline Streaming | ✅ PASS | ✅ PASS | ✅ PASS |
-| 11 | `ppr: static shell in first chunk` | Baseline PPR | ✅ PASS (6.08 ms) | ✅ PASS (5.34 ms) | ✅ PASS (8.89 ms) |
-| 12 | `ppr: hole arrives later (streaming)` | Baseline PPR | ✅ PASS (5.00 ms shell) | ✅ PASS (3.98 ms shell) | ✅ PASS (2.40 ms shell) |
+| 11 | `ppr: static shell in first chunk` | Baseline PPR | ✅ PASS (7.83 ms) | ✅ PASS (5.43 ms) | ✅ PASS (26.89 ms) |
+| 12 | `ppr: hole arrives later (streaming)` | Baseline PPR | ✅ PASS (4.77 ms shell) | ✅ PASS (6.57 ms shell) | ✅ PASS (3.17 ms shell) |
 | 13 | `mutation: Server Function visible in browser` | Baseline Server Actions | ✅ PASS | ✅ PASS | ✅ PASS |
 | 14 | `rigorous-hs: sibling soft nav preserves layout client state & mountId` | Suite 1 · HS | ✅ PASS (`layoutFetches=0`) | ✅ PASS (`layoutFetches=0`) | ✅ PASS (`layoutFetches=0`) |
 | 15 | `rigorous-hs: nested L2 layout, @badge slot, dynamic [deptId], locked [code] & escape hatches` | Suite 1 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
@@ -55,7 +55,7 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **✅ PASS** (`hosts=100`) | **✅ PASS** (`hosts=100`) | **❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | ✅ PASS (`1` execution) | ✅ PASS (`1` execution) | ✅ PASS (`1` execution) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **✅ PASS** (`1` execution) | **✅ PASS** (`1` execution) | **❌ FAIL** (`2` executions) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **✅ PASS** (`402/fresh-fast`) | **✅ PASS** (`402/fresh-fast`) | **❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) |
 | 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **✅ PASS** (`0` page RSC reqs) | **✅ PASS** (`0` page RSC reqs) | **❌ FAIL** (`pageRscReqs=1`) |
@@ -63,10 +63,11 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 | 33 | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | Deep Stress #11 · Slot | **✅ PASS** (`host=100, slot=430`) | **✅ PASS** (`host=100, slot=430`) | **❌ FAIL** (`host=999`) |
 | 34 | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | Deep Stress #12 · Triple Cascade | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) |
 | 35 | `rigorous-hs-concurrent-reval: simultaneous revalidateLayout + revalidatePage serialization & F5 hydration` | Deep Stress #13 · Concurrency | ✅ PASS (`450/451`, `0` hydr. err) | ✅ PASS (`450/451`, `0` hydr. err) | ✅ PASS (`450/451`, `0` hydr. err) |
+| 36 | `rigorous-hs-lazy-html-hydration: revalidateLayout lazy index.html recomposition & 0 hydration errors on co-located & child pages (hard nav)` | Deep Stress #14 · Lazy HTML + Hydr. | ✅ PASS (`L1=460, L2=461`, `0` hydr. err) | ✅ PASS (`L1=460, L2=461`, `0` hydr. err) | ✅ PASS (`L1=460, L2=461`, `0` hydr. err) |
 
 ---
 
-## 3. Root-Cause Analysis of the 5 Next.js 16.4.3 Failures
+## 3. Root-Cause Analysis of the 6 Next.js 16.4.3 Failures
 
 ### Failure #1 — Check 24: `router.refresh()` Lacks Horizontal Segmentation on the Client
 - **Test:** `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard`
@@ -94,7 +95,20 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### Failure #3 — Check 29: Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
+### Failure #3 — Check 28: Server Action Invalidation Re-Render Leaks Into Cold Stampede Deduplication (`2` Executions Instead of `1`)
+- **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold requests coalesce into 1 slot execution (inflightSlotRenders)`
+- **Route:** `/rigorous/cache-slot`
+- **Observed Error on Next.js 16.4.3:**
+  ```text
+  expected stampede slot to execute once across 6 concurrent requests (delta=1), got before=2 after=4
+  ```
+- **Architectural Cause:**
+  - **Dinou v9.0.3** handles `revalidateTag("cs-tag-stampede")` purely on the server slot cache without forcing an immediate full-route RSC re-render on the Server Action `POST` response when the action is invoked via `serverFn`, and `inflightSlotRenders` coalesces all 6 concurrent `fetch()` requests to `/rigorous/cache-slot` onto a single in-flight promise (`delta = 1`).
+  - **Next.js v16.4.3** couples `"use server"` Actions with an automatic RSC re-render of the currently mounted route (`/rigorous/cache-slot`) whenever `updateTag(...)` or `revalidateTag(...)` is called inside the action, and does not coalesce that Server Action POST render with the subsequent burst of 6 concurrent `GET` requests, resulting in `2` executions of the `150 ms` slow slot (`before=2, after=4, delta=2`).
+
+---
+
+### Failure #4 — Check 29: Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
 - **Test:** `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)`
 - **Route:** `/rigorous/hs-cache-slot`
 - **Observed Error on Next.js 16.4.3:**
@@ -114,7 +128,7 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### Failure #4 — Check 31: Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
+### Failure #5 — Check 31: Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
 - **Test:** `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back`
 - **Routes:** `/rigorous/hs-cache-slot` (Page A) $\leftrightarrow$ `/rigorous/hs-cache-slot/page-b` (Page B)
 - **Observed Error on Next.js 16.4.3:**
@@ -129,7 +143,7 @@ The 35 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### Failure #5 — Check 33: Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
+### Failure #6 — Check 33: Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
 - **Test:** `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag`
 - **Route:** `/rigorous/cache-slot`
 - **Observed Error on Next.js 16.4.3:**
@@ -220,7 +234,27 @@ In real-world production deployments, **not needing a warmup phase (Dinou 9.0.3)
 
 ---
 
-## 5. Additional Architectural & Ergonomic Differences Observed Across All 35 Checks
+### 4.5 Deep-Dive on Check 36: Lazy `index.html` Re-Composition & Zero Hydration Mismatch on Co-Located and Descendant Pages After `revalidateLayout`
+
+A critical edge case in Horizontal Segmentation (`rigurous-hs.md` §1.2 & §2.3) occurs when `revalidateLayout(path)` updates an ancestor layout on disk (`layout.rsc` advances from generation $T_1 \to T_2$), and a user subsequently performs a **hard reload (`F5`) or direct URL navigation (`page.goto`)** in the browser (rather than a soft navigation) to:
+1. The **co-located page right next to the revalidated layout** (e.g., `/rigorous/hs` next to `rigorous/hs/layout.tsx`, or `/rigorous/hs/nested` next to `rigorous/hs/nested/layout.tsx`).
+2. A **direct child page** in a subfolder that shares the revalidated layout (`L1`) and has no layout of its own (e.g., `/rigorous/hs/sibling-a`).
+3. A **deep descendant page** under a nested child layout (`L1 → L2`) deeper in the directory tree (e.g., `/rigorous/hs/nested` and `/rigorous/hs/nested/page-2`).
+
+If a framework served the stale pre-rendered `index.html` (from $T_1$) while the client hydrated against the newly revalidated `layout.rsc` (at $T_2$), React would immediately throw a **Hydration Mismatch Error** (`Hydration failed because the server rendered HTML didn't match the client`). Conversely, if a framework eagerly re-rendered every descendant page's `page.tsx` when `revalidateLayout` was called, it would violate Horizontal Segmentation by re-executing untouched pages.
+
+**Check 36 (`rigorous-hs-lazy-html-hydration`)** tests both **Part 1 (`revalidateLayout("/rigorous/hs")` on `L1`, `seq = 460`)** and **Part 2 (`revalidateLayout("/rigorous/hs/nested")` on nested `L2`, `seq = 461`)** while poisoning all co-located and descendant page counters to `999` (`hsIndexPageSeq = 999`, `hsIndexPropsSeq = 999`, `hsSiblingASeq = 999`, `hsNestedPage1Seq = 999`, `hsNestedPage2Seq = 999`):
+
+- **How Dinou v9.0.3 Solves It (Lazy `index.html` Re-Composition from Disk `layout.rsc [T2]` + `page.rsc [T1]`):**
+  1. When `revalidateLayout("/rigorous/hs")` runs, Dinou regenerates only `rigorous/hs/layout.rsc` ($T_2$, `seq = 460`). None of the co-located or descendant `page.rsc` payloads (`rigorous/hs/page.rsc`, `sibling-a/page.rsc`, `nested/page.rsc`, `nested/page-2/page.rsc`) are re-executed—they remain on disk at $T_1$ (`seq = 100`).
+  2. When a hard `GET` arrives for `/rigorous/hs` (co-located) or `/rigorous/hs/sibling-a` (child), Dinou compares `leafLayout.generatedAt` ($T_2$) against `page.generatedAt` ($T_1$). Detecting $T_2 > T_1$, Dinou **lazily re-composes `index.html`** by streaming the fresh `layout.rsc` ($T_2$, `460`) together with the existing cached `page.rsc` ($T_1$, `100`) and stamping `window.__DINOU_BUILD_ID__ = T2`. Both the raw SSR HTML (`await res.text()`) and the hydrated DOM show `L1 = 460` and `page = 100` with **`0` React hydration errors/warnings** and **`0` executions of `page.tsx`**.
+  3. When a hard `GET` arrives for `/rigorous/hs/nested` or `/rigorous/hs/nested/page-2` (under nested layout `L2`), Dinou detects that ancestor `L1.generatedAt` ($T_2$) is newer than `L2.generatedAt` ($T_1$), automatically cascades the layout chain regeneration into `nested/layout.rsc` (while preserving any `<DinouCacheSlot>` inside `L2`, as verified in Check 34, and keeping `nested/page.rsc` and `nested/page-2/page.rsc` untouched at `100`), and lazily re-composes `nested/index.html` and `nested/page-2/index.html` with **`0` hydration errors**.
+- **How Next.js v16.4.3 Behaved:**
+  - Once `getHsIndexPageState`, `getHsNestedLayoutState`, `getHsNestedPage1State`, and `getHsNestedPage2State` were added to `warmNextUseCacheBaseline()` so their `"use cache"` entries were pre-loaded into RAM before poisoning page counters to `999`, Next.js 16.4.3 also passed Check 36 with `0` hydration errors (because `updateTag("layout:/rigorous/hs")` invalidates the on-disk route HTML files and re-renders the route HTML on the next hard `GET` using the fresh layout + RAM-cached page functions). However, just as in Checks 30 and 34, without RAM warmup in `DefaultCacheHandler`, Next.js suffers a cold RAM miss on unvisited descendant pages and leaks `999`.
+
+---
+
+## 5. Additional Architectural & Ergonomic Differences Observed Across All 36 Checks
 
 | Capability / Mechanism | Dinou v9.0.3 | Next.js v16.4.3 (`cacheComponents: true`) |
 | :--- | :--- | :--- |
