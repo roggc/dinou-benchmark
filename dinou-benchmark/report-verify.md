@@ -17,7 +17,7 @@ To evaluate both frameworks beyond synthetic happy-path benchmarks, we implement
 
 The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
-### Final Verification Scoreboard (36 Checks Across 13 Full Runs = 468 Check Executions per Framework)
+### 1.1 Final Verification Scoreboard (36 Checks Across 13 Full Runs = 468 Check Executions per Framework)
 
 Across **13 complete verification runs** (3 single-pass runs + 10 consecutive passes via `node scripts/verify.mjs --only=dinou-9,next --runs=10`, restoring clean post-build disk artifacts and restarting a fresh server process before every run):
 
@@ -25,6 +25,74 @@ Across **13 complete verification runs** (3 single-pass runs + 10 consecutive pa
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 ✅ on 13 runs | 9 ✅ on 13 runs | 14 ✅ on 13 runs | **468 ✅** (`100.0%`) | **36 ✅** | **✅ PASS (100% deterministic, `0` flaky)** |
 | **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ on 13 runs | 9 ✅ on 13 runs | 8 ✅ / 5 ❌ / 1 ⚠️ on 13 runs | **400 ✅ / 68 ❌** (`85.5%`) | **30 ✅ / 5 ❌ / 1 ⚠️** | **❌ FAIL (5 deterministic fails on 13 runs + ⚠️ 1 flaky: `3 Fail of 13 execs`)** |
+
+---
+
+### 1.2 Complete Coverage of the 7 Vertices of the 3D Caching & Streaming Cube ($2^3 - 1 = 7$ Combinations)
+
+Because the architecture forms a **3D Cube** across three orthogonal axes—**X: Horizontal Segmentation (`HS`)**, **Y: Vertical Segmentation (`Cache-Slot`)**, and **Z: Temporal/Streaming Segmentation (`PPR`)**—there are **$2^3 - 1 = 7$ non-empty architectural combinations**: **3 individual axes**, **3 pairwise synergies**, and **1 triple synergy**. Every single one of those 7 combinations is exhaustively tested in `scripts/verify.mjs` across client navigation, clock-based TTL expiration (`revalidate = 1s`), server on-demand surgical revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`), live client refresh (`router.refresh`, `refreshSlot`), concurrency/race conditions, and hard-reload (`F5`) React hydration:
+
+| Cube Vertex / Synergy | Axes Combined | Checks in `scripts/verify.mjs` | Dinou 9.0.3 | Next.js 16.4.3 |
+| :--- | :---: | :--- | :---: | :---: |
+| **1. Individual Axis X — Horizontal Segmentation (`HS`)** | `HS` | **Checks 7, 14, 15, 16, 23, 24, 25, 26, 35, 36** *(10 checks)* | **10 ✅** | 9 ✅ / **1 ❌** *(Check 24)* |
+| **2. Individual Axis Y — Vertical Segmentation (`Cache-Slot`)** | `Cache-Slot` | **Checks 17, 27, 28, 33** *(4 checks)* | **4 ✅** | 1 ✅ / **2 ❌** *(27, 33)* / **1 ⚠️** *(28)* |
+| **3. Individual Axis Z — Partial Prerendering (`PPR`)** | `PPR` | **Checks 11, 12, 18** *(3 checks)* | **3 ✅** | **3 ✅** |
+| **4. Pairwise Synergy #1 — `PPR + Cache-Slot`** | `PPR × Slot` | **Check 19** *(+ clock TTL in Checks 22 & 30)* | **1 ✅** | **1 ✅** |
+| **5. Pairwise Synergy #2 — `HS + Cache-Slot`** | `HS × Slot` | **Checks 20, 29, 31, 32** *(4 checks)* | **4 ✅** | 2 ✅ / **2 ❌** *(Checks 29, 31)* |
+| **6. Pairwise Synergy #3 — `HS + PPR`** | `HS × PPR` | **Checks 21, 30 (Part 1)** *(2 checks)* | **2 ✅** | **2 ✅** |
+| **7. Triple Synergy — `HS + Cache-Slot + PPR`** | `HS × Slot × PPR` | **Checks 22, 30 (Part 2), 34** *(3 multi-scenario checks)* | **3 ✅** | **3 ✅** *(requires RAM warmup)* |
+
+#### Detailed Breakdown of What Is Verified in Each of the 7 Cube Vertices:
+
+1. **Individual Axis X — Pure Horizontal Segmentation (`HS`: Layouts vs. Pages)**
+   - **Checks:** **7, 14, 15, 16, 23, 24, 25, 26, 35, 36**
+   - **What is verified:**
+     - Sibling soft navigation (`Page A → Page B → Page A`) preserving layout client `useState` and `mountId` with **`0` `/____rsc_layout____` network fetches** (**Check 14**).
+     - Multi-level `L1 → L2` layout nesting, parallel `@badge` slot, dynamic `[deptId]`, locked static `[code]` (`allowISG = false`), `validateParams` 404 guards, and layout escape hatches (`reset_layout` and `no_layout`) (**Checks 7 & 15**).
+     - Client `pageCache` deduplication (`0` fetches on repeat soft-nav) vs. `<Link fresh>` bypass (**Check 23**).
+     - `router.refresh()` (page-only) vs. `router.refresh({ layout: true })` (layout + page) and protection of user query parameters `?buildId` & `?v` (**Check 24** — *Fails 100% on Next.js*).
+     - Error boundary containment (`error.tsx` inside page outlet keeping parent layout interactive + soft-nav recovery) (**Check 25**).
+     - Independent clock-based `1s` Layout TTL expiration (without re-executing the child page) vs. `1s` Page TTL expiration (without re-executing the parent layout) (**Check 26**).
+     - Surgical `revalidatePage`, `revalidateLayout`, `revalidatePath`, concurrent `revalidateLayout + revalidatePage` serialization (**Checks 16 & 35**), and lazy `index.html` re-composition with **`0` React hydration errors** on hard navigation (`F5` / `page.goto`) across co-located and descendant pages (`L1` and `L2`) while proving `page.tsx` does not re-execute (`999` poison guard) (**Check 36**).
+
+2. **Individual Axis Y — Pure Vertical Segmentation (`Cache-Slot`: `<DinouCacheSlot>` & `refreshSlot`)**
+   - **Checks:** **17, 27, 28, 33**
+   - **What is verified:**
+     - Real-time dynamic bypass (`revalidate={0}`), surgical slot refresh (`refreshSlot` by ID and by tag) inside dynamic layouts/pages without re-executing the host (`999`), shared multi-slot tags, nested `Outer → Inner` slot isolation, preserved client `useState` inside the slot across live `refreshSlot`, and `"use server"` functions passed as props inside a cached slot (**Check 17**).
+     - Wildcard `refreshSlot("*", { fresh: true })` and clock-based `1s` slot TTL expiration inside a standalone static host page (`ppr = false`) without re-executing the host page or `3600s` sibling slots (**Check 27** — *Fails 100% on Next.js*).
+     - Cold-miss concurrency stampede protection (`6` simultaneous requests coalesce into `1` slot execution) (**Check 28** — *Flaky `3 Fail of 13 execs` on Next.js*).
+     - Tag-only `<DinouCacheSlot tags={["cs-tag-only"]}>` (no `id` prop) live `refreshSlot` and server `revalidateTag` without re-executing the dynamic host page (**Check 33** — *Fails 100% on Next.js*).
+
+3. **Individual Axis Z — Pure Temporal / Streaming Segmentation (`PPR`: Static Shell + Dynamic `<Suspense>` Holes)**
+   - **Checks:** **11, 12, 18**
+   - **What is verified:**
+     - Raw HTTP stream separation (`shellPart` in first packet vs. deferred `streamPart` `<template>` + `<script>` chunks), static `<Suspense>` boundaries collapsing into `shell.html` without shifting dynamic hole IDs, concurrent parallel `<Suspense>` holes (`max(120ms, 120ms)` instead of sequential `240ms`), inherited PPR vs. explicit `export const ppr = false` opt-out, and XSS `<script>` breakout protection (`</script><script>` escaped inside streamed hole payloads) (**Checks 11, 12 & 18**).
+
+4. **Pairwise Synergy #1 — `PPR + Cache-Slot` (Streaming + Vertical Micro-ISR)**
+   - **Checks:** **19** *(plus clock TTL assertions in **22 & 30**)*
+   - **What is verified:**
+     - 3-tier hybrid rendering on a single route: `<DinouCacheSlot>` baked into the **PPR Static Shell**, per-request **Dynamic `<Suspense>` Hole**, and `<DinouCacheSlot>` (both single and nested `Outer → Inner`) **inside a Dynamic `<Suspense>` Hole**.
+     - Surgical `revalidateTag` differentiation: invalidating a slot inside a dynamic hole deletes only `slots/<id>` (leaving `shell.html` intact for instant `0ms TTFB`), whereas invalidating a static-shell slot updates the slot and regenerates `shell.html` (`{ onlyRefreshSlots: true }`) without re-executing the host page.
+     - Live client `refreshSlot` across both static-shell slots and already-streamed dynamic-hole slots without losing React client state.
+
+5. **Pairwise Synergy #2 — `HS + Cache-Slot` (Horizontal Layouts/Pages + Vertical Micro-ISR)**
+   - **Checks:** **20, 29, 31, 32**
+   - **What is verified:**
+     - Cross-axis shared tag between a Layout Slot and a Page Slot (`revalidateTag` and `refreshSlot` update both simultaneously without re-executing either the layout host or the page host), plus `Page A → Page B → Page A` round-trip persistence of live-refreshed slots in `slotOverrideCache` (**Check 20**).
+     - Out-of-order concurrency race (`250ms` slow vs. `10ms` fast `refreshSlot`) enforcing monotonic Last-Write-Wins (LWW) in both the DOM and disk cache (**Check 29** — *Fails 100% on Next.js*).
+     - Unmounted cross-route `refreshSlot` (refreshing Page A's slot while viewing Page B, then soft-navigating back to Page A with `0` page RSC network requests and the updated slot already in `slotOverrideCache`) (**Check 31** — *Fails 100% on Next.js*).
+     - `slotOverrideCache` shadowing guard (`baseChildren === children`): when `router.refresh()` delivers newer server children (`421`) after a local `refreshSlot` (`420`), the boundary yields to the newer server payload while keeping internal client `useState` intact (**Check 32**).
+
+6. **Pairwise Synergy #3 — `HS + PPR` (Horizontal Layouts/Pages + Parallel `@slot` Streaming + PPR)**
+   - **Checks:** **21, 30 (Part 1)**
+   - **What is verified:**
+     - `L1` PPR layout with a parallel `@sidebar` dynamic `<Suspense>` hole + PPR child pages (`Page A`, `Page B`) + static opt-out child (`ppr = false`), soft navigation preserving both `L1` layout state and `@sidebar` state, surgical `revalidateLayout` vs. `revalidatePage` on PPR routes (**Check 21**), and independent `1s` clock TTL expiration of a PPR Layout shell vs. a PPR Page shell (**Check 30, Part 1**).
+
+7. **Triple Synergy (The Core of the Cube) — `HS + Cache-Slot + PPR`**
+   - **Checks:** **22, 30 (Part 2), 34**
+   - **What is verified:**
+     - Simultaneous coexistence of all 3 axes on `/rigorous/triple`: `L1` PPR layout + `L1` layout `<DinouCacheSlot>` + PPR children (`PPR A`, `PPR B`) with static-shell slots and dynamic `<Suspense>` holes containing single and nested (`Outer → Inner`) slots with prop-passed `"use server"` actions + static opt-out children (`Static A`, `Static B` with `ppr = false`) hosting their own slots + standalone `no_layout` PPR route (**Check 22**).
+     - Cross-mode horizontal soft navigation (`PPR A → PPR B → Static A → Static B → PPR A`) with `0` layout network fetches, surgical invalidation of every individual piece while poisoning all other counters to `999`, `1s` clock TTL expiration of slots inside both the PPR static shell and PPR dynamic hole (**Check 22**), surgical `revalidateTag` on a slot inside Static Page B under the PPR layout without re-executing Static Page B (**Check 30, Part 2**), and multi-level `L1 → L2` ancestor `revalidateLayout` cascade into nested PPR (`/rigorous/triple/nested`) and nested Static (`/rigorous/triple/nested/static-child`) routes while preserving `L2`'s `<DinouCacheSlot>` and both nested child pages untouched at `100` (**Check 34**).
 
 ---
 
