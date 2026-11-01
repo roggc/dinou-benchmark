@@ -6,6 +6,9 @@ import { RigorousClientProbe, RigorousSlotWidget } from "@/shared/components/rig
 import { rigorousSlotServerPing } from "../rigorous-actions";
 import { sleep } from "@/shared/lib/data";
 import {
+  getTsHoleNestedInnerState,
+  getTsHoleNestedOuterState,
+  getTsPprAHoleSlotState,
   getTsPprAShellSlotState,
   getTsPprAShellState,
 } from "../next-cached-segments";
@@ -42,10 +45,7 @@ async function TsPprATtlShellSlotContent() {
 }
 
 async function TsPprAHoleSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-ppr-a-hole-slot", "slot:ts-ppr-a-hole-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsPprAHoleSlotState();
   return (
     <div id="ts-ppr-a-hole-slot-box" style={{ border: "1px solid #0277bd", padding: 6 }}>
       <div>
@@ -63,10 +63,7 @@ async function TsPprAHoleSlotContent() {
 }
 
 async function TsHoleNestedInnerContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-hole-nested-inner", "slot:ts-hole-nested-inner", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsHoleNestedInnerState();
   return (
     <div id="ts-hole-nested-inner-box" style={{ border: "1px dotted #4a148c", padding: 4, marginTop: 4 }}>
       Hole Nested Inner Seq:{" "}
@@ -77,10 +74,7 @@ async function TsHoleNestedInnerContent() {
 }
 
 async function TsHoleNestedOuterContent({ children }: { children: ReactNode }) {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-hole-nested-outer", "slot:ts-hole-nested-outer", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsHoleNestedOuterState();
   return (
     <div id="ts-hole-nested-outer-box" style={{ border: "1px dashed #4a148c", padding: 6 }}>
       <div>

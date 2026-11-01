@@ -1,14 +1,15 @@
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { sleep } from "@/shared/lib/data";
+import {
+  getTsNestedPprHoleSlotState,
+  getTsNestedPprShellSlotState,
+  getTsNestedPprShellState,
+} from "../../next-cached-segments";
 
 async function TsNestedPprShellSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-nested-ppr-shell-slot", "slot:ts-nested-ppr-shell-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsNestedPprShellSlotState();
   return (
     <div id="ts-nested-ppr-shell-slot-box">
       Nested PPR Shell Slot Seq:{" "}
@@ -18,10 +19,7 @@ async function TsNestedPprShellSlotContent() {
 }
 
 async function TsNestedPprHoleSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-nested-ppr-hole-slot", "slot:ts-nested-ppr-hole-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsNestedPprHoleSlotState();
   return (
     <div id="ts-nested-ppr-hole-slot-box">
       Nested PPR Hole Slot Seq:{" "}
@@ -43,17 +41,6 @@ async function TsNestedPprDynamicHole() {
       <TsNestedPprHoleSlotContent />
     </div>
   );
-}
-
-async function getTsNestedPprShellState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag(
-    "ts-nested-ppr-page-tag",
-    "page:/rigorous/triple/nested",
-    "subtree:/rigorous/triple/nested"
-  );
-  return getRigorousState();
 }
 
 export default async function TripleNestedPprPage() {

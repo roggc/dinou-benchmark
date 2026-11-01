@@ -1,16 +1,16 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe } from "@/shared/components/rigorous-ui";
 import { sleep } from "@/shared/lib/data";
+import {
+  getTsL2ShellState,
+  getTsNestedLayoutSlotState,
+} from "../../next-cached-segments";
 
 async function TsNestedLayoutSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-nested-layout-slot", "slot:ts-nested-layout-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsNestedLayoutSlotState();
   return (
     <div id="ts-nested-layout-slot-box">
       L2 Layout Slot Seq:{" "}
@@ -29,18 +29,6 @@ async function TsL2DynamicHole() {
       L2 Hole Seq: <span id="ts-l2-hole-seq">{s.tsL2HoleSeq}</span>
     </div>
   );
-}
-
-async function getTsL2ShellState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag(
-    "ts-l2-layout-tag",
-    "layout:/rigorous/triple/nested",
-    "subtree:/rigorous/triple/nested",
-    "subtree:/rigorous/triple"
-  );
-  return getRigorousState();
 }
 
 export default async function TripleNestedLayout({ children }: { children: ReactNode }) {

@@ -1,16 +1,13 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { cacheLife, cacheTag } from "next/cache";
 import { connection } from "next/server";
 import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe } from "@/shared/components/rigorous-ui";
 import { RigorousControls } from "../rigorous-controls";
+import { getCsBannerSlotState } from "../next-cached-segments";
 
 async function CsBannerSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-banner", "slot:cs-layout-banner", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsBannerSlotState();
   return (
     <div id="cs-banner-slot">
       Banner Seq: <span id="cs-banner-seq">{s.csBannerSeq}</span> | Label:{" "}

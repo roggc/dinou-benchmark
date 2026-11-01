@@ -21,6 +21,14 @@ const RESET_TAGS = [
   "cs-static-page-tag",
   "page:/rigorous/cache-slot/static-host",
   "cs-tag-static-slot",
+  "cs-tag-banner",
+  "cs-tag-alpha",
+  "cs-tag-beta",
+  "cs-tag-gamma",
+  "cs-tag-shared",
+  "cs-tag-only",
+  "cs-tag-nested-inner",
+  "cs-tag-nested-outer",
   "cs-tag-stampede",
   "slot:cs-slot-stampede",
   "hscs-l1-layout-tag",
@@ -43,9 +51,25 @@ const RESET_TAGS = [
   "ts-ppr-a-tag",
   "page:/rigorous/triple",
   "ts-tag-ppr-a-shell-slot",
+  "ts-tag-ppr-a-hole-slot",
+  "ts-tag-hole-nested-inner",
+  "ts-tag-hole-nested-outer",
+  "ts-static-a-tag",
+  "page:/rigorous/triple/static-a",
+  "ts-tag-static-a-slot",
   "ts-static-b-tag",
   "page:/rigorous/triple/static-b",
   "ts-tag-static-b-slot",
+  "ts-l2-layout-tag",
+  "layout:/rigorous/triple/nested",
+  "ts-tag-nested-layout-slot",
+  "ts-nested-ppr-page-tag",
+  "page:/rigorous/triple/nested",
+  "ts-tag-nested-ppr-shell-slot",
+  "ts-tag-nested-ppr-hole-slot",
+  "ts-nested-static-child-tag",
+  "page:/rigorous/triple/nested/static-child",
+  "ts-tag-nested-static-slot",
 ];
 
 export async function rigorousGetState(): Promise<RigorousState> {
@@ -70,6 +94,11 @@ export async function rigorousResetState(): Promise<RigorousState> {
   for (const tag of RESET_TAGS) {
     updateTag(tag);
   }
+  return s;
+}
+
+export async function rigorousWarmBaseline(): Promise<RigorousState> {
+  const s = resetRigorousState();
   await warmNextUseCacheBaseline();
   return s;
 }

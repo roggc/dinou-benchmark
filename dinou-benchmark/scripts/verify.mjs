@@ -377,8 +377,10 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
-            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-b");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
+              await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-b");
+            }
           });
           return "page=101 preserved · layout=102 recomposed · 0 hydration errors";
         } finally {
@@ -446,9 +448,11 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-shared");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-nested-inner");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-shared");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-nested-inner");
+            }
           });
           return "alpha/shared/nested slots + server action prop OK";
         } finally {
@@ -620,8 +624,10 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs-ppr");
-            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs-ppr");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs-ppr");
+              await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs-ppr");
+            }
           });
           return "L1 PPR=141 · Page A PPR=140 · @sidebar hole OK";
         } finally {
@@ -768,7 +774,9 @@ for (const fw of frameworks) {
 
           await backChannel.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-a");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-a");
+            }
           });
           return "normal <Link>=100 (0 reqs) · <Link fresh>=260 · L1=100 preserved";
         } finally {
@@ -952,9 +960,11 @@ for (const fw of frameworks) {
           await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+            }
           });
           await page.reload({ waitUntil: "networkidle" });
 
@@ -1020,9 +1030,11 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-banner");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-alpha");
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-beta");
+            }
           });
           return "wildcard refreshSlot('*')=301/302/303 (hosts=100) · static-host 1s slot=305 (host=100)";
         } finally {
@@ -1053,7 +1065,9 @@ for (const fw of frameworks) {
             );
             const s = await window.__BENCH_RIGOROUS__.getState();
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-stampede");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-stampede");
+            }
             return s.csStampedeExecCount;
           });
 
@@ -1077,7 +1091,9 @@ for (const fw of frameworks) {
           await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
           });
           await page.reload({ waitUntil: "networkidle" });
           await waitForText(page, "#hscs-page-a-slot-seq", "100");
@@ -1121,7 +1137,9 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
           });
           return "LWW race won by Request #2 (402/fresh-fast) in both DOM and server cache";
         } finally {
@@ -1220,11 +1238,290 @@ for (const fw of frameworks) {
 
           await page.evaluate(async () => {
             await window.__BENCH_RIGOROUS__.resetState();
-            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-layout-shell-slot");
-            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-ppr-a-shell-slot");
-            await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-static-b-slot");
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-layout-shell-slot");
+              await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-ppr-a-shell-slot");
+              await window.__BENCH_RIGOROUS__.revalidateTag("ts-tag-static-b-slot");
+            }
           });
           return "PPR TTLs (330/331) · shell slots=340/341/342 (hosts=100)";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 31: Deep Stress #9 — Unmounted sibling slot refresh on Page B + immediate remount race to Page A
+    checks.push(
+      await check("rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/hs-cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
+          });
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#hscs-page-a-host-seq", "100");
+          await waitForText(page, "#hscs-page-a-slot-seq", "100");
+
+          // Soft-navigate Page A -> Page B -> Page A -> Page B so both Page A & Page B are warm in client pageCache
+          await page.click("#nav-hscs-page-b");
+          await waitForText(page, "#hscs-page-b-host-seq", "100");
+          await page.click("#nav-hscs-page-a");
+          await waitForText(page, "#hscs-page-a-host-seq", "100");
+          await page.click("#nav-hscs-page-b");
+          await waitForText(page, "#hscs-page-b-host-seq", "100");
+
+          // While viewing Page B, mutate Page A's slot to 410 (and poison Page A host to 999) and refresh Page A's unmounted slot
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hscsPageAHostSeq: 999,
+              hscsPageASlotSeq: 410,
+            });
+            await window.__BENCH_RIGOROUS__.refreshSlot("hscs-tag-page-a-slot", true);
+          });
+
+          // Soft-navigate back to Page A: must reuse client pageCache (0 page RSC fetches) while applying slotOverrideCache (410)
+          let pageRscRequestsOnReturn = 0;
+          const onReturnReq = (req) => {
+            const u = req.url();
+            if (u.includes("____rsc_page____") || u.includes("_rsc=")) {
+              pageRscRequestsOnReturn += 1;
+            }
+          };
+          page.on("request", onReturnReq);
+          await page.click("#nav-hscs-page-a");
+          await waitForText(page, "#hscs-page-a-slot-seq", "410");
+          page.off("request", onReturnReq);
+
+          const pageAHostAfterReturn = await readText(page, "#hscs-page-a-host-seq");
+          assert(
+            pageAHostAfterReturn === "100" && pageRscRequestsOnReturn === 0,
+            `expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=${pageAHostAfterReturn} pageRscReqs=${pageRscRequestsOnReturn}`
+          );
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
+          });
+          return "unmounted slot refreshed on Page B -> 410 on Page A (host=100)";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 32: Deep Stress #10 — slotOverrideCache shadowing guard after refreshSlot followed by revalidateTag + router.refresh()
+    checks.push(
+      await check("rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/hs-cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
+          });
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#hscs-page-a-slot-seq", "100");
+
+          await page.click("#hscs-page-a-slot-widget-btn");
+          await waitForText(page, "#hscs-page-a-slot-widget-count", "1");
+          const widgetMount = await readText(page, "#hscs-page-a-slot-widget-mount");
+
+          // 1. Client refreshSlot sets slotOverrideCache to 420
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({ hscsPageASlotSeq: 420 });
+            await window.__BENCH_RIGOROUS__.refreshSlot("hscs-page-a-slot", true);
+          });
+          await waitForText(page, "#hscs-page-a-slot-seq", "420");
+          assert((await readText(page, "#hscs-page-a-slot-widget-count")) === "1", "widget state preserved after refreshSlot");
+
+          // 2. Server revalidateTag + router.refresh() delivers 421; slotOverrideCache (420) must NOT shadow 421
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hscsPageAHostSeq: 100,
+              hscsPageASlotSeq: 421,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            window.__BENCH_RIGOROUS__.refreshPage();
+          });
+          await waitForText(page, "#hscs-page-a-slot-seq", "421");
+          assert((await readText(page, "#hscs-page-a-slot-widget-mount")) === widgetMount, "widget mount preserved");
+          assert((await readText(page, "#hscs-page-a-slot-widget-count")) === "1", "widget state preserved after router.refresh()");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("hscs-tag-page-a-slot");
+            }
+          });
+          return "slotOverride (420) yielded to router.refresh() (421) · widget state=1 intact";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 33: Deep Stress #11 — Tag-only <DinouCacheSlot tags={["cs-tag-only"]}> (no id prop) live refreshSlot & revalidateTag
+    checks.push(
+      await check("rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/cache-slot`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-only");
+            }
+          });
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#cs-tagonly-seq", "100");
+          await waitForText(page, "#cs-dynamic-host-seq", "100");
+
+          // 1. Live client refreshSlot("cs-tag-only", { fresh: true }) without re-executing dynamic host page
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              csDynamicHostSeq: 999,
+              csTagOnlySeq: 430,
+            });
+            await window.__BENCH_RIGOROUS__.refreshSlot("cs-tag-only", true);
+          });
+          await waitForText(page, "#cs-tagonly-seq", "430");
+          const hostAfterTagOnlyRefresh = await readText(page, "#cs-dynamic-host-seq");
+          assert(
+            hostAfterTagOnlyRefresh === "100",
+            `tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got ${hostAfterTagOnlyRefresh})`
+          );
+
+          // 2. Server revalidateTag("cs-tag-only") + reload
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              csDynamicHostSeq: 100,
+              csTagOnlySeq: 431,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-only");
+          });
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#cs-tagonly-seq", "431");
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateTag("cs-tag-only");
+            }
+          });
+          return "tag-only slot refreshSlot=430 (host=100) · revalidateTag=431";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 34: Deep Stress #12 — Multi-level ancestor L1 revalidateLayout cascade (L1 -> L2 -> Nested PPR & Static children)
+    checks.push(
+      await check("rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children", async () => {
+        const page = await browser.newPage();
+        try {
+          await page.goto(`${base}/rigorous/triple/nested`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await waitForText(page, "#ts-l1-shell-seq", "100");
+          await waitForText(page, "#ts-l2-shell-seq", "100");
+          await waitForText(page, "#ts-nested-layout-slot-seq", "100");
+          await waitForText(page, "#ts-nested-ppr-shell-seq", "100");
+
+          // Bump ancestor L1 to 440 while poisoning L1 slot, L2 slot, nested PPR page, and nested Static page to 999
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              tsL1ShellSeq: 440,
+              tsLayoutShellSlotSeq: 999,
+              tsNestedLayoutSlotSeq: 999,
+              tsNestedPprShellSeq: 999,
+              tsNestedStaticHostSeq: 999,
+            });
+            await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/triple");
+          });
+
+          // 1. Reload nested PPR child (/rigorous/triple/nested)
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#ts-l1-shell-seq", "440");
+          assert((await readText(page, "#ts-layout-shell-slot-seq")) === "100", "L1 slot must stay 100");
+          assert((await readText(page, "#ts-nested-layout-slot-seq")) === "100", "L2 slot must stay 100");
+          assert((await readText(page, "#ts-nested-ppr-shell-seq")) === "100", "nested PPR child shell must stay 100");
+
+          // 2. Visit nested Static child (/rigorous/triple/nested/static-child)
+          await page.goto(`${base}/rigorous/triple/nested/static-child`, { waitUntil: "networkidle" });
+          await waitForText(page, "#ts-l1-shell-seq", "440");
+          assert((await readText(page, "#ts-nested-layout-slot-seq")) === "100", "L2 slot on static-child must stay 100");
+          assert(
+            (await readText(page, "#ts-nested-static-host-seq")) === "100",
+            "nested static-child host page must stay 100"
+          );
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/triple");
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/triple/nested");
+            }
+          });
+          return "L1=440 cascaded through L2 to nested PPR (100) & nested static-child (100)";
+        } finally {
+          await page.close();
+        }
+      })
+    );
+
+    // Check 35: Deep Stress #13 — Simultaneous Promise.all([revalidateLayout, revalidatePage]) serialization + 0 hydration errors
+    checks.push(
+      await check("rigorous-hs-concurrent-reval: simultaneous revalidateLayout + revalidatePage serialization & F5 hydration", async () => {
+        const page = await browser.newPage();
+        const hydrationErrors = [];
+        page.on("console", (msg) => {
+          if (msg.type() === "error" && /hydrat/i.test(msg.text())) {
+            hydrationErrors.push(msg.text());
+          }
+        });
+        try {
+          await page.goto(`${base}/rigorous/hs/sibling-b`, { waitUntil: "networkidle" });
+          await page.waitForFunction(() => Boolean(window.__BENCH_RIGOROUS__));
+          await page.evaluate(() => window.__BENCH_RIGOROUS__.resetState());
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.mutateState({
+              hsL1LayoutSeq: 450,
+              hsSiblingBSeq: 451,
+            });
+            await Promise.all([
+              window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs"),
+              window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-b"),
+            ]);
+          });
+
+          await page.reload({ waitUntil: "networkidle" });
+          await waitForText(page, "#hs-l1-seq", "450");
+          await waitForText(page, "#hs-sibling-b-seq", "451");
+          assert(hydrationErrors.length === 0, `hydration errors: ${hydrationErrors.join("; ")}`);
+
+          await page.evaluate(async () => {
+            await window.__BENCH_RIGOROUS__.resetState();
+            if (window.__BENCH_RIGOROUS__.framework === "dinou") {
+              await window.__BENCH_RIGOROUS__.revalidateLayout("/rigorous/hs");
+              await window.__BENCH_RIGOROUS__.revalidatePage("/rigorous/hs/sibling-b");
+            }
+          });
+          return "concurrent revalidateLayout(450) + revalidatePage(451) aligned · 0 hydration errors";
         } finally {
           await page.close();
         }

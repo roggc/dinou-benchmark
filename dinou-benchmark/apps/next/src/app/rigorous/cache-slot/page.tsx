@@ -5,12 +5,17 @@ import { getRigorousState } from "@/shared/lib/rigorous-state";
 import { RigorousClientProbe, RigorousSlotWidget } from "@/shared/components/rigorous-ui";
 import { rigorousSlotServerPing } from "../rigorous-actions";
 import { sleep } from "@/shared/lib/data";
+import {
+  getCsAlphaSlotState,
+  getCsBetaSlotState,
+  getCsGammaSlotState,
+  getCsNestedInnerSlotState,
+  getCsNestedOuterSlotState,
+  getCsTagOnlySlotState,
+} from "../next-cached-segments";
 
 async function CsAlphaSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-alpha", "slot:cs-slot-alpha", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsAlphaSlotState();
   return (
     <div id="cs-alpha-slot" style={{ border: "1px solid #00897b", padding: 8 }}>
       <p>
@@ -27,10 +32,7 @@ async function CsAlphaSlotContent() {
 }
 
 async function CsBetaSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-beta", "cs-tag-shared", "slot:cs-slot-beta", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsBetaSlotState();
   return (
     <div id="cs-beta-slot">
       Beta Seq: <span id="cs-beta-seq">{s.csBetaSeq}</span> | Label:{" "}
@@ -40,10 +42,7 @@ async function CsBetaSlotContent() {
 }
 
 async function CsGammaSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-gamma", "cs-tag-shared", "slot:cs-slot-gamma", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsGammaSlotState();
   return (
     <div id="cs-gamma-slot">
       Gamma Seq: <span id="cs-gamma-seq">{s.csGammaSeq}</span> | Label:{" "}
@@ -62,10 +61,7 @@ function CsNoCacheSlotContent() {
 }
 
 async function CsTagOnlySlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-only", "slot:cs-tag-only", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsTagOnlySlotState();
   return (
     <div id="cs-tagonly-slot">
       TagOnly Seq: <span id="cs-tagonly-seq">{s.csTagOnlySeq}</span>
@@ -74,10 +70,7 @@ async function CsTagOnlySlotContent() {
 }
 
 async function CsNestedInnerSlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-nested-inner", "slot:cs-slot-nested-inner", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsNestedInnerSlotState();
   return (
     <div id="cs-nested-inner-slot" style={{ border: "1px dotted #5e35b1", padding: 6, marginTop: 4 }}>
       Nested Inner Seq: <span id="cs-nested-inner-seq">{s.csNestedInnerSeq}</span>
@@ -86,10 +79,7 @@ async function CsNestedInnerSlotContent() {
 }
 
 async function CsNestedOuterSlotContent({ children }: { children: ReactNode }) {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("cs-tag-nested-outer", "slot:cs-slot-nested-outer", "slot:*");
-  const s = getRigorousState();
+  const s = await getCsNestedOuterSlotState();
   return (
     <div id="cs-nested-outer-slot" style={{ border: "1px dashed #3949ab", padding: 8 }}>
       <div>

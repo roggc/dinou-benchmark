@@ -48,6 +48,55 @@ export async function getCsStaticHostSlotState() {
   return getRigorousState();
 }
 
+export async function getCsBannerSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-banner", "slot:cs-layout-banner", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsAlphaSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-alpha", "slot:cs-slot-alpha", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsBetaSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-beta", "cs-tag-shared", "slot:cs-slot-beta", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsGammaSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-gamma", "cs-tag-shared", "slot:cs-slot-gamma", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsTagOnlySlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-only", "slot:cs-tag-only", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsNestedInnerSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-nested-inner", "slot:cs-slot-nested-inner", "slot:*");
+  return getRigorousState();
+}
+
+export async function getCsNestedOuterSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("cs-tag-nested-outer", "slot:cs-slot-nested-outer", "slot:*");
+  return getRigorousState();
+}
+
 export async function getHscsL1LayoutState() {
   "use cache";
   cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
@@ -253,6 +302,103 @@ export async function getTsStaticBSlotState() {
   return getRigorousState();
 }
 
+export async function getTsStaticAHostState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-static-a-tag", "page:/rigorous/triple/static-a", "subtree:/rigorous/triple/static-a");
+  return getRigorousState();
+}
+
+export async function getTsStaticASlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-static-a-slot", "slot:ts-static-a-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsPprAHoleSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-ppr-a-hole-slot", "slot:ts-ppr-a-hole-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsHoleNestedInnerState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-hole-nested-inner", "slot:ts-hole-nested-inner", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsHoleNestedOuterState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-hole-nested-outer", "slot:ts-hole-nested-outer", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsL2ShellState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "ts-l2-layout-tag",
+    "layout:/rigorous/triple/nested",
+    "subtree:/rigorous/triple/nested",
+    "subtree:/rigorous/triple"
+  );
+  return getRigorousState();
+}
+
+export async function getTsNestedLayoutSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-nested-layout-slot", "slot:ts-nested-layout-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsNestedPprShellState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "ts-nested-ppr-page-tag",
+    "page:/rigorous/triple/nested",
+    "subtree:/rigorous/triple/nested"
+  );
+  return getRigorousState();
+}
+
+export async function getTsNestedPprShellSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-nested-ppr-shell-slot", "slot:ts-nested-ppr-shell-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsNestedPprHoleSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-nested-ppr-hole-slot", "slot:ts-nested-ppr-hole-slot", "slot:*");
+  return getRigorousState();
+}
+
+export async function getTsNestedStaticHostState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag(
+    "ts-nested-static-child-tag",
+    "page:/rigorous/triple/nested/static-child",
+    "subtree:/rigorous/triple/nested/static-child"
+  );
+  return getRigorousState();
+}
+
+export async function getTsNestedStaticSlotState() {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
+  cacheTag("ts-tag-nested-static-slot", "slot:ts-nested-static-slot", "slot:*");
+  return getRigorousState();
+}
+
 export async function warmNextUseCacheBaseline() {
   await Promise.all([
     getHsL1LayoutState(),
@@ -261,6 +407,13 @@ export async function warmNextUseCacheBaseline() {
     getHsTtlChildPageState(),
     getCsStaticHostPageState(),
     getCsStaticHostSlotState(),
+    getCsBannerSlotState(),
+    getCsAlphaSlotState(),
+    getCsBetaSlotState(),
+    getCsGammaSlotState(),
+    getCsTagOnlySlotState(),
+    getCsNestedInnerSlotState(),
+    getCsNestedOuterSlotState(),
     getHscsL1LayoutState(),
     getHscsL1SlotState(),
     getHscsL1SharedSlotState(),
@@ -284,7 +437,19 @@ export async function warmNextUseCacheBaseline() {
     getTsLayoutShellSlotState(),
     getTsPprAShellState(),
     getTsPprAShellSlotState(),
+    getTsPprAHoleSlotState(),
+    getTsHoleNestedInnerState(),
+    getTsHoleNestedOuterState(),
+    getTsStaticAHostState(),
+    getTsStaticASlotState(),
     getTsStaticBHostState(),
     getTsStaticBSlotState(),
+    getTsL2ShellState(),
+    getTsNestedLayoutSlotState(),
+    getTsNestedPprShellState(),
+    getTsNestedPprShellSlotState(),
+    getTsNestedPprHoleSlotState(),
+    getTsNestedStaticHostState(),
+    getTsNestedStaticSlotState(),
   ]);
 }

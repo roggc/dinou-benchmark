@@ -13,6 +13,7 @@ import {
   rigorousRevalidatePage,
   rigorousRevalidatePath,
   rigorousRevalidateTag,
+  rigorousWarmBaseline,
 } from "./rigorous-actions";
 import type { RigorousState } from "@/shared/lib/rigorous-state";
 
@@ -53,7 +54,10 @@ export function RigorousControls({
       getState: () => rigorousGetState(),
       mutateState: (patch) => rigorousMutateState(patch),
       bumpKeys: (keys, delta = 1) => rigorousBumpKeys(keys, delta),
-      resetState: () => rigorousResetState(),
+      resetState: async () => {
+        await rigorousResetState();
+        return rigorousWarmBaseline();
+      },
       revalidateTag: (tag) => rigorousRevalidateTag(tag),
       revalidatePage: (path) => rigorousRevalidatePage(path),
       revalidateLayout: (path) => rigorousRevalidateLayout(path),

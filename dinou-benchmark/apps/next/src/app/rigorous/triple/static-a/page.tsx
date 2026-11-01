@@ -1,24 +1,16 @@
-import { cacheLife, cacheTag } from "next/cache";
-import { getRigorousState } from "@/shared/lib/rigorous-state";
+import {
+  getTsStaticAHostState,
+  getTsStaticASlotState,
+} from "../../next-cached-segments";
 
 async function TsStaticASlotContent() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-tag-static-a-slot", "slot:ts-static-a-slot", "slot:*");
-  const s = getRigorousState();
+  const s = await getTsStaticASlotState();
   return (
     <div id="ts-static-a-slot-box">
       Static A Slot Seq: <span id="ts-static-a-slot-seq">{s.tsStaticASlotSeq}</span> | Label:{" "}
       <span id="ts-static-a-slot-label">{s.tsStaticASlotLabel}</span>
     </div>
   );
-}
-
-async function getTsStaticAHostState() {
-  "use cache";
-  cacheLife({ stale: 300, revalidate: 3600, expire: 3600 });
-  cacheTag("ts-static-a-tag", "page:/rigorous/triple/static-a", "subtree:/rigorous/triple/static-a");
-  return getRigorousState();
 }
 
 export default async function TripleStaticPageA() {

@@ -17,10 +17,7 @@ function TsNestedLayoutSlotContent() {
   );
 }
 
-async function TsL2DynamicHole() {
-  const ctx = getContext();
-  void ctx?.req?.headers?.["user-agent"];
-  await sleep(20);
+function TsL2DynamicHole() {
   const s = getRigorousState();
   return (
     <div id="ts-l2-hole">
