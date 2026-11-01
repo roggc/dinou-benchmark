@@ -14,13 +14,15 @@ To evaluate both frameworks beyond synthetic happy-path benchmarks, we implement
 
 The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
-### Final Verification Scoreboard (36 Checks)
+### Final Verification Scoreboard (36 Checks · 10-Run Concurrency Stress Suite via `--runs=10`)
 
-| Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–36) | Total Passed | Status |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100% deterministic)** |
-| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100% deterministic)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 9 / 14 *(8 / 14 on race)* | **31 / 36** *(30 / 36)* | **❌ FAIL (5 failures + ⚠️ 1 flaky: 1 Fail of 3 execs)** |
+To detect non-deterministic race conditions, `node scripts/verify.mjs --only=dinou-9,next --runs=10` executed **10 full independent passes** of all 36 checks per framework (**`360` check executions on `dinou-9` and `360` check executions on `next`**), restoring clean post-build disk artifacts and restarting a fresh server process before every run:
+
+| Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–36) | 10-Run Total Executions | Checks 100% Passed (`10/10`) | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 (`10/10`) | 9 / 9 (`10/10`) | 14 / 14 (`10/10`) | **360 / 360 (100.0%)** | **36 / 36** | **✅ PASS (100% deterministic, `0` flaky)** |
+| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | 36 / 36 *(1-run)* | **36 / 36** | **✅ PASS (100%)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 (`10/10`) | 9 / 9 (`10/10`) | 8 / 14 (`10/10`) + 1 flaky (`8/10`) | **308 / 360 (85.6%)** | **30 / 36** *(31 on lucky run)* | **❌ FAIL (5 failures `0/10` + ⚠️ 1 flaky: `2 Fail of 10 execs`)** |
 
 ---
 
@@ -55,7 +57,7 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **✅ PASS** (`hosts=100`) | **✅ PASS** (`hosts=100`) | **❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **✅ PASS** (`1` exec, deterministic) | **✅ PASS** (`1` exec, deterministic) | **⚠️ FLAKY** (1 Fail of 3 execs) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **✅ PASS** (`10/10` runs, `1` exec) | **✅ PASS** (`1` exec, deterministic) | **⚠️ FLAKY** (2 Fail of 10 execs) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **✅ PASS** (`402/fresh-fast`) | **✅ PASS** (`402/fresh-fast`) | **❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) |
 | 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **✅ PASS** (`0` page RSC reqs) | **✅ PASS** (`0` page RSC reqs) | **❌ FAIL** (`pageRscReqs=3`) |
@@ -143,14 +145,15 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`1 Fail of 3 Execs`): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
+### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`2 Fail of 10 Execs` in 10-Run Suite): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
 - **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution`
 - **Route:** `/rigorous/cache-slot`
-- **Observed Behavior Across 3 Verification Executions on Next.js 16.4.3 (`⚠️ FLAKY — 1 Fail of 3 execs`):**
-  - Passed in 2 of the 3 verification executions (`execCount = 1`), but **failed in 1 of the 3 executions** (`30/36` run) with:
+- **Observed Behavior Across the 10-Run Stress Suite (`--runs=10`) on Next.js 16.4.3 (`⚠️ FLAKY — 2 Fail of 10 execs`):**
+  - Passed in 8 of the 10 runs (`Runs 2–9`, `execCount = 1`), and **failed in 2 of the 10 runs** (`Run 1/10` and `Run 10/10`, plus 1 earlier single-run failure = `3 Fail of 13 total execs`) with:
     ```text
     expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
     ```
+  - Meanwhile, on **Dinou v9.0.3 (`dinou-9`)**, all 36 checks—including Check 28—passed **`10/10` runs (`360/360` total check executions, `0` failures, `0` flaky checks)**.
 - **Root-Cause Investigation in Next.js 16.4.3 Internals (`revalidate.js`, `action-handler.js`, `use-cache-wrapper.js`):**
   1. **Forced Page Re-Render Inside Server Action `POST`:** When a `"use server"` Server Action invoked from `/rigorous/cache-slot` calls `updateTag(...)` (such as `rigorousResetState()` or `rigorousRevalidateTag("cs-tag-stampede")`), Next.js's `revalidate()` in `next/dist/server/web/spec-extension/revalidate.js` unconditionally sets `store.pathWasRevalidated = ActionDidRevalidateStaticAndDynamic`.
   2. **Automatic RSC Flight Stream on `POST`:** Because `store.pathWasRevalidated` is set, `executeActionAndPrepareForRender()` in `next/dist/server/app-render/action-handler.js` sets `skipPageRendering = false` and immediately starts re-rendering the entire current route (`/rigorous/cache-slot`) as an RSC Flight stream inside the Server Action `POST` response (`generateFlight`).

@@ -5,15 +5,18 @@
  * rigorous suites (Horizontal Segmentation, Cache-Slot, PPR, Pairwise Synergies,
  * and Triple Synergy).
  *
- * Usage: node scripts/verify.mjs [--only=dinou-9] [--skip-build]
+ * Usage: node scripts/verify.mjs [--only=dinou-9] [--skip-build] [--runs=10]
  */
-import { cp } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { cp, rm } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 import { ROOT, setup, frameworks as allFrameworks, selectedFrameworks } from "./config.mjs";
 import { startServer, timedFetch, writeJson, readJson, round } from "./lib.mjs";
 
 const skipBuild = process.argv.includes("--skip-build");
+const runsArg = process.argv.find((a) => a.startsWith("--runs="));
+const totalRuns = Math.max(1, Number.parseInt(runsArg ? runsArg.slice("--runs=".length) : "1", 10) || 1);
 const frameworks = selectedFrameworks();
 const results = [];
 
@@ -22,6 +25,48 @@ async function resetMessages(app) {
     path.join(ROOT, "shared/data/messages.json"),
     path.join(ROOT, app.dir, "data/messages.json")
   );
+}
+
+function getBuildCachePaths(fw, cwd) {
+  if (fw.id.startsWith("dinou")) {
+    return {
+      live: path.join(cwd, ".dinou", "dist2"),
+      snapshot: path.join(cwd, ".dinou", "dist2-clean-snapshot"),
+      extraClean: [],
+    };
+  }
+  return {
+    live: path.join(cwd, ".next", "server", "app"),
+    snapshot: path.join(cwd, ".next", "server", "app-clean-snapshot"),
+    extraClean: [path.join(cwd, ".next", "cache")],
+  };
+}
+
+async function createCleanSnapshot(fw, cwd) {
+  if (totalRuns <= 1) return;
+  const { live, snapshot } = getBuildCachePaths(fw, cwd);
+  await rm(snapshot, { recursive: true, force: true });
+  if (existsSync(live)) {
+    await cp(live, snapshot, { recursive: true });
+  }
+}
+
+async function restoreCleanSnapshot(fw, cwd) {
+  if (totalRuns <= 1) return;
+  const { live, snapshot, extraClean } = getBuildCachePaths(fw, cwd);
+  for (const extra of extraClean) {
+    await rm(extra, { recursive: true, force: true });
+  }
+  if (existsSync(snapshot)) {
+    await rm(live, { recursive: true, force: true });
+    await cp(snapshot, live, { recursive: true });
+  }
+}
+
+async function removeCleanSnapshot(fw, cwd) {
+  if (totalRuns <= 1) return;
+  const { snapshot } = getBuildCachePaths(fw, cwd);
+  await rm(snapshot, { recursive: true, force: true });
 }
 
 async function check(name, fn) {
@@ -90,20 +135,33 @@ for (const fw of frameworks) {
     console.log(`build ok in ${round(build.ms / 1000, 1)} s`);
   }
 
-  await resetMessages(fw);
+  await createCleanSnapshot(fw, cwd);
+  const allRunChecks = [];
+  let lastPprFirst = 0;
+  let lastPprTotal = 0;
 
-  const server = await startServer({
-    cwd,
-    cmd: "pnpm",
-    args: ["run", "start"],
-    port: fw.port,
-    readyPath: "/",
-    timeoutMs: 180_000,
-  });
+  for (let runIdx = 1; runIdx <= totalRuns; runIdx += 1) {
+    if (totalRuns > 1) {
+      console.log(`\n--- ${fw.name} · Run ${runIdx}/${totalRuns} ---`);
+      if (runIdx > 1) {
+        await restoreCleanSnapshot(fw, cwd);
+      }
+    }
 
-  const base = server.url;
-  const checks = [];
-  const token = `ping-${fw.id}-${Date.now().toString(36)}`;
+    await resetMessages(fw);
+
+    const server = await startServer({
+      cwd,
+      cmd: "pnpm",
+      args: ["run", "start"],
+      port: fw.port,
+      readyPath: "/",
+      timeoutMs: 180_000,
+    });
+
+    const base = server.url;
+    const checks = [];
+    const token = `ping-${fw.id}-r${runIdx}-${Date.now().toString(36)}`;
 
   // --- Baseline Checks (1–12) ---
   checks.push(
@@ -1663,42 +1721,100 @@ for (const fw of frameworks) {
         }
       })
     );
-  } finally {
-    await browser.close();
+    } finally {
+      await browser.close();
+    }
+
+    await server.stop();
+
+    lastPprFirst = pprFirst;
+    lastPprTotal = pprTotal;
+    allRunChecks.push(checks);
+
+    const runPassed = checks.filter((c) => c.ok).length;
+    if (totalRuns > 1) {
+      console.log(`Run ${runIdx}/${totalRuns}: ${runPassed}/${checks.length} checks OK`);
+      for (const c of checks) {
+        if (!c.ok) {
+          console.log(`  ✗ [Run ${runIdx}] ${c.name} — ${c.detail}`);
+        }
+      }
+    }
   }
 
-  await server.stop();
+  await removeCleanSnapshot(fw, cwd);
 
-  const passed = checks.filter((c) => c.ok).length;
-  console.log(`\n${passed}/${checks.length} checks OK`);
-  for (const c of checks) {
-    console.log(`  ${c.ok ? "✓" : "✗"} ${c.name}${c.detail ? ` — ${c.detail}` : ""}`);
+  const checkCount = allRunChecks[0]?.length ?? 0;
+  const aggregatedChecks = [];
+  for (let idx = 0; idx < checkCount; idx += 1) {
+    const samples = allRunChecks.map((run) => run[idx]);
+    const name = samples[0].name;
+    const passedRuns = samples.filter((s) => s.ok).length;
+    const failedRuns = totalRuns - passedRuns;
+    const ok = passedRuns === totalRuns;
+    const flaky = passedRuns > 0 && passedRuns < totalRuns;
+    const avgMs = Math.round(samples.reduce((acc, s) => acc + s.ms, 0) / totalRuns);
+    const firstFail = samples.find((s) => !s.ok);
+    const lastSample = samples[samples.length - 1];
+    let detail = firstFail ? firstFail.detail : lastSample.detail;
+    if (totalRuns > 1) {
+      const statusTag = ok
+        ? `${passedRuns}/${totalRuns} PASS`
+        : flaky
+          ? `${passedRuns}/${totalRuns} FLAKY (${failedRuns} Fail of ${totalRuns} execs)`
+          : `${passedRuns}/${totalRuns} FAIL`;
+      detail = `[${statusTag}] ${detail}`;
+    }
+    aggregatedChecks.push({
+      name,
+      ok,
+      flaky,
+      passedRuns,
+      failedRuns,
+      totalRuns,
+      ms: avgMs,
+      detail,
+    });
+  }
+
+  const passed = aggregatedChecks.filter((c) => c.ok).length;
+  const flakyCount = aggregatedChecks.filter((c) => c.flaky).length;
+  console.log(
+    `\n${passed}/${aggregatedChecks.length} checks OK${
+      totalRuns > 1 ? ` across ${totalRuns} runs (flaky=${flakyCount})` : ""
+    }`
+  );
+  for (const c of aggregatedChecks) {
+    const sym = c.ok ? "✓" : c.flaky ? "⚠" : "✗";
+    console.log(`  ${sym} ${c.name}${c.detail ? ` — ${c.detail}` : ""}`);
   }
 
   results.push({
     framework: fw.id,
     version: fw.version,
     at: new Date().toISOString(),
+    runs: totalRuns,
     passed,
-    total: checks.length,
-    checks,
-    ppr: { shellMs: round(pprFirst, 2), totalMs: round(pprTotal, 2) },
+    flaky: flakyCount,
+    total: aggregatedChecks.length,
+    checks: aggregatedChecks,
+    ppr: { shellMs: round(lastPprFirst, 2), totalMs: round(lastPprTotal, 2) },
   });
-}
 
-// Preserve results of frameworks not executed in this run.
-const validFrameworkIds = new Set(allFrameworks.map((f) => f.id));
-const previousVerify = (await readJson(path.join(ROOT, "results", "verify.json"), [])) ?? [];
-const mergedVerify = [
-  ...previousVerify.filter(
-    (p) => validFrameworkIds.has(p.framework) && !results.some((r) => r.framework === p.framework)
-  ),
-  ...results,
-];
-await writeJson(
-  path.join(ROOT, "results", "verify.json"),
-  mergedVerify.sort((a, b) => a.framework.localeCompare(b.framework))
-);
+  // Persist incrementally after each framework finishes its runs.
+  const validFrameworkIds = new Set(allFrameworks.map((f) => f.id));
+  const previousVerify = (await readJson(path.join(ROOT, "results", "verify.json"), [])) ?? [];
+  const mergedVerify = [
+    ...previousVerify.filter(
+      (p) => validFrameworkIds.has(p.framework) && !results.some((r) => r.framework === p.framework)
+    ),
+    ...results,
+  ];
+  await writeJson(
+    path.join(ROOT, "results", "verify.json"),
+    mergedVerify.sort((a, b) => a.framework.localeCompare(b.framework))
+  );
+}
 
 const allPassed = results.every((r) => r.passed === r.total);
 console.log(`\n${allPassed ? "VERIFY OK" : "VERIFY FAILED"} — results in results/verify.json`);
