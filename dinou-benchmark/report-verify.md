@@ -423,20 +423,17 @@ Unlike performance benchmarks that measure CPU-bound build times, requests per s
 Anyone can independently verify and reproduce all results presented in this report by running the following commands from the root of the `dinou-benchmark` repository:
 
 ```bash
-# 1. Install dependencies across the workspace and benchmark apps (first time only)
-npm install
+# 1. Install dependencies across the pnpm workspace (root + apps/*) and sync shared files
+pnpm install
+pnpm shared
 
 # 2. Run a single full verification pass (builds both apps cleanly + runs all 36 checks on Dinou 9.0.3 & Next.js 16.4.3)
 node scripts/verify.mjs --only=dinou-9,next
 
 # 3. Run the 10-pass consecutive stress & determinism suite (360 check executions per framework)
-#    Automatically snapshots the clean post-build disk cache after building once, and before each
+#    Builds each app cleanly once, snapshots the pristine post-build disk cache, and before each
 #    of the 10 runs restores the pristine disk snapshot and restarts a fresh server process:
 node scripts/verify.mjs --only=dinou-9,next --runs=10
-
-# 4. Re-run verification against existing builds without rebuilding (faster iteration):
-node scripts/verify.mjs --only=dinou-9,next --no-build
-node scripts/verify.mjs --only=dinou-9,next --no-build --runs=10
 ```
 
 Each execution prints the per-check `PASS` / `FAIL` log in real time, outputs the multi-run determinism summary table in the terminal, and saves the structured verification results to `results/verify.json`.
