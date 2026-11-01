@@ -3,7 +3,7 @@
  * Orchestrator: `pnpm bench` runs the entire pipeline in order and finishes
  * by generating results/REPORT.md.
  *
- * Phases: build → verify → bundle → dev-start → hmr → load → memory → report
+ * Phases: dev-start → hmr → build → verify → bundle → load → memory → report
  * Phases can be skipped with --skip=hmr,load or filtered with
  * --only-steps=verify,load.
  */
@@ -12,11 +12,11 @@ import path from "node:path";
 import { ROOT } from "./config.mjs";
 
 const STEPS = [
+  ["dev-start", "scripts/dev-start.mjs"],
+  ["hmr", "scripts/hmr.mjs"],
   ["build", "scripts/build.mjs"],
   ["verify", "scripts/verify.mjs"],
   ["bundle", "scripts/bundle.mjs"],
-  ["dev-start", "scripts/dev-start.mjs"],
-  ["hmr", "scripts/hmr.mjs"],
   ["load", "scripts/load.mjs"],
   ["memory", "scripts/memory.mjs"],
   ["report", "scripts/report.mjs"],

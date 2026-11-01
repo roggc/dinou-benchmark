@@ -57,7 +57,7 @@ for (const fw of frameworks) {
     raw += size;
     gzip += gz;
     brotli += br;
-    biggest.push({ file: path.relative(path.join(ROOT, fw.dir), file), raw: size, gzip: gz });
+    biggest.push({ file: path.relative(path.join(ROOT, fw.dir), file).split(path.sep).join("/"), raw: size, gzip: gz });
   }
 
   biggest.sort((a, b) => b.raw - a.raw);
