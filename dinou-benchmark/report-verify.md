@@ -18,9 +18,9 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 | Framework | Version | Baseline Checks (1–13) | Core 3D Rigorous Suites (14–22) | Deep Stress & Concurrency Edge Cases (23–36) | Total Passed | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100%)** |
-| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100%)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 8 / 14 | **30 / 36** | **❌ FAIL (6 failures)** |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100% deterministic)** |
+| **Dinou 9.0.3 (`-u`)** (`apps/dinou-9-u`) | `9.0.3` | 13 / 13 | 9 / 9 | 14 / 14 | **36 / 36** | **✅ PASS (100% deterministic)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 / 13 | 9 / 9 | 9 / 14 *(8 / 14 on race)* | **31 / 36** *(30 / 36)* | **❌ FAIL (5 failures + ⚠️ 1 flaky: 1 Fail of 3 execs)** |
 
 ---
 
@@ -55,10 +55,10 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | ✅ PASS | ✅ PASS | ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) | ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **✅ PASS** (`hosts=100`) | **✅ PASS** (`hosts=100`) | **❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **✅ PASS** (`1` execution) | **✅ PASS** (`1` execution) | **❌ FAIL** (`2` executions) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **✅ PASS** (`1` exec, deterministic) | **✅ PASS** (`1` exec, deterministic) | **⚠️ FLAKY** (1 Fail of 3 execs) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **✅ PASS** (`402/fresh-fast`) | **✅ PASS** (`402/fresh-fast`) | **❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) | ✅ PASS (`330/331`, `340/341/342`) |
-| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **✅ PASS** (`0` page RSC reqs) | **✅ PASS** (`0` page RSC reqs) | **❌ FAIL** (`pageRscReqs=1`) |
+| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **✅ PASS** (`0` page RSC reqs) | **✅ PASS** (`0` page RSC reqs) | **❌ FAIL** (`pageRscReqs=3`) |
 | 32 | `rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()` | Deep Stress #10 · HS + Slot | ✅ PASS (`420 → 421`, state=1) | ✅ PASS (`420 → 421`, state=1) | ✅ PASS (`420 → 421`, state=1) |
 | 33 | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | Deep Stress #11 · Slot | **✅ PASS** (`host=100, slot=430`) | **✅ PASS** (`host=100, slot=430`) | **❌ FAIL** (`host=999`) |
 | 34 | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | Deep Stress #12 · Triple Cascade | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) | ✅ PASS (`L1=440`, children=`100`) |
@@ -67,7 +67,7 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-## 3. Root-Cause Analysis of the 6 Next.js 16.4.3 Failures
+## 3. Root-Cause Analysis of the 5 Deterministic Next.js 16.4.3 Failures (+ ⚠️ 1 Intrinsic Flaky Race Condition)
 
 ### Failure #1 — Check 24: `router.refresh()` Lacks Horizontal Segmentation on the Client
 - **Test:** `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard`
@@ -95,20 +95,7 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### Failure #3 — Check 28: Server Action Invalidation Re-Render Leaks Into Cold Stampede Deduplication (`2` Executions Instead of `1`)
-- **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold requests coalesce into 1 slot execution (inflightSlotRenders)`
-- **Route:** `/rigorous/cache-slot`
-- **Observed Error on Next.js 16.4.3:**
-  ```text
-  expected stampede slot to execute once across 6 concurrent requests (delta=1), got before=2 after=4
-  ```
-- **Architectural Cause:**
-  - **Dinou v9.0.3** handles `revalidateTag("cs-tag-stampede")` purely on the server slot cache without forcing an immediate full-route RSC re-render on the Server Action `POST` response when the action is invoked via `serverFn`, and `inflightSlotRenders` coalesces all 6 concurrent `fetch()` requests to `/rigorous/cache-slot` onto a single in-flight promise (`delta = 1`).
-  - **Next.js v16.4.3** couples `"use server"` Actions with an automatic RSC re-render of the currently mounted route (`/rigorous/cache-slot`) whenever `updateTag(...)` or `revalidateTag(...)` is called inside the action, and does not coalesce that Server Action POST render with the subsequent burst of 6 concurrent `GET` requests, resulting in `2` executions of the `150 ms` slow slot (`before=2, after=4, delta=2`).
-
----
-
-### Failure #4 — Check 29: Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
+### Failure #3 — Check 29: Out-of-Order Concurrency Race (No Last-Write-Wins Guard on Slow vs. Fast Slot Refresh)
 - **Test:** `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)`
 - **Route:** `/rigorous/hs-cache-slot`
 - **Observed Error on Next.js 16.4.3:**
@@ -128,22 +115,22 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ---
 
-### Failure #5 — Check 31: Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
+### Failure #4 — Check 31: Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
 - **Test:** `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back`
 - **Routes:** `/rigorous/hs-cache-slot` (Page A) $\leftrightarrow$ `/rigorous/hs-cache-slot/page-b` (Page B)
 - **Observed Error on Next.js 16.4.3:**
   ```text
-  expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=1
+  expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3
   ```
 - **Architectural Cause:**
   - **Dinou v9.0.3** decouples the client-side `pageCache` (horizontal route VNodes) from `slotOverrideCache` + `knownClientSlots` (vertical slot VNodes). When the user visits Page A, soft-navigates to Page B (unmounting Page A's `hscs-page-a-slot`), and calls `refreshSlot("hscs-tag-page-a-slot", { fresh: true })` while on Page B:
     1. Dinou resolves `"hscs-tag-page-a-slot"` against `knownClientSlots`, fetches **only** `/____rsc_slot____/hscs-page-a-slot?fresh=1` in the background, and stores the updated VNode (`410`) in `slotOverrideCache` (`T1 → T2 → T3` synchronization in `rigurous-sinergy-hs-cache-slot.md` Scenario 8).
     2. When the user clicks normal `<Link href="/rigorous/hs-cache-slot">` to return to Page A, Dinou serves Page A's VNode directly from the client `pageCache` (**`0` `/____rsc_page____` network requests**) while `<DinouCacheSlotBoundary>` mounts with `slotOverrideCache.get("hscs-page-a-slot")` (`410`).
-  - **Next.js v16.4.3** has no client-side `slotOverrideCache` or background slot endpoint. Calling `updateTag("hscs-tag-page-a-slot")` inside a Server Action while on Page B **purges the entire client-side Router Cache**, forcing the subsequent `<Link href="/rigorous/hs-cache-slot">` click to issue a full-page RSC network request (`pageRscReqs=1`) instead of serving Page A from client cache.
+  - **Next.js v16.4.3** has no client-side `slotOverrideCache` or background slot endpoint. Calling `updateTag("hscs-tag-page-a-slot")` inside a Server Action while on Page B **purges the entire client-side Router Cache**, forcing the subsequent `<Link href="/rigorous/hs-cache-slot">` click to issue full-page RSC network requests instead of serving Page A from client cache.
 
 ---
 
-### Failure #6 — Check 33: Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
+### Failure #5 — Check 33: Tag-Only Slot (`tags={["cs-tag-only"]}`, No `id` Prop) Cannot Refresh Live Without Re-Executing Dynamic Host Page
 - **Test:** `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag`
 - **Route:** `/rigorous/cache-slot`
 - **Observed Error on Next.js 16.4.3:**
@@ -153,6 +140,24 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 - **Architectural Cause:**
   - **Dinou v9.0.3** supports tag-only `<DinouCacheSlot tags={["cs-tag-only"]} revalidate={3600}>` without an explicit `id` prop (`rigurous-cache-slot.md` §2.1 & §3.3). Dinou derives a deterministic internal slot identifier from the primary tag (`tag:cs-tag-only#0`), registers the mounted boundary under `"cs-tag-only"` on the client, and allows `refreshSlot("cs-tag-only", { fresh: true })` to refresh only that slot (`430`) via `/____rsc_slot____` while the enclosing `revalidate = 0` dynamic host page stays untouched at `100` (even when poisoned to `999`).
   - **Next.js v16.4.3** requires `updateTag("cs-tag-only")` + `router.refresh()` to update a tag-addressed `"use cache"` component from the client, which re-executes the dynamic host page (`#cs-dynamic-host-seq` becomes `999`).
+
+---
+
+### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`1 Fail of 3 Execs`): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
+- **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution`
+- **Route:** `/rigorous/cache-slot`
+- **Observed Behavior Across 3 Verification Executions on Next.js 16.4.3 (`⚠️ FLAKY — 1 Fail of 3 execs`):**
+  - Passed in 2 of the 3 verification executions (`execCount = 1`), but **failed in 1 of the 3 executions** (`30/36` run) with:
+    ```text
+    expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
+    ```
+- **Root-Cause Investigation in Next.js 16.4.3 Internals (`revalidate.js`, `action-handler.js`, `use-cache-wrapper.js`):**
+  1. **Forced Page Re-Render Inside Server Action `POST`:** When a `"use server"` Server Action invoked from `/rigorous/cache-slot` calls `updateTag(...)` (such as `rigorousResetState()` or `rigorousRevalidateTag("cs-tag-stampede")`), Next.js's `revalidate()` in `next/dist/server/web/spec-extension/revalidate.js` unconditionally sets `store.pathWasRevalidated = ActionDidRevalidateStaticAndDynamic`.
+  2. **Automatic RSC Flight Stream on `POST`:** Because `store.pathWasRevalidated` is set, `executeActionAndPrepareForRender()` in `next/dist/server/app-render/action-handler.js` sets `skipPageRendering = false` and immediately starts re-rendering the entire current route (`/rigorous/cache-slot`) as an RSC Flight stream inside the Server Action `POST` response (`generateFlight`).
+  3. **Premature Client `await` Resolution Due to `<Suspense>` Streaming:** Because the body of `/rigorous/cache-slot` (`CacheSlotDynamicBody`) is wrapped in `<Suspense>` and awaits `connection()`, React Flight flushes **Chunk #1** of the `POST` response (containing the Server Action's return value `actionResult` and the `<Suspense>` fallback) **immediately**, while on the Node.js server `CacheSlotDynamicBody` and its child `"use cache"` slots (including `<CsStampedeSlotContent />`) are still executing asynchronously in the background.
+  4. **The Intrinsic Race Window:** On the client, `await resetState()` resolves as soon as Chunk #1 arrives—making the client code believe the Server Action has completely finished when in fact the server still has a dangling background `<Suspense>` render in flight from that `POST`. In Check 28, the client immediately calls `await mutateState({ csStampedeExecCount: 0, csStampedeDelayMs: 150 })`, followed by `await revalidateTag("cs-tag-stampede")` and 6 concurrent `fetch("/rigorous/cache-slot")` calls. Depending on millisecond-level CPU scheduling, the dangling `<Suspense>` stream from the previous `POST` reaches `<CsStampedeSlotContent />` right *after* `mutateState` sets `csStampedeExecCount = 0` (**Execution #1**) and right *before* `revalidateTag("cs-tag-stampede")` expires the tag again and triggers the coalesced fill for the 6 concurrent `GET` requests (**Execution #2**, yielding `execCount = 2` instead of `1`).
+- **Why Dinou v9.0.3 Is 100% Deterministic (`1` Execution in Every Run):**
+  - In **Dinou v9.0.3**, Server Functions are pure RPC calls (`POST /____server_fn____`). Calling `resetState()` or `revalidateTag("cs-tag-stampede")` updates the server state/cache and returns a clean JSON response without ever launching an implicit background `<Suspense>` page render behind the developer's back. When `await` resolves in the browser, the Dinou server is 100% idle, and the subsequent 6 concurrent `GET` requests deterministically coalesce in `inflightSlotRenders` into **1** execution every single time.
 
 ---
 
