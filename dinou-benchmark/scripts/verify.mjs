@@ -17,7 +17,11 @@ import { startServer, timedFetch, writeJson, readJson, round } from "./lib.mjs";
 const skipBuild = process.argv.includes("--skip-build");
 const runsArg = process.argv.find((a) => a.startsWith("--runs="));
 const totalRuns = Math.max(1, Number.parseInt(runsArg ? runsArg.slice("--runs=".length) : "1", 10) || 1);
-const frameworks = selectedFrameworks();
+const explicitOnlyArg = process.argv.find((a) => a.startsWith("--only="));
+const explicitlyIncludesUnvendorized = Boolean(explicitOnlyArg && explicitOnlyArg.includes("dinou-9-u"));
+// Exclude dinou-9-u from verify by default because its runtime/application code is identical to dinou-9
+// and running both would subject Dinou to 2x as many verification runs as Next.js.
+const frameworks = selectedFrameworks().filter((f) => explicitlyIncludesUnvendorized || f.id !== "dinou-9-u");
 const results = [];
 
 async function resetMessages(app) {
@@ -1802,7 +1806,9 @@ for (const fw of frameworks) {
   });
 
   // Persist incrementally after each framework finishes its runs.
-  const validFrameworkIds = new Set(allFrameworks.map((f) => f.id));
+  const validFrameworkIds = new Set(
+    allFrameworks.filter((f) => explicitlyIncludesUnvendorized || f.id !== "dinou-9-u").map((f) => f.id)
+  );
   const previousVerify = (await readJson(path.join(ROOT, "results", "verify.json"), [])) ?? [];
   const mergedVerify = [
     ...previousVerify.filter(
