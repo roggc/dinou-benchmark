@@ -80,10 +80,10 @@ export const setup = {
     staticStabilityRuns: 3,
   },
   load: {
-    durationSeconds: Number(process.env.LOAD_DURATION || 10),
-    connections: Number(process.env.LOAD_CONNECTIONS || 50),
-    warmupSeconds: Number(process.env.LOAD_WARMUP || 3),
-    runs: Number(process.env.LOAD_RUNS || 3),
+    durationSeconds: Number(process.env.LOAD_DURATION || 30),
+    connections: Number(process.env.LOAD_CONNECTIONS || 200),
+    warmupSeconds: Number(process.env.LOAD_WARMUP || 5),
+    runs: Number(process.env.LOAD_RUNS || 5),
     /** Numbers from shared runners are not publishable */
     smokeOnly: true,
   },

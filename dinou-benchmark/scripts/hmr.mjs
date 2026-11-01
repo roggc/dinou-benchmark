@@ -10,7 +10,7 @@ import { ROOT, selectedFrameworks } from "./config.mjs";
 import { startServer, writeJson, round, median } from "./lib.mjs";
 
 const frameworks = selectedFrameworks();
-const runs = Number(process.env.HMR_RUNS || 2);
+const runs = Number(process.env.HMR_RUNS || 5);
 const results = [];
 
 for (const fw of frameworks) {

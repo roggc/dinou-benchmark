@@ -123,6 +123,7 @@ for (const fw of frameworks) {
       url: `${server.url}${(routes.find((r) => r.kind === "ssr") ?? routes[0]).path}`,
       connections: setup.load.connections,
       duration: setup.load.durationSeconds,
+      timeout: Math.max(30, setup.load.durationSeconds),
       pipelining: 1,
     });
 

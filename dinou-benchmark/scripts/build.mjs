@@ -6,7 +6,7 @@ import { ROOT, selectedFrameworks } from "./config.mjs";
 import { runCommand, writeJson, round, median } from "./lib.mjs";
 
 const frameworks = selectedFrameworks();
-const runs = Number(process.env.BUILD_RUNS || 2);
+const runs = Number(process.env.BUILD_RUNS || 5);
 const results = [];
 
 async function dirSize(dir) {

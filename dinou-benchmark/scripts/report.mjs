@@ -105,10 +105,10 @@ if (build || dev || hmr || bundle || memory) {
   row("Production build (s, median)", (id) => fmt(byId(build, id)?.medianSeconds, 2));
   row("Output size (MB)", (id) => fmt((byId(build, id)?.outputBytes ?? 0) / 1e6, 1));
   row("Dev cold start (s, median)", (id) => fmt(byId(dev, id)?.medianSeconds, 2));
-  row("HMR edit → DOM (ms)", (id) => fmt(byId(hmr, id)?.medianMs, 0));
+  row("HMR edit → DOM (ms, median)", (id) => fmt(byId(hmr, id)?.medianMs, 0));
   row("Client JS (KiB gzip)", (id) => fmt((byId(bundle, id)?.gzipBytes ?? 0) / 1024, 1));
   row("Client JS (KiB brotli)", (id) => fmt((byId(bundle, id)?.brotliBytes ?? 0) / 1024, 1));
-  row("Idle RSS (MB)", (id) => fmt((byId(memory, id)?.idleBytes ?? 0) / 1e6, 1));
+  row("Idle RSS (MB, median)", (id) => fmt((byId(memory, id)?.idleBytes ?? 0) / 1e6, 1));
   row("Peak RSS under load (MB)", (id) => fmt((byId(memory, id)?.peakBytes ?? 0) / 1e6, 1));
   lines.push("");
   if ((memory ?? []).some((m) => m.reliable === false)) {
