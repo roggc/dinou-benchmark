@@ -406,8 +406,10 @@ If a framework served the stale pre-rendered `index.html` (from $T_1$) while the
 
 ## 6. Disclaimer, Hardware Independence & Reproducibility Guide
 
-### 6.1 Human–Agent Co-Creation Disclaimer (`roggc` & `Gemini 4 Argon`)
+### 6.1 Human–Agent Co-Creation Disclaimer (`roggc` & `Gemini 4 Argon`) & Open Feedback
 Both the 36-check verification benchmark suite (`scripts/verify.mjs`, along with the complete 3D rigorous test routes implemented in `apps/dinou-9` and `apps/next`) and this verification report (`report-verify.md`) were designed, implemented, audited, and documented exclusively through **human–agent interaction (`roggc` — `Gemini 4 Argon`)**. Every architectural scenario, failure root-cause analysis, and multi-run verification execution was derived directly from automated end-to-end Playwright and HTTP runs against the live production builds of **Dinou v9.0.3** and **Next.js v16.4.3**.
+
+If you find any issue, have any comment or methodological objection, or spot anything that requires correction, clarification, or a more idiomatic implementation in either framework, **please feel free to open an issue in this GitHub repository**. Contributions and technical feedback are always welcome.
 
 ### 6.2 Hardware & Machine Independence of the Verification Results
 Unlike performance benchmarks that measure CPU-bound build times, requests per second, or memory footprint, the **36 verification checks in `scripts/verify.mjs` are 100% hardware-agnostic (machine-independent)**:
