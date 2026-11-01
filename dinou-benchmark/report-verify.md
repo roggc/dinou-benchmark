@@ -59,7 +59,7 @@ Across **13 complete verification runs** (3 single-pass runs + 10 consecutive pa
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | 100% ✅ PASS | 100% ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | 100% ✅ PASS (`280/100`, `281/100`) | 100% ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **100% ✅ PASS** (`hosts=100`) | **100% ❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** (`1` exec, deterministic) | **⚠️ FLAKY** (`76.9% ✅ · 23.1% ❌`) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** | **⚠️ FLAKY** (`76.9% ✅ · 23.1% ❌`) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **100% ✅ PASS** (`402/fresh-fast`) | **100% ❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | 100% ✅ PASS (`330/331`, `340/341/342`) | 100% ✅ PASS (`330/331`, `340/341/342`) |
 | 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **100% ✅ PASS** (`0` page RSC reqs) | **100% ❌ FAIL** (`pageRscReqs=1–3`) |
