@@ -364,7 +364,7 @@ In real-world production deployments, **not needing a warmup phase (Dinou 9.0.3)
    - In a production application with dozens or hundreds of routes and cached subtrees, developers should not have to maintain a centralized warmup registry that imports and invokes every `"use cache"` function across two sequential Server Action turns on startup or after tag resets. In **Dinou v9.0.3**, granular persistence is automatic at build time with zero userland boilerplate.
 
 3. **First-Visitor Latency Protection (*Eager* Regeneration vs. *Lazy* Eviction):**
-   - **Dinou v9.0.3 (*Eager*):** When `revalidateTag`, `revalidatePage`, or `revalidateLayout` is called, Dinou immediately regenerates only the affected piece and splices it into the cached on-disk shells. The very next user who requests the page receives an instant cache hit (`~6–7 ms`).
+   - **Dinou v9.0.3 (*Eager*):** When `revalidateTag`, `revalidatePage`, or `revalidateLayout` is called, Dinou immediately regenerates only the affected piece and splices it into the cached on-disk shells. The very next user who requests the page receives an instant cache hit.
    - **Next.js v16.4.3 (*Lazy*):** `updateTag` only marks the entry expired in RAM; the first user who visits the page after an invalidation pays the full server re-execution latency on the critical path.
 
 4. **Lower Baseline RAM Pressure:**
@@ -401,3 +401,42 @@ If a framework served the stale pre-rendered `index.html` (from $T_1$) while the
 | **3. Client-Side Sub-Component Slot Refresh (`refreshSlot`)** | Built-in `refreshSlot(idOrTag, { fresh })` (including `"*"` wildcard and tag-only slots) fetches `/____rsc_slot____/:id`, updates `slotOverrideCache`, and reconciles only the targeted slot boundary without re-executing host layouts/pages or purging `pageCache`. | No equivalent primitive; requires `updateTag` + `router.refresh()`, which re-executes uncached host layouts/pages and purges the client Router Cache. |
 | **4. Parameter Validation (`validateParams`) & Strict Static Lock (`allowISG = false`)** | Declarative exports in `page_functions.ts` / `layout_functions.ts`: `validateParams(params)` and `export const allowISG = false`. | `dynamicParams = false` is ignored or incompatible with `cacheComponents: true` in Next.js 16.4.3 when combined with dynamic/cached subtrees; requires imperative `notFound()` guards inside every page/layout component body. |
 | **5. Layout Hierarchy Escape Hatches (`reset_layout` & `no_layout`)** | Zero-move file markers: drop an empty `reset_layout` or `no_layout` file in any route folder without restructuring parent directories. | No file-marker equivalent; requires refactoring the directory tree into parenthesized Route Groups (`(with-l1)/`, `(reset-branch)/`, `(no-layout)/`) so sibling branches stop inheriting the parent `layout.tsx`. |
+
+---
+
+## 6. Disclaimer, Hardware Independence & Reproducibility Guide
+
+### 6.1 Human–Agent Co-Creation Disclaimer (`roggc` & `Gemini 4 Argon`)
+Both the 36-check verification benchmark suite (`scripts/verify.mjs`, along with the complete 3D rigorous test routes implemented in `apps/dinou-9` and `apps/next`) and this verification report (`report-verify.md`) were designed, implemented, audited, and documented exclusively through **human–agent interaction (`roggc` — `Gemini 4 Argon`)**. Every architectural scenario, failure root-cause analysis, and multi-run verification execution was derived directly from automated end-to-end Playwright and HTTP runs against the live production builds of **Dinou v9.0.3** and **Next.js v16.4.3**.
+
+### 6.2 Hardware & Machine Independence of the Verification Results
+Unlike performance benchmarks that measure CPU-bound build times, requests per second, or memory footprint, the **36 verification checks in `scripts/verify.mjs` are 100% hardware-agnostic (machine-independent)**:
+- Every check asserts **deterministic architectural invariants, cache isolation semantics, network request counts, sequence numbers, and React hydration integrity**:
+  - Whether a parent layout or host page remained frozen at sequence `100` instead of re-executing and jumping to `270` or `999`.
+  - Whether client-side navigation issued `0` redundant layout or page RSC network requests (`layoutFetches = 0`, `pageRscReqs = 0`).
+  - Whether out-of-order responses respected monotonic **Last-Write-Wins (LWW)** (`402/fresh-fast` preserved over `401/stale-slow`).
+  - Whether hard browser reloads (`F5` / `page.goto`) produced **`0` React hydration errors or warnings**.
+- Because these are **functional and architectural correctness checks**, the `100% ✅ PASS` results on **Dinou v9.0.3** and the **5 deterministic `100% ❌ FAIL` checks (`Checks 24, 27, 29, 31, 33`)** on **Next.js v16.4.3** do not depend on the CPU, RAM, disk speed, or operating system of the machine where the suite is executed, and are fully reproducible by anyone on any standard development environment. *(Only the exact failure frequency of the intrinsic race condition in Next.js's `⚠️ FLAKY` Check 28 may vary slightly with OS thread scheduling, as explained in Section 3).*
+
+### 6.3 How to Reproduce the Verification Suite Locally
+
+Anyone can independently verify and reproduce all results presented in this report by running the following commands from the root of the `dinou-benchmark` repository:
+
+```bash
+# 1. Install dependencies across the workspace and benchmark apps (first time only)
+npm install
+
+# 2. Run a single full verification pass (builds both apps cleanly + runs all 36 checks on Dinou 9.0.3 & Next.js 16.4.3)
+node scripts/verify.mjs --only=dinou-9,next
+
+# 3. Run the 10-pass consecutive stress & determinism suite (360 check executions per framework)
+#    Automatically snapshots the clean post-build disk cache after building once, and before each
+#    of the 10 runs restores the pristine disk snapshot and restarts a fresh server process:
+node scripts/verify.mjs --only=dinou-9,next --runs=10
+
+# 4. Re-run verification against existing builds without rebuilding (faster iteration):
+node scripts/verify.mjs --only=dinou-9,next --no-build
+node scripts/verify.mjs --only=dinou-9,next --no-build --runs=10
+```
+
+Each execution prints the per-check `PASS` / `FAIL` log in real time, outputs the multi-run determinism summary table in the terminal, and saves the structured verification results to `results/verify.json`.
