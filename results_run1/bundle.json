@@ -1,0 +1,110 @@
+[
+  {
+    "framework": "dinou-9",
+    "version": "9.0.3",
+    "files": 23,
+    "rawBytes": 290073,
+    "gzipBytes": 96484,
+    "brotliBytes": 83736,
+    "biggest": [
+      {
+        "file": ".dinou/dist3/main-HXL2MVXM.js",
+        "raw": 222123,
+        "gzip": 69492
+      },
+      {
+        "file": ".dinou/dist3/chunk-5LGNS2Z4.js",
+        "raw": 27216,
+        "gzip": 9068
+      },
+      {
+        "file": ".dinou/dist3/chunk-AYUQ2JW7.js",
+        "raw": 8248,
+        "gzip": 3209
+      },
+      {
+        "file": ".dinou/dist3/chunk-CHLWBLOH.js",
+        "raw": 7629,
+        "gzip": 2828
+      },
+      {
+        "file": ".dinou/dist3/rigorous-ui-80c42495-VKW2Y4MJ.js",
+        "raw": 4877,
+        "gzip": 1985
+      }
+    ],
+    "at": "2026-11-01T23:04:44.977Z"
+  },
+  {
+    "framework": "dinou-9-u",
+    "version": "9.0.3",
+    "files": 23,
+    "rawBytes": 290073,
+    "gzipBytes": 96484,
+    "brotliBytes": 83736,
+    "biggest": [
+      {
+        "file": ".dinou/dist3/main-HXL2MVXM.js",
+        "raw": 222123,
+        "gzip": 69492
+      },
+      {
+        "file": ".dinou/dist3/chunk-5LGNS2Z4.js",
+        "raw": 27216,
+        "gzip": 9068
+      },
+      {
+        "file": ".dinou/dist3/chunk-AYUQ2JW7.js",
+        "raw": 8248,
+        "gzip": 3209
+      },
+      {
+        "file": ".dinou/dist3/chunk-CHLWBLOH.js",
+        "raw": 7629,
+        "gzip": 2828
+      },
+      {
+        "file": ".dinou/dist3/rigorous-ui-2469c514-COHIZI5O.js",
+        "raw": 4877,
+        "gzip": 1985
+      }
+    ],
+    "at": "2026-11-01T23:04:45.579Z"
+  },
+  {
+    "framework": "next",
+    "version": "16.4.3",
+    "files": 15,
+    "rawBytes": 599714,
+    "gzipBytes": 186823,
+    "brotliBytes": 162092,
+    "biggest": [
+      {
+        "file": ".next/static/chunks/2ki52vdnbo2ft.js",
+        "raw": 229850,
+        "gzip": 71831
+      },
+      {
+        "file": ".next/static/chunks/1cawphmi-6nbu.js",
+        "raw": 131961,
+        "gzip": 35872
+      },
+      {
+        "file": ".next/static/chunks/0cz1d0mv5g_q7.js",
+        "raw": 112594,
+        "gzip": 39520
+      },
+      {
+        "file": ".next/static/chunks/3a43himsg77qz.js",
+        "raw": 36969,
+        "gzip": 10871
+      },
+      {
+        "file": ".next/static/chunks/06bs-nf19b2js.js",
+        "raw": 29512,
+        "gzip": 7701
+      }
+    ],
+    "at": "2026-11-01T23:04:46.757Z"
+  }
+]

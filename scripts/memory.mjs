@@ -1,0 +1,156 @@
+#!/usr/bin/env node
+/**
+ * Production server RAM: idle RSS and peak RSS under load.
+ *
+ * Reads only the VmRSS field from /proc/<pid>/status of the process tree
+ * spawned by this script (or Windows equivalent via PowerShell).
+ */
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import autocannon from "autocannon";
+import { ROOT, routes, setup, selectedFrameworks } from "./config.mjs";
+import { startServer, writeJson, round, median } from "./lib.mjs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const frameworks = selectedFrameworks();
+const results = [];
+
+const isWin = process.platform === "win32";
+const WIN_RSS_SCRIPT = path.join(ROOT, "scripts", "win-rss.ps1");
+
+let reliable = true;
+if (process.platform === "linux") {
+  try {
+    const { stdout: kernelRelease } = await promisify(execFile)("uname", ["-r"]);
+    reliable = !/gvisor/i.test(kernelRelease);
+    if (!reliable) {
+      console.warn("warning: gVisor kernel detected; /proc RSS is not per-process and will be marked as unreliable.");
+    }
+  } catch {
+    reliable = false;
+  }
+}
+
+async function winTreeRss(pid) {
+  try {
+    const { stdout } = await promisify(execFile)(
+      "powershell",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", WIN_RSS_SCRIPT, "-ParentPid", String(pid)],
+      { timeout: 5000 }
+    );
+    return Number(stdout.trim()) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function linuxTreeRss(rootPid) {
+  try {
+    const { stdout } = await promisify(execFile)("ps", ["-eo", "pid,ppid,rss"]);
+    const lines = stdout.trim().split("\n").slice(1);
+    const byPpid = new Map();
+    const rssByPid = new Map();
+    for (const line of lines) {
+      const parts = line.trim().split(/\s+/);
+      if (parts.length >= 3) {
+        const p = Number(parts[0]);
+        const pp = Number(parts[1]);
+        const rss = Number(parts[2]) * 1024; // ps returns RSS in KB -> convert to bytes
+        rssByPid.set(p, rss);
+        if (!byPpid.has(pp)) byPpid.set(pp, []);
+        byPpid.get(pp).push(p);
+      }
+    }
+    function sumTree(pid) {
+      let sum = rssByPid.get(pid) || 0;
+      for (const child of byPpid.get(pid) || []) {
+        sum += sumTree(child);
+      }
+      return sum;
+    }
+    return sumTree(rootPid);
+  } catch {
+    // Fallback: single process /proc/<pid>/status if ps is unavailable
+    try {
+      const raw = await readFile(`/proc/${rootPid}/status`, "utf8");
+      const match = raw.match(/^VmRSS:\s+(\d+) kB/m);
+      return match ? Number(match[1]) * 1024 : 0;
+    } catch {
+      return 0;
+    }
+  }
+}
+
+async function treeRss(pid) {
+  if (isWin) return winTreeRss(pid);
+  return linuxTreeRss(pid);
+}
+
+function runAutocannon(opts) {
+  return new Promise((resolve, reject) => {
+    const instance = autocannon(opts, (error, result) => (error ? reject(error) : resolve(result)));
+    instance.on("error", reject);
+  });
+}
+
+for (const fw of frameworks) {
+  const cwd = path.join(ROOT, fw.dir);
+  const server = await startServer({
+    cwd,
+    cmd: "pnpm",
+    args: ["run", "start"],
+    port: fw.port,
+    readyPath: "/",
+    timeoutMs: 180_000,
+  });
+
+  try {
+    await new Promise((r) => setTimeout(r, 3000));
+    const idle = [];
+    for (let i = 0; i < 5; i += 1) {
+      idle.push(await treeRss(server.child.pid));
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
+    const peak = { value: 0 };
+    const sampler = setInterval(async () => {
+      const value = await treeRss(server.child.pid);
+      if (value > peak.value) peak.value = value;
+    }, 400);
+
+    await runAutocannon({
+      url: `${server.url}${(routes.find((r) => r.kind === "ssr") ?? routes[0]).path}`,
+      connections: setup.load.connections,
+      duration: setup.load.durationSeconds,
+      timeout: Math.max(30, setup.load.durationSeconds),
+      pipelining: 1,
+    });
+
+    clearInterval(sampler);
+    const afterLoad = await treeRss(server.child.pid);
+    const idleMedian = median(idle);
+
+    console.log(
+      `${fw.name} ${fw.version}: RSS idle ${round(idleMedian / 1e6, 1)} MB · peak ${round(peak.value / 1e6, 1)} MB · post-load ${round(afterLoad / 1e6, 1)} MB`
+    );
+
+    results.push({
+      framework: fw.id,
+      version: fw.version,
+      idleBytes: Math.round(idleMedian),
+      peakBytes: Math.round(peak.value),
+      afterLoadBytes: afterLoad,
+      at: new Date().toISOString(),
+      reliable,
+      note: reliable
+        ? "Process-tree RSS of the server; includes the pnpm wrapper."
+        : "Process-tree RSS, but kernel is gVisor: value is inflated and not per-process.",
+    });
+  } finally {
+    await server.stop();
+  }
+}
+
+await writeJson(path.join(ROOT, "results", "memory.json"), results);
+

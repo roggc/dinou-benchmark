@@ -1,0 +1,10 @@
+{
+  "messages": [
+    {
+      "id": 1,
+      "author": "seed",
+      "body": "Initial benchmark message.",
+      "at": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}
