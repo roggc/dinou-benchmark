@@ -2,7 +2,12 @@
 
 Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and `dinou-9-u` unvendorized `-u`) and **Next.js 16.4.3** running **the exact same application**: identical local data, identical React 19 components, identical CSS, and the full 3D caching & revalidation matrix defined in the `rigurous-*.md` specification documents.
 
-> **Honesty Notice.** Results included in `results/` (if any) are produced in a single-core shared sandbox environment. They serve to verify that the benchmark harness works properly, **not** to publish definitive comparisons. Any publishable figures should come from `pnpm bench` executed on the dedicated hardware described in `infra/` with the load generator isolated.
+> **Official Benchmark Results & Engineering Reports (4 Dedicated Intel Xeon vCPUs / 8 GB RAM DigitalOcean CPU-Optimized Droplet):**
+> - [`report-run2-results.md`](./report-run2-results.md) & [`report-run1-results.md`](./report-run1-results.md) — Complete 12-route & 3D Caching Cube empirical results across **Run 1** (`timeout = 30s`, [`results_run1/`](./results_run1/)) and **Run 2** (`timeout = 60s`, [`results_run2/`](./results_run2/)).
+> - [`report-3d-architecture.md`](./report-3d-architecture.md) — Architectural analysis: True End-to-End Orthogonal 3D Caching (Dinou 9) vs. Server-Only Coupled 2.5D Caching (Next.js 16).
+> - [`report-verify.md`](./report-verify.md) — Detailed breakdown of all **36 end-to-end Playwright behavioral checks** (`36 checks × 10 runs = 360 executions` per run).
+> - [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) & [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) — Forensic Linux `epoll`, Grafana `k6`, and `autocannon` socket-queue telemetry.
+> - [`report-infra.md`](./report-infra.md) & [`report-bench-structure.md`](./report-bench-structure.md) — Hardware sizing, OS process scheduling, verified `lscpu`/kernel fingerprint, and benchmark harness architecture.
 
 ---
 
@@ -63,7 +68,7 @@ dinou-benchmark/
 ├── scripts/
 │   ├── sync-shared.mjs         # Copies shared/ to each app & mirrors rigorous suites
 │   ├── build.mjs               # Measures production build time + output size
-│   ├── verify.mjs              # 22 functional & 3D caching E2E checks per framework
+│   ├── verify.mjs              # 36 functional & 3D caching E2E checks per framework
 │   ├── dev-start.mjs           # Dev server cold-start time
 │   ├── hmr.mjs                 # Real Chromium HMR edit-to-DOM measurement
 │   ├── bundle.mjs              # Client JS gzip & brotli bundle analysis
@@ -72,7 +77,12 @@ dinou-benchmark/
 │   ├── report.mjs              # Generates results/REPORT.md + charts.svg
 │   └── bench.mjs               # Main pipeline orchestrator
 ├── rigurous-*.md               # 11 architectural & E2E specification documents
-├── results/                    # Execution JSON files + generated reports & charts
+├── infra/
+│   └── droplet-setup.sh        # Automated DigitalOcean Ubuntu 24.04 LTS provisioning
+├── report-*.md                 # Official empirical benchmark & architectural reports
+├── results_run1/               # Archived Run 1 JSON telemetry, logs, reports & SVG charts (timeout=30s)
+├── results_run2/               # Archived Run 2 JSON telemetry, logs, reports & SVG charts (timeout=60s)
+├── results/                    # Working output directory populated by local `pnpm bench` runs
 └── bench.config.mjs            # Single source of truth for framework configurations
 ```
 
@@ -90,7 +100,7 @@ Individual phases:
 
 ```bash
 pnpm bench:build     # Build time and output size
-pnpm bench:verify    # 22 functional & rigorous E2E checks per framework
+pnpm bench:verify    # 36 functional & rigorous E2E checks per framework
 pnpm bench:dev       # Dev cold start time
 pnpm bench:hmr       # HMR in real browser
 pnpm bench:bundle    # Client bundle size (raw, gzip, brotli)
@@ -109,7 +119,7 @@ pnpm bench:verify --only=dinou-9,next
 ## 5. Documented Framework Differences (Dinou 9.0.3 vs. Next.js 16.4.3)
 
 1. **Horizontal Segmentation (`layout.rsc` vs. `page.rsc`) & Lazy HTML Re-Composition.**
-   - **Dinou 9.0.3** persists `layout.rsc` + `layout.metadata.json` independently from `page.rsc` + `metadata.json`. Calling `revalidateLayout(path)` regenerates only `layout.rsc`; on the next request to any static or PPR child route, Dinou detects `leafLayout.generatedAt > page.generatedAt` and lazily re-composes `index.html` / `shell.html` in $O(1)$ without re-executing the child's `page.tsx`.
+   - **Dinou 9.0.3** persists `layout.rsc` + `layout.metadata.json` independently from `page.rsc` + `metadata.json`. Calling `revalidateLayout(path)` regenerates only `layout.rsc`; on the next request to any static or PPR child route, Dinou detects `leafLayout.generatedAt > page.generatedAt` and lazily re-composes `index.html` / `shell.html` in `O(1)` without re-executing the child's `page.tsx`.
    - **Next.js 16.4.3** (`cacheComponents: true`) caches segment computations via `"use cache"` + `cacheTag` / `cacheLife` and invalidates via `revalidatePath(path, 'layout' | 'page')` and `updateTag`.
 2. **Vertical Segmentation (`<DinouCacheSlot>` + `refreshSlot` vs. `"use cache"` + `updateTag`).**
    - **Dinou 9.0.3** provides `<DinouCacheSlot id="..." tags={[...]} revalidate={N}>` and a surgical client router primitive `refreshSlot(idOrTag, { fresh })` that fetches `/____rsc_slot____/:id` and reconciles only that slot's fiber subtree without re-rendering the enclosing page or layout. On the server, `revalidateTag(slotTag)` refreshes static/PPR-shell hosts via `{ onlyRefreshSlots: true }` without re-executing `page.tsx` or `layout.tsx`, and evicts only `slots/<id>` for dynamic-hole slots (`inStaticShell: false`) to preserve `0ms` static shell TTFB.
