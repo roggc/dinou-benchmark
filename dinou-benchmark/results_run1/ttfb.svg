@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="1446" viewBox="0 0 760 1446">
+  <rect width="100%" height="100%" fill="#0b0d10"/>
+  <text x="0" y="26" font-family="ui-sans-serif" font-size="15" font-weight="600" fill="#e7ecf3">TTFB median by route (ms, lower is better)</text>
+  <text x="0" y="71" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ · dinou-9</text>
+  <rect x="240" y="54" width="81.2771392081737" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="329.2771392081737" y="71" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.5 ms</text>
+  <text x="0" y="109" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ · dinou-9-u</text>
+  <rect x="240" y="92" width="63.15453384418902" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="311.154533844189" y="109" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.1 ms</text>
+  <text x="0" y="147" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ · next</text>
+  <rect x="240" y="130" width="341.0344827586207" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="589.0344827586207" y="147" font-family="ui-monospace" font-size="12" fill="#e7ecf3">6.2 ms</text>
+  <text x="0" y="185" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/items/42 · dinou-9</text>
+  <rect x="240" y="168" width="76.88378033205619" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="324.8837803320562" y="185" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.4 ms</text>
+  <text x="0" y="223" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/items/42 · dinou-9-u</text>
+  <rect x="240" y="206" width="76.3346104725415" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="324.3346104725415" y="223" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.4 ms</text>
+  <text x="0" y="261" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/items/42 · next</text>
+  <rect x="240" y="244" width="118.62068965517241" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="366.62068965517244" y="261" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.2 ms</text>
+  <text x="0" y="299" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/dashboard · dinou-9</text>
+  <rect x="240" y="282" width="160.90676883780333" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="408.9067688378033" y="299" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.9 ms</text>
+  <text x="0" y="337" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/dashboard · dinou-9-u</text>
+  <rect x="240" y="320" width="174.6360153256705" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="422.63601532567054" y="337" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.2 ms</text>
+  <text x="0" y="375" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/dashboard · next</text>
+  <rect x="240" y="358" width="422.8607918263091" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="670.8607918263091" y="375" font-family="ui-monospace" font-size="12" fill="#e7ecf3">7.7 ms</text>
+  <text x="0" y="413" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ppr · dinou-9</text>
+  <rect x="240" y="396" width="132.3499361430396" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="380.3499361430396" y="413" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.4 ms</text>
+  <text x="0" y="451" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ppr · dinou-9-u</text>
+  <rect x="240" y="434" width="130.70242656449554" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="378.70242656449557" y="451" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.4 ms</text>
+  <text x="0" y="489" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/ppr · next</text>
+  <rect x="240" y="472" width="171.89016602809704" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="419.89016602809704" y="489" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.1 ms</text>
+  <text x="0" y="527" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/messages · dinou-9</text>
+  <rect x="240" y="510" width="138.93997445721584" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="386.93997445721584" y="527" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.5 ms</text>
+  <text x="0" y="565" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/messages · dinou-9-u</text>
+  <rect x="240" y="548" width="147.17752234993617" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="395.17752234993617" y="565" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.7 ms</text>
+  <text x="0" y="603" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/messages · next</text>
+  <rect x="240" y="586" width="430" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="678" y="603" font-family="ui-monospace" font-size="12" fill="#e7ecf3">7.8 ms</text>
+  <text x="0" y="641" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs · dinou-9</text>
+  <rect x="240" y="624" width="80.17879948914431" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="328.1787994891443" y="641" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.5 ms</text>
+  <text x="0" y="679" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs · dinou-9-u</text>
+  <rect x="240" y="662" width="64.80204342273308" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="312.80204342273305" y="679" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.2 ms</text>
+  <text x="0" y="717" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs · next</text>
+  <rect x="240" y="700" width="128.50574712643677" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="376.50574712643675" y="717" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.3 ms</text>
+  <text x="0" y="755" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/cache-slot · dinou-9</text>
+  <rect x="240" y="738" width="251.5197956577267" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="499.5197956577267" y="755" font-family="ui-monospace" font-size="12" fill="#e7ecf3">4.6 ms</text>
+  <text x="0" y="793" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/cache-slot · dinou-9-u</text>
+  <rect x="240" y="776" width="249.32311621966795" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="497.32311621966795" y="793" font-family="ui-monospace" font-size="12" fill="#e7ecf3">4.5 ms</text>
+  <text x="0" y="831" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/cache-slot · next</text>
+  <rect x="240" y="814" width="204.8403575989783" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="452.8403575989783" y="831" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.7 ms</text>
+  <text x="0" y="869" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr · dinou-9</text>
+  <rect x="240" y="852" width="135.64495530012772" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="383.6449553001277" y="869" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.5 ms</text>
+  <text x="0" y="907" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr · dinou-9-u</text>
+  <rect x="240" y="890" width="131.8007662835249" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="379.8007662835249" y="907" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.4 ms</text>
+  <text x="0" y="945" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr · next</text>
+  <rect x="240" y="928" width="184.52107279693485" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="432.52107279693485" y="945" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.4 ms</text>
+  <text x="0" y="983" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr-cache-slot · dinou-9</text>
+  <rect x="240" y="966" width="148.27586206896552" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="396.2758620689655" y="983" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.7 ms</text>
+  <text x="0" y="1021" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr-cache-slot · dinou-9-u</text>
+  <rect x="240" y="1004" width="150.4725415070243" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="398.4725415070243" y="1021" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.7 ms</text>
+  <text x="0" y="1059" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/ppr-cache-slot · next</text>
+  <rect x="240" y="1042" width="173.53767560664113" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="421.53767560664113" y="1059" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.2 ms</text>
+  <text x="0" y="1097" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-cache-slot · dinou-9</text>
+  <rect x="240" y="1080" width="114.22733077905492" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="362.2273307790549" y="1097" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.1 ms</text>
+  <text x="0" y="1135" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-cache-slot · dinou-9-u</text>
+  <rect x="240" y="1118" width="99.94891443167306" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="347.9489144316731" y="1135" font-family="ui-monospace" font-size="12" fill="#e7ecf3">1.8 ms</text>
+  <text x="0" y="1173" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-cache-slot · next</text>
+  <rect x="240" y="1156" width="190.01277139208173" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="438.01277139208173" y="1173" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.5 ms</text>
+  <text x="0" y="1211" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-ppr · dinou-9</text>
+  <rect x="240" y="1194" width="135.095785440613" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="383.095785440613" y="1211" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.5 ms</text>
+  <text x="0" y="1249" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-ppr · dinou-9-u</text>
+  <rect x="240" y="1232" width="123.5632183908046" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="371.5632183908046" y="1249" font-family="ui-monospace" font-size="12" fill="#e7ecf3">2.3 ms</text>
+  <text x="0" y="1287" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/hs-ppr · next</text>
+  <rect x="240" y="1270" width="193.30779054916985" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="441.30779054916985" y="1287" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.5 ms</text>
+  <text x="0" y="1325" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/triple · dinou-9</text>
+  <rect x="240" y="1308" width="223.51213282247767" height="26" rx="5" fill="#10b981" opacity="0.9"/>
+  <text x="471.51213282247767" y="1325" font-family="ui-monospace" font-size="12" fill="#e7ecf3">4.1 ms</text>
+  <text x="0" y="1363" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/triple · dinou-9-u</text>
+  <rect x="240" y="1346" width="239.98722860791827" height="26" rx="5" fill="#059669" opacity="0.9"/>
+  <text x="487.98722860791827" y="1363" font-family="ui-monospace" font-size="12" fill="#e7ecf3">4.4 ms</text>
+  <text x="0" y="1401" font-family="ui-sans-serif" font-size="12" fill="#8d99a8">/rigorous/triple · next</text>
+  <rect x="240" y="1384" width="180.67688378033205" height="26" rx="5" fill="#7dd3fc" opacity="0.9"/>
+  <text x="428.67688378033205" y="1401" font-family="ui-monospace" font-size="12" fill="#e7ecf3">3.3 ms</text>
+</svg>

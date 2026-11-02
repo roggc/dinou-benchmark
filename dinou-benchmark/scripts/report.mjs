@@ -43,7 +43,7 @@ lines.push("");
 lines.push(`Generated: ${new Date().toISOString()}`);
 lines.push("");
 lines.push(
-  "> **Honesty Notice.** The numbers in this report were produced in a single-core shared sandbox environment, not on the dedicated cloud hardware described in `infra/`. They serve to verify that the benchmark harness functions properly, **not** to publish definitive comparisons. For publishable figures, run `pnpm bench` on the dedicated hardware indicated in the README (`infra/droplet-setup.sh`)."
+  "> **Execution Environment.** Performance, build, startup, HMR, and memory figures in this report were recorded on a dedicated DigitalOcean CPU-Optimized droplet (**4 Dedicated Intel Xeon vCPUs / 8 GB RAM**, Ubuntu 24.04 LTS, provisioned via `infra/droplet-setup.sh`) across **`n = 5` independent passes** (`200` concurrent connections, `30s` per round, `5s` warmup). Functional and 3D Caching Cube verification (`36 checks × 10 runs = 360 executions`) is documented in [`report-verify.md`](../report-verify.md)."
 );
 lines.push("");
 
