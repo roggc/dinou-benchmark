@@ -621,7 +621,7 @@
         "failedRuns": 10,
         "totalRuns": 10,
         "ms": 1650,
-        "detail": "[0/10 FAIL] router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270)"
+        "detail": "[0/10 PASS (10/10 FAIL)] router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270)"
       },
       {
         "name": "rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery",
@@ -651,7 +651,7 @@
         "failedRuns": 10,
         "totalRuns": 10,
         "ms": 1939,
-        "detail": "[0/10 FAIL] wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999)"
+        "detail": "[0/10 PASS (10/10 FAIL)] wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999)"
       },
       {
         "name": "rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution",
@@ -671,7 +671,7 @@
         "failedRuns": 10,
         "totalRuns": 10,
         "ms": 2402,
-        "detail": "[0/10 FAIL] LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow"
+        "detail": "[0/10 PASS (10/10 FAIL)] LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow"
       },
       {
         "name": "rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag",
@@ -691,7 +691,7 @@
         "failedRuns": 10,
         "totalRuns": 10,
         "ms": 2110,
-        "detail": "[0/10 FAIL] expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3"
+        "detail": "[0/10 PASS (10/10 FAIL)] expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3"
       },
       {
         "name": "rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()",
@@ -711,7 +711,7 @@
         "failedRuns": 10,
         "totalRuns": 10,
         "ms": 1827,
-        "detail": "[0/10 FAIL] tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)"
+        "detail": "[0/10 PASS (10/10 FAIL)] tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)"
       },
       {
         "name": "rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children",

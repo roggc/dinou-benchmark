@@ -1766,7 +1766,7 @@ for (const fw of frameworks) {
         ? `${passedRuns}/${totalRuns} PASS`
         : flaky
           ? `${passedRuns}/${totalRuns} FLAKY (${failedRuns} Fail of ${totalRuns} execs)`
-          : `${passedRuns}/${totalRuns} FAIL`;
+          : `${passedRuns}/${totalRuns} PASS (${failedRuns}/${totalRuns} FAIL)`;
       detail = `[${statusTag}] ${detail}`;
     }
     aggregatedChecks.push({

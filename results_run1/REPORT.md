@@ -1,24 +1,65 @@
 # Benchmark Results: Dinou v9.0.3 vs. Next.js v16.4.3
 
-Generated: 2026-11-02T10:32:30.712Z
+Generated: 2026-11-02T21:33:43.513Z
 
 > **Execution Environment.** Performance, build, startup, HMR, and memory figures in this report were recorded on a dedicated DigitalOcean CPU-Optimized droplet (**4 Dedicated Intel Xeon vCPUs / 8 GB RAM**, Ubuntu 24.04 LTS, provisioned via `infra/droplet-setup.sh`) across **`n = 5` independent passes** (`200` concurrent connections, `30s` per round, `5s` warmup). Functional and 3D Caching Cube verification (`36 checks × 10 runs = 360 executions`) is documented in [`report-verify.md`](../report-verify.md).
 
 ## Functional & Rigorous 3D Caching Verification
 
-| Framework | Version | Checks Passed | Status |
-| --- | --- | --- | --- |
-| Dinou 9.0.3 | `9.0.3` | 36/36 | ✅ |
-| Next.js 16.4.3 | `16.4.3` | 30/36 | ⚠️ |
+| Framework | Version | Checks Passed (10/10) | Flaky Checks | Deterministic Failures (0/10) | Total Executions Passed | Status |
+| --- | --- | :---: | :---: | :---: | :---: | :---: |
+| Dinou 9.0.3 | `9.0.3` | **36/36** | 0 | 0 | `360/360` (`100.0%`) | ✅ |
+| Next.js 16.4.3 | `16.4.3` | **30/36** | 1 | 5 | `308/360` (`85.6%`) | ⚠️ |
 
-Failures:
+### Failures & Flaky Checks Summary
 
-- Next.js 16.4.3 → rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard: [0/10 FAIL] router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270)
-- Next.js 16.4.3 → rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL: [0/10 FAIL] wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999)
-- Next.js 16.4.3 → rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution: [8/10 FLAKY (2 Fail of 10 execs)] expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
-- Next.js 16.4.3 → rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh): [0/10 FAIL] LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow
-- Next.js 16.4.3 → rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back: [0/10 FAIL] expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3
-- Next.js 16.4.3 → rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag: [0/10 FAIL] tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)
+- **Check #24** · Next.js 16.4.3 → `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard` — **❌ FAIL (0/10 passed, 10/10 failed)**: router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270)
+- **Check #27** · Next.js 16.4.3 → `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` — **❌ FAIL (0/10 passed, 10/10 failed)**: wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999)
+- **Check #28** · Next.js 16.4.3 → `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` — **⚠️ FLAKY (8/10 passed, 2/10 failed)**: expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
+- **Check #29** · Next.js 16.4.3 → `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` — **❌ FAIL (0/10 passed, 10/10 failed)**: LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow
+- **Check #31** · Next.js 16.4.3 → `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` — **❌ FAIL (0/10 passed, 10/10 failed)**: expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3
+- **Check #33** · Next.js 16.4.3 → `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` — **❌ FAIL (0/10 passed, 10/10 failed)**: tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)
+
+### Complete 36-Check Verification Breakdown (`#1`–`#36`)
+
+| Check # | Verification Check | Dinou 9.0.3 Result & Detail | Next.js 16.4.3 Result & Detail |
+| :---: | :--- | :--- | :--- |
+| **#1** | `ssg: / responds 200` | ✅ `10/10` PASS — 4.6 ms | ✅ `10/10` PASS — 4.3 ms |
+| **#2** | `ssg: / 50 items listing` | ✅ `10/10` PASS — 50 items | ✅ `10/10` PASS — 50 items |
+| **#3** | `ssg: stable HTML across requests` | ✅ `10/10` PASS — 3 identical requests | ✅ `10/10` PASS — 3 identical requests |
+| **#4** | `isr: /items/1 responds 200` | ✅ `10/10` PASS — 66.1 ms | ✅ `10/10` PASS — 38.9 ms |
+| **#5** | `isr: cached and stable HTML` | ✅ `10/10` PASS — 2 identical requests | ✅ `10/10` PASS — 2 identical requests |
+| **#6** | `isr: prerendered route /items/42` | ✅ `10/10` PASS — correct content | ✅ `10/10` PASS — correct content |
+| **#7** | `404: nonexistent & validateParams/allowISG routes` | ✅ `10/10` PASS — /this-route-does-not-exist=404 /items/999=404 /rigorous/hs/dept/invalid=404 /rigorous/hs/locked/unlisted=404 | ✅ `10/10` PASS — /this-route-does-not-exist=404 /items/999=404 /rigorous/hs/dept/invalid=404 /rigorous/hs/locked/unlisted=404 |
+| **#8** | `dashboard: responds 200` | ✅ `10/10` PASS — 231.6 ms | ✅ `10/10` PASS — 240.7 ms |
+| **#9** | `dashboard: is dynamic (two requests differ)` | ✅ `10/10` PASS — different timestamps | ✅ `10/10` PASS — different timestamps |
+| **#10** | `dashboard: streams 3 holes after fallback` | ✅ `10/10` PASS — 3 fallbacks · 3 holes · 246.7 ms | ✅ `10/10` PASS — 3 fallbacks · 3 holes · 223.6 ms |
+| **#11** | `ppr: static shell in first chunk` | ✅ `10/10` PASS — first chunk 90.17 ms | ✅ `10/10` PASS — first chunk 8.43 ms |
+| **#12** | `ppr: hole arrives later (streaming)` | ✅ `10/10` PASS — shell 8.48 ms · total 233.45 ms | ✅ `10/10` PASS — shell 3.9 ms · total 216 ms |
+| **#13** | `mutation: Server Function visible in browser` | ✅ `10/10` PASS — persisted and rendered | ✅ `10/10` PASS — persisted and rendered |
+| **#14** | `rigorous-hs: sibling soft nav preserves layout client state & mountId` | ✅ `10/10` PASS — mountId=m-1-zluxh preserved · layoutFetches=0 | ✅ `10/10` PASS — mountId=m-1-xv4sf preserved · layoutFetches=0 |
+| **#15** | `rigorous-hs: nested L2 layout, @badge slot, dynamic [deptId], locked [code] & escape hatches` | ✅ `10/10` PASS — L2 + @badge + [deptId] + [code] + reset_layout + no_layout OK | ✅ `10/10` PASS — L2 + @badge + [deptId] + [code] + reset_layout + no_layout OK |
+| **#16** | `rigorous-hs: surgical revalidatePage vs revalidateLayout & lazy HTML re-composition` | ✅ `10/10` PASS — page=101 preserved · layout=102 recomposed · 0 hydration errors | ✅ `10/10` PASS — page=101 preserved · layout=102 recomposed · 0 hydration errors |
+| **#17** | `rigorous-cache-slot: dynamic bypass, surgical slot refresh, shared tag, nested slots & server action prop` | ✅ `10/10` PASS — alpha/shared/nested slots + server action prop OK | ✅ `10/10` PASS — alpha/shared/nested slots + server action prop OK |
+| **#18** | `rigorous-ppr: static shell, collapsed static Suspense, concurrent holes, inherited/opt-out & XSS guard` | ✅ `10/10` PASS — shell 84.12 ms · total 222.74 ms · XSS safe | ✅ `10/10` PASS — shell 19.78 ms · total 108.47 ms · XSS safe |
+| **#19** | `rigorous-ppr-cache-slot: shell slots vs dynamic hole slots & nested hole slot isolation` | ✅ `10/10` PASS — shell=100 · holeSlotA=120 · nestedInner=120 | ✅ `10/10` PASS — shell=100 · holeSlotA=120 · nestedInner=120 |
+| **#20** | `rigorous-hs-cache-slot: cross-axis shared tag, round-trip A->B->A slot persistence & LWW race` | ✅ `10/10` PASS — cross-axis shared tag + round-trip A->B->A slot=131 preserved | ✅ `10/10` PASS — cross-axis shared tag + round-trip A->B->A slot=131 preserved |
+| **#21** | `rigorous-hs-ppr: L1 PPR layout + @sidebar hole + PPR pages + surgical revalidateLayout/Page` | ✅ `10/10` PASS — L1 PPR=141 · Page A PPR=140 · @sidebar hole OK | ✅ `10/10` PASS — L1 PPR=141 · Page A PPR=140 · @sidebar hole OK |
+| **#22** | `rigorous-triple: 3D matrix surgical isolation (HS + Cache-Slot + PPR + 1s clock TTL)` | ✅ `10/10` PASS — 3D isolation + 1s TTL slots + nested L2 + 0 hydration errors | ✅ `10/10` PASS — 3D isolation + 1s TTL slots + nested L2 + 0 hydration errors |
+| **#23** | `rigorous-hs: client pageCache deduplication vs <Link fresh> bypass` | ✅ `10/10` PASS — normal `<Link>`=100 (0 reqs) · `<Link fresh>`=260 · L1=100 preserved | ✅ `10/10` PASS — normal `<Link>`=100 (0 reqs) · `<Link fresh>`=260 · L1=100 preserved |
+| **#24** | `rigorous-hs: router.refresh() page-only vs router.refresh({ layout: true }) & ?buildId/?v guard` | ✅ `10/10` PASS — page-only refresh (layout=100, page=270) · layout refresh (270) · ?buildId/?v intact | ❌ `0/10` PASS (`10/10` failed) — router.refresh() (page-only) must NOT re-execute layout (expected 100, got 270) |
+| **#25** | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | ✅ `10/10` PASS — error.tsx contained in outlet · L1 state=1 preserved across break & recovery | ✅ `10/10` PASS — error.tsx contained in outlet · L1 state=1 preserved across break & recovery |
+| **#26** | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | ✅ `10/10` PASS — 1s layout TTL=280 (child=100) · 1s page TTL=281 (L1=100) | ✅ `10/10` PASS — 1s layout TTL=280 (child=100) · 1s page TTL=281 (L1=100) |
+| **#27** | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | ✅ `10/10` PASS — wildcard refreshSlot('*')=301/302/303 (hosts=100) · static-host 1s slot=305 (host=100) | ❌ `0/10` PASS (`10/10` failed) — wildcard refreshSlot('*', { fresh: true }) must NOT re-execute host layout or host page (got layout=999, page=999) |
+| **#28** | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | ✅ `10/10` PASS — 6 concurrent cold requests -> 1 slot execution | ⚠️ `8/10` FLAKY (`2/10` failed) — expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2 |
+| **#29** | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | ✅ `10/10` PASS — LWW race won by Request #2 (402/fresh-fast) in both DOM and server cache | ❌ `0/10` PASS (`10/10` failed) — LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow |
+| **#30** | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | ✅ `10/10` PASS — PPR TTLs (330/331) · shell slots=340/341/342 (hosts=100) | ✅ `10/10` PASS — PPR TTLs (330/331) · shell slots=340/341/342 (hosts=100) |
+| **#31** | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | ✅ `10/10` PASS — unmounted slot refreshed on Page B -> 410 on Page A (host=100) | ❌ `0/10` PASS (`10/10` failed) — expected Page A to be served from client pageCache with 0 page RSC fetches (host=100) + slotOverride=410, got host=100 pageRscReqs=3 |
+| **#32** | `rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()` | ✅ `10/10` PASS — slotOverride (420) yielded to router.refresh() (421) · widget state=1 intact | ✅ `10/10` PASS — slotOverride (420) yielded to router.refresh() (421) · widget state=1 intact |
+| **#33** | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | ✅ `10/10` PASS — tag-only slot refreshSlot=430 (host=100) · revalidateTag=431 | ❌ `0/10` PASS (`10/10` failed) — tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999) |
+| **#34** | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | ✅ `10/10` PASS — L1=440 cascaded through L2 to nested PPR (100) & nested static-child (100) | ✅ `10/10` PASS — L1=440 cascaded through L2 to nested PPR (100) & nested static-child (100) |
+| **#35** | `rigorous-hs-concurrent-reval: simultaneous revalidateLayout + revalidatePage serialization & F5 hydration` | ✅ `10/10` PASS — concurrent revalidateLayout(450) + revalidatePage(451) aligned · 0 hydration errors | ✅ `10/10` PASS — concurrent revalidateLayout(450) + revalidatePage(451) aligned · 0 hydration errors |
+| **#36** | `rigorous-hs-lazy-html-hydration: revalidateLayout lazy index.html recomposition & 0 hydration errors on co-located & child pages (hard nav)` | ✅ `10/10` PASS — co-located (/rigorous/hs, /nested) & child (/nested/page-2) lazy HTML recomposed (L1=460, L2=461, pages=100) · 0 hydration errors | ✅ `10/10` PASS — co-located (/rigorous/hs, /nested) & child (/nested/page-2) lazy HTML recomposed (L1=460, L2=461, pages=100) · 0 hydration errors |
 
 ## Production · TTFB, Throughput and Latency (Baseline + 7 Rigorous 3D Caching Suites)
 

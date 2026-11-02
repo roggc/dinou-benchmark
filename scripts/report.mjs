@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 /**
- * Generates results/REPORT.md from results/*.json and SVG vector charts.
+ * Generates results/REPORT.md (or <dir>/REPORT.md via --dir=<dir>) from *.json and SVG vector charts.
  * Zero external dependencies: pure templates.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { ROOT, routes, frameworks } from "./config.mjs";
 
+const dirArg = process.argv.find((a) => a.startsWith("--dir="));
+const targetDirName = dirArg ? dirArg.slice("--dir=".length) : "results";
+const targetDir = path.join(ROOT, targetDirName);
+
 async function readJson(name) {
   try {
-    return JSON.parse(await readFile(path.join(ROOT, "results", name), "utf8"));
+    return JSON.parse(await readFile(path.join(targetDir, name), "utf8"));
   } catch {
     return null;
   }
@@ -37,6 +41,40 @@ const labels = {
 const label = (id) => labels[id] ?? id;
 const fmt = (n, digits = 1) => (n === undefined || n === null ? "—" : Number(n).toFixed(digits));
 
+function stripBracketTag(detail = "") {
+  return String(detail)
+    .replace(/^\[[^\]]*\]\s*/, "")
+    .replace(/<Link([^>]*)>/g, "`<Link$1>`")
+    .trim();
+}
+
+function formatCheckStatus(check, fallbackRuns = 1) {
+  const totalRuns = check.totalRuns ?? fallbackRuns;
+  const passedRuns = check.passedRuns ?? (check.ok ? totalRuns : 0);
+  const failedRuns = check.failedRuns ?? totalRuns - passedRuns;
+  const cleanDetail = stripBracketTag(check.detail);
+
+  if (check.ok) {
+    return {
+      badge: `✅ PASS (${passedRuns}/${totalRuns} passed)`,
+      shortBadge: `✅ \`${passedRuns}/${totalRuns}\` PASS`,
+      cleanDetail,
+    };
+  }
+  if (check.flaky) {
+    return {
+      badge: `⚠️ FLAKY (${passedRuns}/${totalRuns} passed, ${failedRuns}/${totalRuns} failed)`,
+      shortBadge: `⚠️ \`${passedRuns}/${totalRuns}\` FLAKY (\`${failedRuns}/${totalRuns}\` failed)`,
+      cleanDetail,
+    };
+  }
+  return {
+    badge: `❌ FAIL (${passedRuns}/${totalRuns} passed, ${failedRuns}/${totalRuns} failed)`,
+    shortBadge: `❌ \`${passedRuns}/${totalRuns}\` PASS (\`${failedRuns}/${totalRuns}\` failed)`,
+    cleanDetail,
+  };
+}
+
 const lines = [];
 lines.push("# Benchmark Results: Dinou v9.0.3 vs. Next.js v16.4.3");
 lines.push("");
@@ -47,26 +85,69 @@ lines.push(
 );
 lines.push("");
 
-if (verify) {
+if (verify && verify.length > 0) {
+  const runsPerCheck = verify[0]?.runs ?? 10;
   lines.push("## Functional & Rigorous 3D Caching Verification");
   lines.push("");
-  lines.push("| Framework | Version | Checks Passed | Status |");
-  lines.push("| --- | --- | --- | --- |");
+  lines.push(
+    `| Framework | Version | Checks Passed (${runsPerCheck}/${runsPerCheck}) | Flaky Checks | Deterministic Failures (0/${runsPerCheck}) | Total Executions Passed | Status |`
+  );
+  lines.push("| --- | --- | :---: | :---: | :---: | :---: | :---: |");
   for (const entry of verify) {
+    const runs = entry.runs ?? runsPerCheck;
+    const totalChecks = entry.total ?? entry.checks.length;
+    const passedChecks = entry.passed ?? entry.checks.filter((c) => c.ok).length;
+    const flakyChecks = entry.flaky ?? entry.checks.filter((c) => c.flaky).length;
+    const deterministicFailures = totalChecks - passedChecks - flakyChecks;
+    const totalExecs = totalChecks * runs;
+    const passedExecs = entry.checks.reduce(
+      (sum, c) => sum + (c.passedRuns ?? (c.ok ? runs : 0)),
+      0
+    );
+    const execPct = totalExecs > 0 ? ((passedExecs / totalExecs) * 100).toFixed(1) : "0.0";
     lines.push(
-      `| ${label(entry.framework)} | \`${entry.version}\` | ${entry.passed}/${entry.total} | ${entry.passed === entry.total ? "✅" : "⚠️"} |`
+      `| ${label(entry.framework)} | \`${entry.version}\` | **${passedChecks}/${totalChecks}** | ${flakyChecks} | ${deterministicFailures} | \`${passedExecs}/${totalExecs}\` (\`${execPct}%\`) | ${passedChecks === totalChecks ? "✅" : "⚠️"} |`
     );
   }
   lines.push("");
-  const failed = verify.flatMap((entry) =>
-    entry.checks.filter((c) => !c.ok).map((c) => `- ${label(entry.framework)} → ${c.name}: ${c.detail}`)
+
+  const failedOrFlaky = verify.flatMap((entry) =>
+    entry.checks
+      .map((c, idx) => ({ check: c, checkNum: idx + 1, entry }))
+      .filter(({ check }) => !check.ok)
+      .map(({ check, checkNum, entry: fwEntry }) => {
+        const { badge, cleanDetail } = formatCheckStatus(check, fwEntry.runs ?? runsPerCheck);
+        return `- **Check #${checkNum}** · ${label(fwEntry.framework)} → \`${check.name}\` — **${badge}**: ${cleanDetail}`;
+      })
   );
-  if (failed.length) {
-    lines.push("Failures:");
+  if (failedOrFlaky.length) {
+    lines.push("### Failures & Flaky Checks Summary");
     lines.push("");
-    lines.push(...failed);
+    lines.push(...failedOrFlaky);
     lines.push("");
   }
+
+  // Full 36-Check Breakdown Table
+  const verifyFrameworks = verify.map((entry) => entry.framework);
+  const maxChecks = Math.max(...verify.map((entry) => entry.checks.length));
+  lines.push(`### Complete ${maxChecks}-Check Verification Breakdown (\`#1\`–\`#${maxChecks}\`)`);
+  lines.push("");
+  lines.push(
+    `| Check # | Verification Check | ${verifyFrameworks.map((fwId) => `${label(fwId)} Result & Detail`).join(" | ")} |`
+  );
+  lines.push(`| :---: | :--- | ${verifyFrameworks.map(() => ":---").join(" | ")} |`);
+  for (let i = 0; i < maxChecks; i += 1) {
+    const checkName = verify[0]?.checks[i]?.name ?? `Check #${i + 1}`;
+    const cells = verify.map((entry) => {
+      const c = entry.checks[i];
+      if (!c) return "—";
+      const { shortBadge, cleanDetail } = formatCheckStatus(c, entry.runs ?? runsPerCheck);
+      const safeDetail = cleanDetail.replace(/\|/g, "\\|");
+      return `${shortBadge}${safeDetail ? ` — ${safeDetail}` : ""}`;
+    });
+    lines.push(`| **#${i + 1}** | \`${checkName}\` | ${cells.join(" | ")} |`);
+  }
+  lines.push("");
 }
 
 if (load) {
@@ -119,7 +200,7 @@ if (build || dev || hmr || bundle || memory) {
   }
 }
 
-await writeFile(path.join(ROOT, "results", "REPORT.md"), lines.join("\n") + "\n", "utf8");
+await writeFile(path.join(targetDir, "REPORT.md"), lines.join("\n") + "\n", "utf8");
 
 // --- SVG Charts (horizontal bars, zero external dependencies) ---
 function barChart({ title, series, unit, width = 760 }) {
@@ -187,13 +268,13 @@ const totalHeight = currentY + 20;
 
 const index = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${totalHeight}">
   <rect width="100%" height="100%" fill="#0b0d10"/>
-  <text x="20" y="34" font-family="ui-sans-serif" font-size="16" fill="#e7ecf3">See results/REPORT.md</text>
+  <text x="20" y="34" font-family="ui-sans-serif" font-size="16" fill="#e7ecf3">See ${targetDirName}/REPORT.md</text>
   ${chartElements.join("\n")}
 </svg>`;
 
-await writeFile(path.join(ROOT, "results", "charts.svg"), index, "utf8");
+await writeFile(path.join(targetDir, "charts.svg"), index, "utf8");
 for (const chart of charts) {
-  await writeFile(path.join(ROOT, "results", chart.name), chart.svg, "utf8");
+  await writeFile(path.join(targetDir, chart.name), chart.svg, "utf8");
 }
 
-console.log("Wrote results/REPORT.md and results/charts.svg");
+console.log(`Wrote ${targetDirName}/REPORT.md and ${targetDirName}/charts.svg`);
