@@ -120,7 +120,7 @@ Every check in [`scripts/verify.mjs`](https://github.com/roggc/dinou-benchmark/b
 | :--- | :---: | :---: | :---: | :--- |
 | **Cold Dev Server Start (`dev-start` median)** | **`2.18 s` → `2.09 s`** | `2.27 s` → `2.16 s` | `3.55 s` → `3.48 s` | **`1.63×–1.67×` faster cold start** |
 | **Client HMR Latency (`hmr` median)** | **`271 ms` → `266 ms`** | **`271 ms` → `260 ms`** | `314 ms` → `290 ms` | **`1.09×–1.16×` faster HMR (`-24 to -43 ms`)** |
-| **Production Build Time (`build` median)** | `6.70 s` → `6.52 s` | **`6.50 s` → `6.39 s`** | `14.90 s` → `14.54 s` | **`2.22×–2.23×` faster build (`-8.0 to -8.2 s`)** |
+| **Production Build Time (`build` median)** | `6.69 s` → `6.52 s` | **`6.54 s` → `6.39 s`** | `14.88 s` → `14.54 s` | **`2.22×–2.23×` faster build (`-8.02 to -8.19 s`)** |
 | **Production Build Output Size on Disk** | **`7.5 MB` → `7.5 MB`** | **`7.5 MB` → `7.5 MB`** | `59.7 MB` → `59.6 MB` | **`7.95×–7.96×` smaller disk footprint** |
 | **Client JS Bundle Size (Raw / Gzip / Brotli)** | **`283.3 / 94.2 / 81.8 KiB`** | **`283.3 / 94.2 / 81.8 KiB`** | `585.7 / 182.5 / 158.3 KiB` | **`48.3%` smaller client JS (Brotli)** |
 | **Idle RSS Memory** | `275.2` → `275.1 MB` | `275.3` → `275.4 MB` | **`245.9` → `246.5 MB`** | Next.js `~29 MB` lower at idle |
