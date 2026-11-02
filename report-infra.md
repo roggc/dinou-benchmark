@@ -106,3 +106,23 @@ Because `autocannon` runs on fixed wall-clock timers, the execution duration of 
 - **Per Framework (12 Routes):** $12 \times 158\text{s} = 1,896\text{s} \approx \mathbf{31.6\text{ minutes/framework}}$.
 - **Full 3-Framework Suite (`dinou-9`, `dinou-9-u`, `next`):** $\approx \mathbf{95\text{ minutes (~1 hour 35 minutes)}}$ for `load.mjs` (or $\approx \mathbf{63\text{ minutes}}$ when running the 2 primary frameworks `--only=dinou-9,next`).
 
+
+---
+
+## 6. Verified Droplet Hardware, Kernel & Runtime Fingerprint (`results_run1/env.txt` & `results_run2/env.txt`)
+
+The full hardware, kernel, storage, networking, and runtime fingerprint captured directly from `dinou-benchmark-runner` (`lon1` region) is archived verbatim in [`results_run1/env.txt`](./results_run1/env.txt) and [`results_run2/env.txt`](./results_run2/env.txt):
+
+| Category | Parameter | Verified Value |
+| :--- | :--- | :--- |
+| **Cloud Provider & Region** | Provider / Datacenter Region | DigitalOcean Droplet (KVM / QEMU `pc-i440fx-6.1`), **`lon1`** (London) |
+| **Operating System** | Distribution & Kernel | **Ubuntu 24.04.5 LTS (Noble Numbat)** · Linux `6.8.0-142-generic #142-Ubuntu SMP PREEMPT_DYNAMIC x86_64` |
+| **Processor (CPU)** | Model & Microarchitecture | **Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz** (Family `6`, Model `85`, Stepping `4`, `5387.33 BogoMIPS`, `AVX2` / `AVX-512` enabled) |
+| **CPU Topology & Isolation** | vCPUs / NUMA / Steal Time | **`4` Dedicated vCPUs** (`1` Socket × `4` Cores × `1` Thread/core, NUMA node `0`, **`st = 0%` CPU Steal Time** verified via `vmstat`) |
+| **CPU Cache Hierarchy** | L1d / L1i / L2 Cache | **L1d:** `128 KiB` (`4 × 32 KiB`) · **L1i:** `128 KiB` (`4 × 32 KiB`) · **L2:** `16 MiB` (`4 × 4 MiB`) |
+| **CPU Security Mitigations** | Hardware/Kernel Mitigations | Meltdown (`PTI`), Spectre v1/v2 (`IBRS`, `IBPB conditional`, `BHI SW loop`), L1TF (`PTE Inversion`), MDS (`Clear CPU buffers`), Retbleed (`IBRS`), Spec Store Bypass (`prctl`) |
+| **Memory & Swap** | Physical RAM / Swap / THP | **`7.8 GiB` RAM** (`8,131,780 kB MemTotal`, `~7.2 GiB` available at idle) · **`4.0 GiB` Swap** (`0 B` used) · Transparent Huge Pages: `[madvise]` (`2048 kB` page size) |
+| **Storage & Filesystem** | Root Block Device & Mount | **`50 GB` SSD (`/dev/vda1`, `48G` usable)** · **`ext4`** mounted with `rw,relatime,discard,errors=remount-ro,commit=30` |
+| **Kernel Networking (`sysctl`)** | TCP & File Descriptor Limits | `ulimit -n = 65535` · `net.core.somaxconn = 65535` · `net.ipv4.tcp_max_syn_backlog = 65535` · `ip_local_port_range = 10240 65000` · `tcp_tw_reuse = 1` · `tcp_congestion_control = cubic` · `fs.file-max = 2097152` |
+| **Node.js & Internal Engines** | Runtime & C++ Dependencies | **Node.js `v22.23.4`** (`x64`) · **V8** `12.4.254.21-node.57` · **libuv** `1.51.0` · **llhttp** `9.4.3` · **undici** `6.29.1` · **OpenSSL** `3.5.9` · **Brotli** `1.1.0` · **zlib** `1.3.1-e00f703` · **zstd** `1.5.7` · **simdutf** `6.4.2` · **simdjson** `4.5.0` · **ada** `2.9.2` |
+| **Benchmark Toolchain** | Package Manager & Harness | **`pnpm 12.15.0`** · **`autocannon v8.0.0`** · **`playwright 1.64.1`** |
