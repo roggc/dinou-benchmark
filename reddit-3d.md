@@ -84,7 +84,7 @@ Every check in [`scripts/verify.mjs`](https://github.com/roggc/dinou-benchmark/b
 
 ## 3. Production HTTP Load Benchmark: Run 1 & Run 2 (12 Routes, 200 Connections, 30s × 5 Passes per Run)
 
-**Environment:** Dedicated DigitalOcean CPU-Optimized Droplet (**4 Dedicated Intel Xeon vCPUs, 8 GB RAM**, Ubuntu 24.04 LTS, Node.js v24.15.0). Both frameworks run on the same machine sequentially (`1` production server process + `autocannon` with `200` concurrent connections, `5s` warmup, `30s` duration × `5` passes per route in **Run 1** [`6,073s`] and **Run 2** [`6,048s`]).
+**Environment:** Dedicated DigitalOcean CPU-Optimized Droplet (**4 Dedicated Intel Xeon vCPUs, 8 GB RAM**, Ubuntu 24.04 LTS, Node.js v22.23.4). Both frameworks run on the same machine sequentially (`1` production server process + `autocannon` with `200` concurrent connections, `5s` warmup, `30s` duration × `5` passes per route in **Run 1** [`6,073s`] and **Run 2** [`6,048s`]).
 
 > **Why Two Full Runs (`Run 1` with `timeout = 30s` vs. `Run 2` with `timeout = 60s`)?**  
 > In **Run 1**, `scripts/load.mjs` used `timeout: Math.max(30, durationSeconds)`, which set `autocannon`'s per-request timeout (`30s`) equal to the test duration (`30s`). Because `autocannon` (`lib/run.js` lines 86–95) initializes client `timeoutTicker` timers (`30,000 ms`) ~40 ms *before* `stopTimer` stops the test, any initial-burst socket still waiting at `t = 30.0s` fired a teardown-race timeout at `+30.04s` (affecting 2 routes in Dinou and 4 routes in Next.js). Profiling with **Grafana `k6`** (`timeout = 60s`) and internal socket telemetry (`/__stats`) proved `0` slow requests inside Node (`max 17–27 ms`) and `100.0%` `200 OK` completion at `30.85s`. In **Run 2**, setting `timeout = 60s` (`2 × duration`) eliminated **100% of timeouts (`0 errors` across all 36 route-framework combinations)** while reproducing Run 1's throughput and latency figures within `1%–5%`.
@@ -160,7 +160,7 @@ Every script, route implementation, and raw telemetry JSON from both runs (`resu
   - [`report-run2-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run2-results.md) & [`report-run1-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run1-results.md) — *Complete Run 1 (`timeout = 30s`) and Run 2 (`timeout = 60s`) analysis & reproducibility comparison*
   - [`report-verify.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-verify.md) — *Complete breakdown of all 36 E2E Playwright checks across 10-run suites*
   - [`report-timeouts-diagnosis.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-timeouts-diagnosis.md) & [`report-timeouts-diagnosis-for-dumbs.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-timeouts-diagnosis-for-dumbs.md) — *Linux `epoll`, Grafana `k6`, and Autocannon socket-queue telemetry*
-  - [`results/REPORT.md`](https://github.com/roggc/dinou-benchmark/blob/main/results/REPORT.md) — *Auto-generated summary tables and SVG charts*
+  - [`results_run2/REPORT.md`](https://github.com/roggc/dinou-benchmark/blob/master/results_run2/REPORT.md) & [`results_run1/REPORT.md`](https://github.com/roggc/dinou-benchmark/blob/master/results_run1/REPORT.md) — *Auto-generated summary tables and SVG charts*
 
 Happy to answer any questions about how Dinou implements its 3D caching axes, how `<DinouCacheSlot>` reconciles partial RSC trees in the browser without re-running host layouts/pages, or anything about the benchmark methodology!
 

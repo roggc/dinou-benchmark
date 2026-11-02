@@ -5,7 +5,7 @@
 **Frameworks Evaluated:** **Dinou v9.0.3** (`dinou-9`), **Dinou v9.0.3 Unvendorized** (`dinou-9-u`, `dinou -u`), and **Next.js v16.4.3** (`next`), all running **React 19.3.1**  
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
 **Total Pipeline Execution Time:** `6,048 seconds` (`1 hour 40 minutes 48 seconds` — vs. `6,073 seconds` in Run 1, a `0.41%` variance)  
-**Raw Data Archives:** [`results_run1/`](./results_run1/) (Run 1, `timeout = 30s`) · [`results_run2/`](./results_run2/) & [`results/`](./results/) (Run 2, `timeout = 60s`)  
+**Raw Data Archives:** [`results_run1/`](./results_run1/) (Run 1, `timeout = 30s`) · [`results_run2/`](./results_run2/) (Run 2, `timeout = 60s`)  
 **Companion Reports:** [`report-run1-results.md`](./report-run1-results.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md)
 
 ---
