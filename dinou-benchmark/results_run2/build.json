@@ -1,0 +1,53 @@
+[
+  {
+    "framework": "dinou-9",
+    "version": "9.0.3",
+    "runs": [
+      6.47,
+      7.52,
+      6.67,
+      6.52,
+      6.48
+    ],
+    "medianSeconds": 6.52,
+    "outputBytes": 7488924,
+    "outputBytesByDir": {
+      ".dinou": 7488924
+    },
+    "at": "2026-11-02T15:24:51.805Z"
+  },
+  {
+    "framework": "dinou-9-u",
+    "version": "9.0.3",
+    "runs": [
+      6.33,
+      6.39,
+      6.4,
+      6.4,
+      6.32
+    ],
+    "medianSeconds": 6.39,
+    "outputBytes": 7482184,
+    "outputBytesByDir": {
+      ".dinou": 7482184
+    },
+    "at": "2026-11-02T15:25:23.898Z"
+  },
+  {
+    "framework": "next",
+    "version": "16.4.3",
+    "runs": [
+      14.33,
+      14.45,
+      14.68,
+      14.68,
+      14.54
+    ],
+    "medianSeconds": 14.54,
+    "outputBytes": 59646981,
+    "outputBytesByDir": {
+      ".next": 59646981
+    },
+    "at": "2026-11-02T15:26:37.063Z"
+  }
+]

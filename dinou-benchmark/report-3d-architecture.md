@@ -30,7 +30,7 @@ In geometry and systems engineering, three dimensions only constitute a true **3
      /rigorous/ppr-cache-slot   ●───────────────────────●  │  ◄── /rigorous/triple (X ∩ Y ∩ Z)
                   (Y ∩ Z)       │  │                    │  │      [TRIPLE SYNERGY VERTEX]
                                 │  │                    │  │      • Dinou: 206.8 req/s (36/36 PASS)
-                                │  ●────────────────────│──●      • Next:   18.1 req/s (30–31/36 PASS)
+                                │  ●────────────────────│──●      • Next:   93.7 req/s (30–31/36 PASS)
                                 │ /  (Baseline Origin)  │ /        /rigorous/hs (X-Axis)
                                 │/                      │/
   /rigorous/cache-slot (Y-Axis) ●───────────────────────●────────► X-Axis: Horizontal Segmentation (HS)
@@ -83,7 +83,7 @@ In **Dinou 9.0.3**, the three axes exist as first-class citizens **both in the s
 
 **Next.js 16.4.3** (with `cacheComponents: true`, `"use cache"`, `cacheLife`, `cacheTag`, and PPR) attempts to cover the three dimensions on the server, but suffers from a fundamental architectural limitation: **its segmentation exists during server rendering, but collapses into a single coupled pipeline whenever the client refreshes or invalidates state**.
 
-This structural coupling directly explains why Next.js fails **5 out of 36 verification checks deterministically (`0/10` pass rate on all 5)**, exhibits **flakiness on a 6th check (`Check #28: rigorous-cache-slot-stampede`, `[8/10 PASS · 2/10 FAIL]` in Run 1, yielding `30/36` non-flaky passes)**, and suffers a **`10.5×` throughput collapse** on the 3D synergy routes:
+This structural coupling directly explains why Next.js fails **5 out of 36 verification checks deterministically (`0/10` pass rate on all 5)**, exhibits **flakiness on a 6th check (`Check #28: rigorous-cache-slot-stampede`, `[8/10 PASS · 2/10 FAIL]` in Run 1, yielding `30/36` non-flaky passes)**, and suffers a **`6.67×` throughput collapse** when Horizontal Segmentation meets Dynamic Cache-Slots (`/rigorous/hs-cache-slot`) and a **`2.21×` throughput drop** at the Triple Synergy vertex (`/rigorous/triple`):
 
 ### 4.1 Fracture #1: Next.js's Vertical Axis (`"use cache"`) Is Blind from the Client & Eventually Consistent on Invalidation
 - In Next.js, `"use cache"` is purely **server-side function memoization**; it has no addressable slot identity in the client DOM or network protocol, nor a synchronous atomic slot state machine:
@@ -103,18 +103,20 @@ Because Next.js treats invalidation at the route/Flight-tree level rather than a
 1. **Unmounted Route Eviction**: Calling `updateTag()` for a slot on `Page A` while the user is on `Page B` invalidates `Page A`'s entire client router cache entry, forcing **1–3 full page RSC network fetches** when soft-navigating back to `Page A` (**Check #30 — `[0/10 FAIL]`**).
 2. **Out-of-Order Concurrency Race (No Per-Slot LWW)**: When a slow `250 ms` slot refresh and a fast `10 ms` slot refresh race concurrently, Next.js's client reconciler lacks per-slot monotonic ordering and overwrites the newer fast DOM state (`402/fresh-fast`) with the late stale response (`401/stale-slow`) (**Check #29 — `[0/10 FAIL]`**).
 
-### 4.4 Fracture #4: Throughput Collapse at the 3D Intersection (`PPR + "use cache"` & `Triple Synergy`)
-When all three axes intersect under high concurrency (`200` connections on the 4-vCPU production droplet), the difference between Dinou's decoupled 3D engine and Next.js's coupled `"use cache"` + PPR streaming pipeline becomes dramatic:
+### 4.4 Fracture #4: Server-Side Axis De-Optimization Under Load (`6.67×` Collapse on `HS ∩ Cache-Slot` & `2.21×` on `Triple Synergy`)
+When the axes intersect under high concurrency (`200` connections on the 4-vCPU production droplet), Next.js's lack of server-side axis orthogonality is exposed directly in HTTP throughput and tail latency:
+- **On `/rigorous/hs-cache-slot` ($X \cap Y$)**: A cached Horizontal Segmentation layout and page (`revalidate: 3600`) embeds an uncached dynamic slot (`revalidate: 0`). Because Dinou's X-Axis and Y-Axis are orthogonal on the server, Dinou preserves the cached outer HS layout/page and re-renders *only* the dynamic slot in `~1.4 ms` of CPU (**`684.7 req/s`**, `p50 = 208 ms`, **`p99 = 325 ms`**). In Next.js 16.4.3, `await connection()` inside the dynamic slot **de-optimizes the entire route out of Horizontal Segmentation into full dynamic SSR**, collapsing throughput by **`6.67×`** to **`102.7 req/s`** and driving `p99` tail latency to **`19,753 ms` (~20 seconds, `60.8×` worse)**.
+- **Across all 4 PPR & Synergy Vertices (`/rigorous/ppr`, `/rigorous/ppr-cache-slot`, `/rigorous/hs-ppr`, `/rigorous/triple`)**: Dinou outperforms Next.js by **`1.50×` to `2.21×` in throughput** (`206.8 req/s` vs. `93.7 req/s` on `/rigorous/triple`) while cutting `p99` tail latencies in half (`11.8s` vs. `22.0s`).
 
-| 3D Cube Route / Vertex | Dinou 9.0.3 (`req/s` · `p50` · `TTFB`) | Next.js 16.4.3 (`req/s` · `p50` · `TTFB`) | Dinou Architectural Advantage |
+| 3D Cube Route / Vertex | Dinou 9.0.3 (`req/s` · `p50` / `p99` · `TTFB`) | Next.js 16.4.3 (`req/s` · `p50` / `p99` · `TTFB`) | Dinou Architectural Advantage |
 | :--- | :---: | :---: | :--- |
-| **`/rigorous/hs`** *(X-Axis)* | **`1,126.5 req/s`** · `157 ms` · `1.46 ms` | `781.9 req/s` · `199 ms` · `6.24 ms` | **`1.44×` higher throughput · `4.27×` faster TTFB** |
-| **`/rigorous/cache-slot`** *(Y-Axis)* | **`215.5 req/s`** · `359 ms` · `4.58 ms` | `123.3 req/s` · `1,004 ms` · `6.14 ms` | **`1.75×` higher throughput · `2.80×` lower `p50` latency** |
-| **`/rigorous/ppr`** *(Z-Axis)* | **`196.4 req/s`** · `937 ms` · `2.47 ms` | `134.8 req/s` · `1,132 ms` · `12.63 ms` | **`1.46×` higher throughput · `5.11×` faster TTFB** |
-| **`/rigorous/hs-cache-slot`** *(X ∩ Y)* | **`684.7 req/s`** · `208 ms` · `2.08 ms` | `783.7 req/s` · `200 ms` · `6.28 ms` | **`3.02×` faster TTFB** *(plus 100% surgical client slot refresh)* |
-| **`/rigorous/hs-ppr`** *(X ∩ Z)* | **`191.5 req/s`** · `975 ms` · `2.46 ms` | `118.4 req/s` · `1,303 ms` · `14.11 ms` | **`1.62×` higher throughput · `5.74×` faster TTFB** |
-| **`/rigorous/ppr-cache-slot`** *(Y ∩ Z)* | **`187.7 req/s`** · **`909 ms`** · **`2.70 ms`** | `19.6 req/s` · `9,517 ms` · `11.17 ms` | **`9.58×` higher throughput · `10.47×` lower `p50` latency** |
-| **`/rigorous/triple`** *(X ∩ Y ∩ Z)* | **`206.8 req/s`** · **`732 ms`** · **`4.07 ms`** | `18.1 req/s` · `10,275 ms` · `12.39 ms` | **`11.43×` higher throughput · `14.04×` lower `p50` latency** |
+| **`/rigorous/hs`** *(X-Axis)* | `1,126.5 req/s` · `157` / `203 ms` · **`1.46 ms`** | `1,150.4 req/s` · `156` / `203 ms` · `2.34 ms` | **Tied req/s · `1.60×` faster TTFB** *(+ surgical HS invalidation)* |
+| **`/rigorous/cache-slot`** *(Y-Axis)* | **`215.5 req/s`** · **`359` / `6,282 ms`** · `4.58 ms` | `124.7 req/s` · `973` / `18,897 ms` · `3.73 ms` | **`1.73×` higher throughput · `2.71×` lower `p50` · `3.01×` lower `p99`** |
+| **`/rigorous/ppr`** *(Z-Axis)* | **`196.4 req/s`** · **`937` / `7,394 ms`** · **`2.47 ms`** | `130.6 req/s` · `1,172` / `17,254 ms` · `3.36 ms` | **`1.50×` higher throughput · `2.33×` lower `p99` · `1.36×` faster TTFB** |
+| **`/rigorous/ppr-cache-slot`** *(Y ∩ Z)* | **`187.7 req/s`** · **`909` / `11,333 ms`** · **`2.70 ms`** | `98.6 req/s` · `1,436` / `22,051 ms` · `3.16 ms` | **`1.90×` higher throughput · `1.58×` lower `p50` · `1.95×` lower `p99`** |
+| **`/rigorous/hs-cache-slot`** *(X ∩ Y)* | **`684.7 req/s`** · **`208` / `325 ms`** · **`2.08 ms`** | `102.7 req/s` · `1,039` / `19,753 ms` · `3.46 ms` | **`6.67×` higher throughput · `5.00×` lower `p50` · `60.8×` lower `p99`** |
+| **`/rigorous/hs-ppr`** *(X ∩ Z)* | **`191.5 req/s`** · **`975` / `6,263 ms`** · **`2.46 ms`** | `119.7 req/s` · `1,209` / `19,651 ms` · `3.52 ms` | **`1.60×` higher throughput · `3.14×` lower `p99` · `1.43×` faster TTFB** |
+| **`/rigorous/triple`** *(X ∩ Y ∩ Z)* | **`206.8 req/s`** · **`732` / `11,799 ms`** · `4.07 ms` | `93.7 req/s` · `1,448` / `22,034 ms` · `3.29 ms` | **`2.21×` higher throughput · `1.98×` lower `p50` · `1.87×` lower `p99`** |
 
 ---
 
@@ -128,7 +130,8 @@ When all three axes intersect under high concurrency (`200` connections on the 4
 | **Y-Axis: Atomic Tag Eviction & Stampede Coalescing** | Synchronous atomic slot invalidation + singleflight Promise coalescing (`6` concurrent requests $\rightarrow$ `1` execution, **PASS `10/10`**, `0` flaky) | Non-atomic `revalidateTag()` propagation can serve stale `"use cache"` data (`0` executions) to immediate concurrent bursts (**FLAKY `8/10` in Run 1**) |
 | **Y-Axis: Per-Slot Concurrency Ordering (LWW)** | Monotonic per-slot sequence guard prevents slow stale refreshes from overwriting newer fast refreshes (**PASS `10/10`**) | Out-of-order Server Action responses overwrite fresh DOM state (**FAIL `0/10`**) |
 | **Y-Axis: Unmounted Route Slot Patching** | `slotOverrideCache` patches slots on unmounted pages while keeping their client `pageCache` intact (**PASS `10/10`**) | Invalidates the entire unmounted route cache entry, forcing full RSC re-fetches on back-nav (**FAIL `0/10`**) |
-| **Z-Axis & 3D Intersection (`Triple Synergy`)** | **`206.8 req/s`** (`p50 = 732 ms`, `TTFB = 4.07 ms`) | `18.1 req/s` (`p50 = 10,275 ms`, `TTFB = 12.39 ms`) — **`11.4×` slower** |
+| **X ∩ Y Server Isolation (`HS + Dynamic Slot`)** | Preserves outer HS cache and re-renders only the dynamic slot (**`684.7 req/s`**, `p99 = 325 ms`) | Dynamic slot (`await connection()`) de-optimizes entire route (`102.7 req/s`, `p99 = 19,753 ms` — **`6.67×` slower**) |
+| **X ∩ Y ∩ Z Intersection (`Triple Synergy`)** | **`206.8 req/s`** (`p50 = 732 ms`, `p99 = 11,799 ms`) | `93.7 req/s` (`p50 = 1,448 ms`, `p99 = 22,034 ms`) — **`2.21×` slower** |
 | **Overall 3D Behavioral Verification Score** | **`36 / 36` checks (`360 / 360` across 10 runs — `100.0%`, `0` flaky)** | **`30 / 36` non-flaky in Run 1 (`1` flaky + `5` fail = `308/360`, `85.6%`) · `31 / 36` in Run 2 (`310/360`, `86.1%`)** |
 
 ---
@@ -157,7 +160,7 @@ A survey of every major category in the ecosystem shows why no other framework c
   - In Next.js 16, `"use cache"` is an opaque server-only directive with no identity in the browser DOM: refreshing a cached slot from the client forces Next.js to re-execute the entire host Layout and dynamic host Page.
   - Its client `router.refresh()` destroys Horizontal Segmentation by re-executing ancestor layouts.
   - It lacks per-slot LWW concurrency protection, evicts unmounted route caches when updating a slot tag, and exhibits non-atomic tag invalidation under stampede concurrency.
-  - And when all three axes are combined at the `/rigorous/triple` vertex under load, Next.js collapses to **`18.1 req/s`** (`> 10s` median latency), whereas Dinou sustains **`206.8 req/s`** (`11.4×` faster).
+  - Under production load, embedding a dynamic slot inside a Horizontally Segmented route (`/rigorous/hs-cache-slot`) de-optimizes the entire route in Next.js (`102.7 req/s` vs. Dinou's **`684.7 req/s` — `6.67×` faster**), and at the `/rigorous/triple` vertex Dinou leads by **`2.21×` in throughput** (`206.8 req/s` vs. `93.7 req/s`).
 
 ### Conclusion
 This is not a marketing claim, but a reproducible engineering measurement: **`dinou-benchmark` defines a public, automated 36-check end-to-end verification suite and 12-route stress test across all 7 vertices of the 3D Caching & Streaming Cube, and Dinou 9.0.3 is currently the only framework in the world that achieves `36 / 36` (`100.0%`).**

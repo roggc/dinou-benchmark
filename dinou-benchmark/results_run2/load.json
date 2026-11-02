@@ -1,0 +1,1007 @@
+[
+  {
+    "framework": "dinou-9",
+    "version": "9.0.3",
+    "connections": 200,
+    "durationSeconds": 30,
+    "runs": 5,
+    "routes": [
+      {
+        "route": "home",
+        "path": "/",
+        "kind": "ssg",
+        "ttfbMs": {
+          "median": 1.45,
+          "p95": 42.85
+        },
+        "rps": {
+          "median": 1432.4,
+          "min": 1403,
+          "max": 1478.4
+        },
+        "latencyMs": {
+          "p50": 127,
+          "p95": 162,
+          "p97_5": 162,
+          "p99": 176
+        },
+        "runs": 5,
+        "totalRequests": 215906,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "item",
+        "path": "/items/42",
+        "kind": "isr",
+        "ttfbMs": {
+          "median": 1.18,
+          "p95": 6.31
+        },
+        "rps": {
+          "median": 1274.1,
+          "min": 1237.7,
+          "max": 1308.1
+        },
+        "latencyMs": {
+          "p50": 143,
+          "p95": 181,
+          "p97_5": 181,
+          "p99": 185
+        },
+        "runs": 5,
+        "totalRequests": 191304,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "dashboard",
+        "path": "/dashboard",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 3.05,
+          "p95": 9.47
+        },
+        "rps": {
+          "median": 408,
+          "min": 400.7,
+          "max": 422.2
+        },
+        "latencyMs": {
+          "p50": 461,
+          "p95": 639,
+          "p97_5": 639,
+          "p99": 683
+        },
+        "runs": 5,
+        "totalRequests": 61298,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "ppr",
+        "path": "/ppr",
+        "kind": "ppr",
+        "ttfbMs": {
+          "median": 2.42,
+          "p95": 3.45
+        },
+        "rps": {
+          "median": 514.4,
+          "min": 509,
+          "max": 532.4
+        },
+        "latencyMs": {
+          "p50": 381,
+          "p95": 439,
+          "p97_5": 439,
+          "p99": 479
+        },
+        "runs": 5,
+        "totalRequests": 77511,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "messages",
+        "path": "/messages",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 2.48,
+          "p95": 5.99
+        },
+        "rps": {
+          "median": 421.7,
+          "min": 411.9,
+          "max": 435
+        },
+        "latencyMs": {
+          "p50": 445,
+          "p95": 538,
+          "p97_5": 538,
+          "p99": 1655
+        },
+        "runs": 5,
+        "totalRequests": 63391,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs",
+        "path": "/rigorous/hs",
+        "kind": "hs",
+        "ttfbMs": {
+          "median": 1.2,
+          "p95": 5.24
+        },
+        "rps": {
+          "median": 1180,
+          "min": 1152,
+          "max": 1220.1
+        },
+        "latencyMs": {
+          "p50": 153,
+          "p95": 198,
+          "p97_5": 198,
+          "p99": 200
+        },
+        "runs": 5,
+        "totalRequests": 178072,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-cache-slot",
+        "path": "/rigorous/cache-slot",
+        "kind": "cache-slot",
+        "ttfbMs": {
+          "median": 4.7,
+          "p95": 9.24
+        },
+        "rps": {
+          "median": 222.1,
+          "min": 212.6,
+          "max": 227.4
+        },
+        "latencyMs": {
+          "p50": 350,
+          "p95": 550,
+          "p97_5": 550,
+          "p99": 5973
+        },
+        "runs": 5,
+        "totalRequests": 33222,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr",
+        "path": "/rigorous/ppr",
+        "kind": "ppr-rigorous",
+        "ttfbMs": {
+          "median": 2.29,
+          "p95": 2.73
+        },
+        "rps": {
+          "median": 196.4,
+          "min": 193,
+          "max": 200.8
+        },
+        "latencyMs": {
+          "p50": 918,
+          "p95": 1399,
+          "p97_5": 1399,
+          "p99": 7380
+        },
+        "runs": 5,
+        "totalRequests": 29488,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr-cache-slot",
+        "path": "/rigorous/ppr-cache-slot",
+        "kind": "ppr+slot",
+        "ttfbMs": {
+          "median": 2.7,
+          "p95": 7.11
+        },
+        "rps": {
+          "median": 190.3,
+          "min": 183.8,
+          "max": 195.2
+        },
+        "latencyMs": {
+          "p50": 904,
+          "p95": 1864,
+          "p97_5": 1864,
+          "p99": 10714
+        },
+        "runs": 5,
+        "totalRequests": 28519,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-cache-slot",
+        "path": "/rigorous/hs-cache-slot",
+        "kind": "hs+slot",
+        "ttfbMs": {
+          "median": 1.75,
+          "p95": 7.25
+        },
+        "rps": {
+          "median": 689,
+          "min": 570.3,
+          "max": 700.7
+        },
+        "latencyMs": {
+          "p50": 205,
+          "p95": 308,
+          "p97_5": 308,
+          "p99": 312
+        },
+        "runs": 5,
+        "totalRequests": 100286,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-ppr",
+        "path": "/rigorous/hs-ppr",
+        "kind": "hs+ppr",
+        "ttfbMs": {
+          "median": 2.17,
+          "p95": 2.5
+        },
+        "rps": {
+          "median": 194.7,
+          "min": 191.2,
+          "max": 199.5
+        },
+        "latencyMs": {
+          "p50": 980,
+          "p95": 1376,
+          "p97_5": 1376,
+          "p99": 5787
+        },
+        "runs": 5,
+        "totalRequests": 29216,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-triple",
+        "path": "/rigorous/triple",
+        "kind": "triple",
+        "ttfbMs": {
+          "median": 3.74,
+          "p95": 8.19
+        },
+        "rps": {
+          "median": 209.7,
+          "min": 208.7,
+          "max": 222.6
+        },
+        "latencyMs": {
+          "p50": 720,
+          "p95": 2266,
+          "p97_5": 2266,
+          "p99": 11381
+        },
+        "runs": 5,
+        "totalRequests": 31817,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      }
+    ],
+    "at": "2026-11-02T15:58:11.636Z",
+    "note": "autocannon does not expose exact p95; p97.5 is used as an upper bound. Percentiles reported are the median of that percentile across runs."
+  },
+  {
+    "framework": "dinou-9-u",
+    "version": "9.0.3",
+    "connections": 200,
+    "durationSeconds": 30,
+    "runs": 5,
+    "routes": [
+      {
+        "route": "home",
+        "path": "/",
+        "kind": "ssg",
+        "ttfbMs": {
+          "median": 1.24,
+          "p95": 67.46
+        },
+        "rps": {
+          "median": 1397.3,
+          "min": 1366,
+          "max": 1421.8
+        },
+        "latencyMs": {
+          "p50": 128,
+          "p95": 162,
+          "p97_5": 162,
+          "p99": 165
+        },
+        "runs": 5,
+        "totalRequests": 209417,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "item",
+        "path": "/items/42",
+        "kind": "isr",
+        "ttfbMs": {
+          "median": 1.13,
+          "p95": 4.89
+        },
+        "rps": {
+          "median": 1214.8,
+          "min": 1173.1,
+          "max": 1241.3
+        },
+        "latencyMs": {
+          "p50": 144,
+          "p95": 192,
+          "p97_5": 192,
+          "p99": 194
+        },
+        "runs": 5,
+        "totalRequests": 181814,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "dashboard",
+        "path": "/dashboard",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 3.12,
+          "p95": 4.91
+        },
+        "rps": {
+          "median": 409.9,
+          "min": 395.7,
+          "max": 417.4
+        },
+        "latencyMs": {
+          "p50": 467,
+          "p95": 635,
+          "p97_5": 635,
+          "p99": 693
+        },
+        "runs": 5,
+        "totalRequests": 61084,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "ppr",
+        "path": "/ppr",
+        "kind": "ppr",
+        "ttfbMs": {
+          "median": 2.33,
+          "p95": 2.58
+        },
+        "rps": {
+          "median": 534.3,
+          "min": 508.8,
+          "max": 536.4
+        },
+        "latencyMs": {
+          "p50": 359,
+          "p95": 437,
+          "p97_5": 437,
+          "p99": 461
+        },
+        "runs": 5,
+        "totalRequests": 78770,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "messages",
+        "path": "/messages",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 3.02,
+          "p95": 7.26
+        },
+        "rps": {
+          "median": 420.8,
+          "min": 413,
+          "max": 426
+        },
+        "latencyMs": {
+          "p50": 448,
+          "p95": 541,
+          "p97_5": 541,
+          "p99": 1691
+        },
+        "runs": 5,
+        "totalRequests": 62995,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs",
+        "path": "/rigorous/hs",
+        "kind": "hs",
+        "ttfbMs": {
+          "median": 1.16,
+          "p95": 1.68
+        },
+        "rps": {
+          "median": 1145,
+          "min": 1099.7,
+          "max": 1191.9
+        },
+        "latencyMs": {
+          "p50": 156,
+          "p95": 198,
+          "p97_5": 198,
+          "p99": 199
+        },
+        "runs": 5,
+        "totalRequests": 170634,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-cache-slot",
+        "path": "/rigorous/cache-slot",
+        "kind": "cache-slot",
+        "ttfbMs": {
+          "median": 4.39,
+          "p95": 7.52
+        },
+        "rps": {
+          "median": 215.9,
+          "min": 215,
+          "max": 218.9
+        },
+        "latencyMs": {
+          "p50": 372,
+          "p95": 554,
+          "p97_5": 554,
+          "p99": 6398
+        },
+        "runs": 5,
+        "totalRequests": 32508,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr",
+        "path": "/rigorous/ppr",
+        "kind": "ppr-rigorous",
+        "ttfbMs": {
+          "median": 2.24,
+          "p95": 3.06
+        },
+        "rps": {
+          "median": 187.3,
+          "min": 184.2,
+          "max": 188.1
+        },
+        "latencyMs": {
+          "p50": 980,
+          "p95": 1580,
+          "p97_5": 1580,
+          "p99": 7800
+        },
+        "runs": 5,
+        "totalRequests": 27970,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr-cache-slot",
+        "path": "/rigorous/ppr-cache-slot",
+        "kind": "ppr+slot",
+        "ttfbMs": {
+          "median": 2.57,
+          "p95": 9.24
+        },
+        "rps": {
+          "median": 181,
+          "min": 179.4,
+          "max": 182.9
+        },
+        "latencyMs": {
+          "p50": 944,
+          "p95": 2527,
+          "p97_5": 2527,
+          "p99": 12068
+        },
+        "runs": 5,
+        "totalRequests": 27156,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-cache-slot",
+        "path": "/rigorous/hs-cache-slot",
+        "kind": "hs+slot",
+        "ttfbMs": {
+          "median": 1.72,
+          "p95": 2.69
+        },
+        "rps": {
+          "median": 693.4,
+          "min": 607.3,
+          "max": 700.5
+        },
+        "latencyMs": {
+          "p50": 203,
+          "p95": 307,
+          "p97_5": 307,
+          "p99": 328
+        },
+        "runs": 5,
+        "totalRequests": 100283,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-ppr",
+        "path": "/rigorous/hs-ppr",
+        "kind": "hs+ppr",
+        "ttfbMs": {
+          "median": 2.22,
+          "p95": 3.06
+        },
+        "rps": {
+          "median": 194.7,
+          "min": 187.1,
+          "max": 199.4
+        },
+        "latencyMs": {
+          "p50": 964,
+          "p95": 1393,
+          "p97_5": 1393,
+          "p99": 5904
+        },
+        "runs": 5,
+        "totalRequests": 29069,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-triple",
+        "path": "/rigorous/triple",
+        "kind": "triple",
+        "ttfbMs": {
+          "median": 4.13,
+          "p95": 9.55
+        },
+        "rps": {
+          "median": 211.1,
+          "min": 193.6,
+          "max": 213.7
+        },
+        "latencyMs": {
+          "p50": 716,
+          "p95": 2012,
+          "p97_5": 2012,
+          "p99": 11191
+        },
+        "runs": 5,
+        "totalRequests": 31187,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      }
+    ],
+    "at": "2026-11-02T16:29:41.287Z",
+    "note": "autocannon does not expose exact p95; p97.5 is used as an upper bound. Percentiles reported are the median of that percentile across runs."
+  },
+  {
+    "framework": "next",
+    "version": "16.4.3",
+    "connections": 200,
+    "durationSeconds": 30,
+    "runs": 5,
+    "routes": [
+      {
+        "route": "home",
+        "path": "/",
+        "kind": "ssg",
+        "ttfbMs": {
+          "median": 5.59,
+          "p95": 10.76
+        },
+        "rps": {
+          "median": 835.8,
+          "min": 813,
+          "max": 844.9
+        },
+        "latencyMs": {
+          "p50": 188,
+          "p95": 262,
+          "p97_5": 262,
+          "p99": 392
+        },
+        "runs": 5,
+        "totalRequests": 124602,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "item",
+        "path": "/items/42",
+        "kind": "isr",
+        "ttfbMs": {
+          "median": 2.03,
+          "p95": 3.25
+        },
+        "rps": {
+          "median": 1292.5,
+          "min": 1273,
+          "max": 1313
+        },
+        "latencyMs": {
+          "p50": 143,
+          "p95": 177,
+          "p97_5": 177,
+          "p99": 181
+        },
+        "runs": 5,
+        "totalRequests": 195057,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "dashboard",
+        "path": "/dashboard",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 7.26,
+          "p95": 12.02
+        },
+        "rps": {
+          "median": 189.2,
+          "min": 182.8,
+          "max": 196.9
+        },
+        "latencyMs": {
+          "p50": 920,
+          "p95": 1414,
+          "p97_5": 1414,
+          "p99": 9195
+        },
+        "runs": 5,
+        "totalRequests": 28526,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "ppr",
+        "path": "/ppr",
+        "kind": "ppr",
+        "ttfbMs": {
+          "median": 2.74,
+          "p95": 7.95
+        },
+        "rps": {
+          "median": 196.6,
+          "min": 191,
+          "max": 202.9
+        },
+        "latencyMs": {
+          "p50": 945,
+          "p95": 1311,
+          "p97_5": 1311,
+          "p99": 6255
+        },
+        "runs": 5,
+        "totalRequests": 29393,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "messages",
+        "path": "/messages",
+        "kind": "ssr",
+        "ttfbMs": {
+          "median": 6.2,
+          "p95": 11.42
+        },
+        "rps": {
+          "median": 170,
+          "min": 122,
+          "max": 213.3
+        },
+        "latencyMs": {
+          "p50": 1017,
+          "p95": 2021,
+          "p97_5": 2021,
+          "p99": 7497
+        },
+        "runs": 5,
+        "totalRequests": 25697,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs",
+        "path": "/rigorous/hs",
+        "kind": "hs",
+        "ttfbMs": {
+          "median": 2.23,
+          "p95": 14.73
+        },
+        "rps": {
+          "median": 1245.9,
+          "min": 1203.7,
+          "max": 1312
+        },
+        "latencyMs": {
+          "p50": 142,
+          "p95": 176,
+          "p97_5": 176,
+          "p99": 183
+        },
+        "runs": 5,
+        "totalRequests": 188540,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-cache-slot",
+        "path": "/rigorous/cache-slot",
+        "kind": "cache-slot",
+        "ttfbMs": {
+          "median": 2.74,
+          "p95": 6.63
+        },
+        "rps": {
+          "median": 133.3,
+          "min": 132,
+          "max": 136.5
+        },
+        "latencyMs": {
+          "p50": 917,
+          "p95": 6496,
+          "p97_5": 6496,
+          "p99": 18552
+        },
+        "runs": 5,
+        "totalRequests": 20083,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr",
+        "path": "/rigorous/ppr",
+        "kind": "ppr-rigorous",
+        "ttfbMs": {
+          "median": 3.04,
+          "p95": 8.59
+        },
+        "rps": {
+          "median": 139.7,
+          "min": 138.2,
+          "max": 146.7
+        },
+        "latencyMs": {
+          "p50": 1095,
+          "p95": 6393,
+          "p97_5": 6393,
+          "p99": 15892
+        },
+        "runs": 5,
+        "totalRequests": 21161,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-ppr-cache-slot",
+        "path": "/rigorous/ppr-cache-slot",
+        "kind": "ppr+slot",
+        "ttfbMs": {
+          "median": 3.26,
+          "p95": 10.44
+        },
+        "rps": {
+          "median": 107.1,
+          "min": 103.3,
+          "max": 113.3
+        },
+        "latencyMs": {
+          "p50": 1392,
+          "p95": 10797,
+          "p97_5": 10797,
+          "p99": 19607
+        },
+        "runs": 5,
+        "totalRequests": 16143,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-cache-slot",
+        "path": "/rigorous/hs-cache-slot",
+        "kind": "hs+slot",
+        "ttfbMs": {
+          "median": 2.96,
+          "p95": 8.05
+        },
+        "rps": {
+          "median": 110.7,
+          "min": 108,
+          "max": 113.3
+        },
+        "latencyMs": {
+          "p50": 1029,
+          "p95": 7897,
+          "p97_5": 7897,
+          "p99": 19344
+        },
+        "runs": 5,
+        "totalRequests": 16644,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-hs-ppr",
+        "path": "/rigorous/hs-ppr",
+        "kind": "hs+ppr",
+        "ttfbMs": {
+          "median": 3.13,
+          "p95": 11.29
+        },
+        "rps": {
+          "median": 127.3,
+          "min": 123,
+          "max": 140
+        },
+        "latencyMs": {
+          "p50": 1164,
+          "p95": 8224,
+          "p97_5": 8224,
+          "p99": 18068
+        },
+        "runs": 5,
+        "totalRequests": 19441,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      },
+      {
+        "route": "rigorous-triple",
+        "path": "/rigorous/triple",
+        "kind": "triple",
+        "ttfbMs": {
+          "median": 3.36,
+          "p95": 11.11
+        },
+        "rps": {
+          "median": 100.3,
+          "min": 98.6,
+          "max": 102.6
+        },
+        "latencyMs": {
+          "p50": 1428,
+          "p95": 12038,
+          "p97_5": 12038,
+          "p99": 21651
+        },
+        "runs": 5,
+        "totalRequests": 15065,
+        "errors": 0,
+        "timeouts": 0,
+        "socketErrors": 0,
+        "non2xx": 0,
+        "errorRatePct": 0
+      }
+    ],
+    "at": "2026-11-02T17:01:15.421Z",
+    "note": "autocannon does not expose exact p95; p97.5 is used as an upper bound. Percentiles reported are the median of that percentile across runs."
+  }
+]
