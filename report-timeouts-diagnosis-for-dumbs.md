@@ -1,6 +1,6 @@
 # Plain-English Guide to the `/rigorous/cache-slot` Timeouts ("For Humans")
 
-> **Companion to**: [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) (which contains all raw Linux droplet logs, kernel counters, and telemetry tables).  
+> **Companion to**: [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md).  
 > **Goal of this document**: Explain in plain, visual, everyday language what is actually happening inside Node.js, Dinou, and Next.js during the `/rigorous/cache-slot` load test, why `autocannon` reports timeouts on Dinou while Dinou is running faster, and how our diagnostic tools prove it.
 
 ---
@@ -57,27 +57,27 @@ Because on every other route in the benchmark, one of two things happens:
    There is a slow component simulating an external database/network wait (an asynchronous timer). While waiting for that timer to finish, **the cashier stands with arms crossed waiting** (consuming zero CPU). During those idle waiting pauses, the cashier walks over to the front door and buzzes all `200` customers into the store.
 3. **`/rigorous/cache-slot` Is the Only "Pure Uninterrupted CPU" Route**:  
    It is the only route where the cashier has to do real CPU work (`4.6 ms` of dynamic React rendering) **AND has zero idle waiting pauses**, because the data (`CachedSlot`) is already sitting in RAM cache.
-   - *(Note on `/rigorous/hs-cache-slot`)*: Because Hoisted Static (`HS`) pre-builds the static outer JSX shell at startup, the per-customer CPU work drops from `4.6 ms` down to `~1.4 ms` (`684 req/s`). That is fast enough that the cashier buzzes in `199` of the `200` customers, leaving only `1` customer (or a few in `-u`) right on the 30-second boundary.
+   - *(Note on `/rigorous/hs-cache-slot`)*: Because Horizontal Segmentation (`HS`) caches the outer layout and page segments independently in memory, the per-customer CPU work drops from `4.6 ms` down to `~1.46 ms` (`684.7 req/s`). That is fast enough that the cashier buzzes in `199.8` of the `200` customers on average, leaving only `1` timeout across 5 rounds in `dinou-9` (`30` in `dinou-9-u`, vs. `160` in Next.js) right on the 30-second boundary.
 
 ---
 
-## 4. Why Doesn't Next.js Get Timeouts on `/rigorous/cache-slot` Despite Being Slower?
+## 4. Why Does Next.js Get Fewer Timeouts on `/rigorous/cache-slot` (`~20/round` vs. `~68/round`) Despite Being `1.73×` Slower?
 
 Because when Next.js combines a dynamic route (`await connection()`) with `"use cache"`, **Next.js is unable to deliver the cached page in a single uninterrupted push**:
 
 - Next.js hands the customer an initial receipt (the HTTP headers) after `~204 ms`, but then **internally pauses and suspends its own work**, taking an extra **`~800 milliseconds` (`0.8 seconds`)** to trickle out the body of the page in chunks (`http_req_receiving = 799.36 ms` in Next.js vs. **`0.27 ms`** in Dinou — nearly **`3,000 times` slower** at delivering the response body).
-- Because the Next.js cashier stops and pauses between chunks of every single page, it uses those pauses to buzz all `200` customers through the front door.
-- **The heavy price Next.js pays for those internal pauses**: Even though all `200` customers are standing inside the store, Next.js serves everyone much more slowly:
-  - It delivers almost half the throughput (**`120.1 req/s`** in Next.js vs. **`215.5 req/s`** in Dinou).
-  - **More than half of all Next.js customers (`55.52%`, or `1,896` requests in steady state) have to wait over `1 full second`** to receive their page (median latency of **`1,030 ms`** in Next.js vs. **`383 ms`** in Dinou, where only **`0.016%`** of steady-state requests exceed 1 second).
+- Because the Next.js cashier stops and pauses between chunks of every single page, it uses those pauses to buzz **`~170–180` of the `200` customers** through the front door during the 30-second round (leaving only **`~20–30` customers** waiting at the door at `t = 30.0s` — i.e., `99` timeouts across 5 rounds in `autocannon` and `30` requests `>= 30s` in `k6`, vs. `~68–90` in Dinou).
+- **The heavy price Next.js pays for those internal pauses**: Even though `~170–180` customers get inside the store, Next.js serves everyone much more slowly:
+  - It delivers **`1.68×–1.73×` lower throughput** (**`124.7 req/s`** in `autocannon` / **`120.1 req/s`** in `k6` for Next.js vs. **`215.5 req/s`** in `autocannon` / **`202.2 req/s`** in `k6` for Dinou).
+  - **More than half of all Next.js customers (`55.52%` = `2,053 / 3,698` total requests, including `1,896` in steady state `[1s–30s]`) have to wait over `1 full second`** to receive their page (median latency of **`973 ms`** in `autocannon` / **`1,030 ms`** in `k6` for Next.js vs. **`359 ms`** in `autocannon` / **`383.5 ms`** in `k6` for Dinou, where only **`1` request (`0.016%`)** in steady state exceeds 1 second).
 
 | What Happens Inside the Store | Dinou 9.0.3 | Next.js 16.4.3 |
 | :--- | :--- | :--- |
 | **Time to prepare & hand over the body (`http_req_receiving`)** | **`0.27 ms`** (`267 µs` — handed over in one shot) | **`799.36 ms`** (`~0.8s` — trickled out in chunks across pauses) |
-| **Throughput (customers served per second)** | **`215.5 req/s`** (`1.75×` faster) | `120.1 req/s` |
-| **Typical wait time for customers inside (Median `p50`)** | **`359–383 ms`** (`2.69×` faster) | `1,004–1,030 ms` (`> 1 second`) |
-| **Customers waiting `> 1 second` in steady state** | **`1` customer (`0.016%`)** | **`1,896` customers (`55.52%`)** |
-| **Customers left waiting at the door at `t = 30.0s` (with 30s cutoff)** | `~76` sockets (all served in `< 1s` at `30.85s` once the 30s burst stops) | `0` sockets (because the `800 ms` body pauses let them in early) |
+| **Throughput (customers served per second)** | **`215.5 req/s`** (`autocannon`) / **`202.2 req/s`** (`k6`) (**`1.68×–1.73×` faster**) | `124.7 req/s` (`autocannon`) / `120.1 req/s` (`k6`) |
+| **Typical wait time for customers inside (Median `p50`)** | **`359 ms`** (`autocannon`) / **`383.5 ms`** (`k6`) (**`2.69×–2.71×` faster**) | `973 ms` (`autocannon`) / `1,030 ms` (`k6`) |
+| **Customers waiting `> 1 second` in steady state (`[1s–30s]`)** | **`1` customer (`0.016%` of `6,253`)** | **`1,896` customers (`51.27%` of `3,698`; `2,053` = `55.52%` total)** |
+| **Customers left waiting at the door at `t = 30.0s` (`timeout = 30s`)** | `~68–90` sockets per round (`338` across 5 `autocannon` rounds; all served in `< 1s` at `30.85s` once the 30s burst stops) | `~20–30` sockets per round (`99` across 5 `autocannon` rounds; `800 ms` body pauses let `~170` sockets in early) |
 
 ---
 
@@ -88,7 +88,7 @@ As currently designed, our two diagnostic scripts split the job as follows:
 1. **[`scripts/diagnose-timeouts.mjs`](./scripts/diagnose-timeouts.mjs) runs specifically against Dinou (Port `3121`)**:
    - **Why?** Because in addition to running 4 `autocannon` client scenarios (200-conn clean burst, 200-conn warmup burst, 50-conn moderate concurrency, and 200-conn without Keep-Alive), it queries the internal **`/__stats` and `/__reset_stats` endpoints** that we wired into [`apps/dinou-9/dinou.config.js`](./apps/dinou-9/dinou.config.js).
    - Those endpoints hook directly into Node.js's low-level `req.socket` events to count exact accepted TCP sockets (`122 out of 200`), exact time spent inside Node (`4.67 ms` average, `17 ms` max), and requests over 1 second (`0`).
-   - Next.js had `0` timeouts in `autocannon` and hides the raw Node.js `http.Server` behind `next start`, so `diagnose-timeouts.mjs` focuses on proving what happens inside Dinou's socket queue.
+   - Next.js hides its raw Node.js `http.Server` behind the `next start` CLI, so `diagnose-timeouts.mjs` focuses on instrumenting Dinou's internal socket queue (`/__stats`), while `k6-diagnose.mjs` profiles both frameworks side by side from the outside.
 
 2. **[`scripts/k6-diagnose.mjs`](./scripts/k6-diagnose.mjs) runs against BOTH Dinou (Port `3121`) and Next.js (Port `3111`)**:
    - **Why?** Because **Grafana `k6`** measures the entire lifecycle of every request from the outside with microsecond precision — separating **time waiting for headers (`http_req_waiting`)** from **time downloading the body (`http_req_receiving`)**, grouping every single request into 1-second time buckets (`[0s–1s]`, `[1s–5s]`, `[5s–30s]`), and reading Linux kernel TCP counters (`nstat`) — while also querying `/__stats` when testing Dinou.
