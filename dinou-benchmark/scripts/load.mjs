@@ -53,7 +53,7 @@ for (const fw of frameworks) {
           url,
           connections: setup.load.connections,
           duration: setup.load.warmupSeconds,
-          timeout: Math.max(30, setup.load.durationSeconds),
+          timeout: Math.max(60, setup.load.durationSeconds * 2),
           pipelining: 1,
         });
       }
@@ -70,7 +70,7 @@ for (const fw of frameworks) {
           url,
           connections: setup.load.connections,
           duration: setup.load.durationSeconds,
-          timeout: Math.max(30, setup.load.durationSeconds),
+          timeout: Math.max(60, setup.load.durationSeconds * 2),
           pipelining: 1,
         });
         runs.push({
