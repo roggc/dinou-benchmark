@@ -161,4 +161,21 @@ What this benchmark uncovered is not a flaw in Dinou, but rather **what happens 
 - **In real life**, human reading time between clicks, a front-end Reverse Proxy (Nginx/Cloudflare), or multi-core workers prevent it from ever happening.
 - **In the benchmark**, it shows why a tool like **Grafana `k6`** (or testing at 50–100 connections, or observing the post-30s drain) reveals the full truth that `autocannon` hid by cutting off its stopwatch at `30.00s`.
 
+---
+
+## 7. Epilogue: The Two-Clock Race in `autocannon` & How Run 2 (`timeout = 60s`) Proved `0` Errors
+
+Why did `autocannon` report those timeouts right at **`+30.04s`** in **Run 1**?
+
+In [`scripts/load.mjs`](./scripts/load.mjs), `autocannon` has **two separate clocks**:
+1. **Clock #1 — `duration: 30` (The Store's Opening Hours: 30 seconds)**: *"The test runs for 30 seconds."*
+2. **Clock #2 — `timeout: 30` (Each Customer's Personal Patience Stopwatch: 30 seconds)**: *"If a customer waits 30.00 seconds without getting an answer, log `1 timeout`."*
+
+Originally, when `duration` was `10` seconds, the formula `timeout: Math.max(30, duration)` set `timeout` to **`30` seconds** — giving a 20-second safety margin (`timeout > duration`). When we raised `duration` to **`30` seconds**, `Math.max(30, 30)` became **`30`**, making both clocks equal (`30s == 30s`).
+
+Inside `autocannon`'s source code (`node_modules/autocannon/lib/run.js`, lines 86–118), `autocannon` starts the 200 customers' `timeout` stopwatches (`initialiseClients`) **about 40 milliseconds before** it starts the `stopTimer` that closes the store at the end of the 30-second test!
+- So at **`+30.04s`** — literally **10 milliseconds before `autocannon` rang the closing bell to end the 30-second test** — the 30-second personal stopwatch of the `76` sidewalk customers beeped first!
+- When we restored the safety margin in [`scripts/load.mjs`](./scripts/load.mjs) by setting **`timeout: 60` (`2 × duration`)** and ran **Run 2** ([`report-run2-results.md`](./report-run2-results.md)), **100% of timeouts disappeared across all 12 routes in both Dinou (`339 → 0`) and Next.js (`279 → 0`)**, while throughput (`215.5 → 222.1 req/s`), median latency (`359 → 350 ms`), and `p99` (`6,282 → 5,973 ms`) remained rock-solid.
+
+
 

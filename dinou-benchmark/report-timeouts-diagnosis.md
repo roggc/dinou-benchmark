@@ -216,3 +216,19 @@ In real life, `epoll` `accept()` starvation on a CPU-bound, in-memory-cached SSR
 | **2. Multi-Core Process Scaling** *(`node:cluster`, `pm2 start -i max`, K8s replicas)* | Running 1 Node.js worker per vCPU (`4` workers on a 4-vCPU server) sharing the listening port via Linux kernel `SO_REUSEPORT`. | The kernel distributes incoming TCP connections across `4` independent event loops, quadrupling throughput (`~860 req/s`) and cutting per-worker socket load to `50` connections. | `50` connections per worker is well below the `~122`-socket single-thread `epoll` threshold (**`0` timeouts**). |
 | **3. Node.js Native Socket Rotation** *(`server.maxRequestsPerSocket = 50` or `100`)* | Configuring Node's native `http.Server.maxRequestsPerSocket` (which defaults to `0` = unlimited requests per `Keep-Alive` socket) when running a standalone Node.js process without a proxy. | After a socket completes $N$ requests, Node sends `Connection: close`, forcing the client to reconnect at the back of the `accept()` queue and rotating fairness across all 200 clients. | **Scenario 4 (`diagnose-timeouts.mjs`, connection rotation)**: All 200 clients are served continuously with **`0` timeouts (`100% OK`)**. |
 
+---
+
+## 6. Empirical Validation in Run 2 (`timeout = 60s` in `scripts/load.mjs`)
+
+Inspecting `autocannon`'s internal runner (`node_modules/autocannon/lib/run.js`, lines 86–118) revealed the exact reason why setting `timeout === duration` (`30s === 30s`) in Run 1 triggered timeouts at **`+30.03s – +30.05s`**:
+1. On line 86, `initialiseClients(clients)` creates the `200` client sockets and starts each socket's `timeoutTicker` (`30,000 ms`) **first**.
+2. On line 89 (several milliseconds later), `autocannon` registers `stopTimer` (`30,000 ms`), and only calls `clients.forEach((client) => client.destroy())` on the next `tickInterval` (`+30.04s – +30.05s`).
+3. Because `timeoutTicker` (`30,000 ms`) was started ~40 ms *before* `stopTimer`, when `timeout == duration` (`30s == 30s`), any initial-burst socket still waiting at the end of the 30-second test fires `onTimeout` at `+30.04s` — just `10 ms` before `tickInterval` calls `client.destroy()`!
+
+In [`scripts/load.mjs`](./scripts/load.mjs), restoring the `timeout > duration` safety margin (`timeout: Math.max(60, setup.load.durationSeconds * 2)` = **`60s`**) and running the complete **Run 2** benchmark ([`report-run2-results.md`](./report-run2-results.md)) confirmed our diagnosis with 100% precision:
+- **Dinou 9.0.3 (`/rigorous/cache-slot`)**: `338` timeouts (`Run 1`) $\rightarrow$ **`0 errors (100% OK)` (`Run 2`)** (`222.1 req/s`, `p50 = 350 ms`, `p99 = 5,973 ms`).
+- **Dinou `-u` 9.0.3 (`/rigorous/cache-slot`)**: `300` timeouts (`Run 1`) $\rightarrow$ **`0 errors (100% OK)` (`Run 2`)** (`215.9 req/s`, `p50 = 372 ms`, `p99 = 6,398 ms`).
+- **Dinou 9.0.3 & `-u` (`/rigorous/hs-cache-slot`)**: `1` / `30` timeouts (`Run 1`) $\rightarrow$ **`0 errors (100% OK)` (`Run 2`)** (`689.0–693.4 req/s`, `p50 = 203–205 ms`, `p99 = 312–328 ms`).
+- **Next.js 16.4.3 (across all 4 routes with timeouts in Run 1)**: `99` + `160` + `1` + `19` = `279` timeouts (`Run 1`) $\rightarrow$ **`0 errors (100% OK)` (`Run 2`)**.
+
+
