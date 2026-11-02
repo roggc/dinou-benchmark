@@ -4,30 +4,30 @@
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Frameworks Evaluated:** **Dinou v9.0.3** (`dinou-9`), **Dinou v9.0.3 Unvendorized** (`dinou-9-u`, `dinou -u`), and **Next.js v16.4.3** (`next`), all running **React 19.3.1**  
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
-**Total Pipeline Execution Time:** `6,073 seconds` (`1 hour 41 minutes 13 seconds`)  
-**Companion Reports:** [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`deep-dive-investigation.md`](./deep-dive-investigation.md)
+**Total Pipeline Execution Time:** `6,073 seconds` (`1 hour 41 minutes 13 seconds`) · **`autocannon` Socket Timeout:** `timeout = 30s` (equal to the `30s` round window)  
+**Companion Reports:** [`report-run2-results.md`](./report-run2-results.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`deep-dive-investigation.md`](./deep-dive-investigation.md) · **Raw Archive:** [`results_run1/REPORT.md`](./results_run1/REPORT.md)
 
 ---
 
 ## 1. Executive Summary
 
-This report presents the complete empirical results of the expanded **12-route `dinou-benchmark` suite**—evaluating both the **5 baseline rendering modes** (`SSG`, `ISR`, `Dynamic SSR + Suspense`, `PPR`, and `SSR + Disk I/O`) and all **7 non-empty vertices of the 3D Caching & Streaming Cube** ($2^3 - 1 = 7$ combinations of **Horizontal Segmentation `HS`**, **Vertical Segmentation `Cache-Slot`**, and **Partial Prerendering `PPR`**).
+This report presents the complete empirical results of the expanded **12-route `dinou-benchmark` suite**—evaluating both the **5 baseline rendering modes** (`SSG`, `ISR`, `Dynamic SSR + Suspense`, `PPR`, and `SSR + Disk I/O`) and all **7 non-empty vertices of the 3D Caching & Streaming Cube** (`2³ - 1 = 7` combinations of **Horizontal Segmentation `HS`**, **Vertical Segmentation `Cache-Slot`**, and **Partial Prerendering `PPR`**).
 
-Every statistical phase in this run was standardized to **`n = 5` independent passes** (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, and `5` idle RSS samples), with HTTP load testing executed at **`200` concurrent connections**, **`30 seconds` per pass** (`150 seconds` of sustained load per route), and a **`5-second` full-concurrency warmup** prior to each route.
+Every statistical phase in this run was standardized to **`n = 5` independent passes** (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, and `5` idle RSS samples), with HTTP load testing executed at **`200` concurrent connections**, **`30 seconds` per pass** (`150 seconds` of sustained load per route), **`autocannon` client socket `timeout = 30s`**, and a **`5-second` full-concurrency warmup** prior to each route.
 
-### 1.1 Global Scorecard across All 8 Benchmark Dimensions
+### 1.1 Global Scorecard across All 9 Benchmark Dimensions
 
 | Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Lead vs. Next.js 16.4.3 |
 | :--- | ---: | ---: | ---: | :--- |
 | **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `30 / 36` (`5 ❌`, `1 ⚠️` · `85.6%`) | **Dinou `+14.4%` compliance (`0` failures vs. `52/360` failed execs)** |
-| **2. Production Build Time** (`Median of 5 runs`) | **`6.70 s`** | **`6.50 s`** | `14.90 s` | **Dinou `2.29×` faster (`-8.40 s` per build)** |
+| **2. Production Build Time** (`Median of 5 runs`) | **`6.69 s`** | **`6.54 s`** | `14.88 s` | **Dinou `2.22×` faster (`-8.19 s` per build)** |
 | **3. Build Output Size on Disk** (`.dinou` vs. `.next`) | **`7.5 MB`** | **`7.5 MB`** | `59.7 MB` | **Dinou `8.0×` smaller on disk (`-52.2 MB`)** |
 | **4. Client JS Bundle Weight** (`Brotli -11` / `Gzip -9` / `Raw`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | `158.3 KiB` (`182.4` / `585.7 KiB`) | **Dinou `1.94×` smaller client JS (`-76.5 KiB` Brotli, `-48.3%`)** |
 | **5. Dev Server Cold Start** (`Median of 5 runs`) | **`2.18 s`** | **`2.27 s`** | `3.55 s` | **Dinou `1.63×` faster cold start (`-1.37 s`)** |
 | **6. Browser HMR Edit-to-DOM** (`Median of 5 runs`) | **`271 ms`** | **`271 ms`** | `314 ms` | **Dinou `1.16×` faster HMR (`-43 ms`)** |
 | **7. Idle Server Memory** (`Median of 5 samples`) | `275.2 MB` | `275.3 MB` | **`245.9 MB`** | **Next.js `29.3 MB` lower at idle** |
-| **8. Peak Memory Under 200-Conn Load** (`Peak RSS` & `Δ Expansion`) | **`488.3 MB`** (`+213.1 MB`) | **`476.7 MB`** (`+201.4 MB`) | `1,060.5 MB` (`+814.6 MB`) | **Dinou `2.22×` lower peak RAM (`-583.8 MB`) & `4.0×` less memory expansion** |
-| **9. Post-Load Settled Memory** (`RSS after load`) | **`488.4 MB`** | **`476.3 MB`** | `1,060.5 MB` | **Dinou `2.23×` lower settled RAM (`-584.2 MB`)** |
+| **8. Peak Memory Under 200-Conn Load** (`Peak RSS` & `Δ Expansion`) | **`488.3 MB`** (`+213.1 MB`) | **`476.7 MB`** (`+201.4 MB`) | `1,060.5 MB` (`+814.6 MB`) | **Dinou `2.17×` lower peak RAM (`-572.2 MB`) & `3.8×` less memory expansion** |
+| **9. Post-Load Settled Memory** (`RSS after load`) | **`488.4 MB`** | **`476.3 MB`** | `1,060.5 MB` | **Dinou `2.17×` lower settled RAM (`-572.1 MB`)** |
 
 ---
 
@@ -43,8 +43,8 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
    - On `/messages` (async `fs.promises.readFile` disk I/O), Dinou delivers **`411.0 req/s`** (`p99: 1,935 ms`) vs. Next.js's **`154.0 req/s`** (`p99: 8,355 ms`) — **`2.67×` higher throughput** and **`4.3×` lower tail latency**.
 3. **All 4 Rigorous 3D Cube PPR Vertices (`/rigorous/ppr`, `/rigorous/ppr-cache-slot`, `/rigorous/hs-ppr`, `/rigorous/triple`) — Dinou Leads by `1.50×` to `2.21×` with `0` Timeouts:**
    - On `/rigorous/triple` (Vertex 7: Triple Synergy combining `HS + Cache-Slot + PPR`), Dinou delivers **`206.8 req/s`** (`p50: 732 ms`, `p99: 11,799 ms`, **`0` timeouts**) vs. Next.js's **`93.7 req/s`** (`p50: 1,448 ms`, `p99: 22,034 ms`, **`19` timeouts**) — **`2.21×` higher throughput** and **`2.0×` lower median/tail latency**.
-4. **Memory Under 200 Concurrent Connections — Next.js Exceeds `1.06 GB` (`+814.6 MB` Expansion) vs. Dinou's `476.7–488.3 MB` (`+201–213 MB` Expansion):**
-   - Increasing concurrency from `50` connections (in the preliminary October report) to `200` connections caused Next.js's process-tree RAM to surge from `473.5 MB` to **`1,060.5 MB`** (`+814.6 MB` over idle, with `0 MB` reclaimed post-load), while Dinou remained compact at **`476.7 MB` (`dinou-9-u`) / `488.3 MB` (`dinou-9`)**.
+4. **Memory Under 200 Concurrent Connections — Next.js Exceeds `1.06 GB` (`+814.6 MB` Expansion) vs. Dinou's `488.3 MB` (`+213.1 MB` Expansion):**
+   - Under `200` concurrent connections (`30s` burst on `/dashboard`), Next.js's process-tree RAM surges from `245.9 MB` at idle to **`1,060.5 MB`** (`+814.6 MB` expansion, with `0 MB` reclaimed post-load), while Dinou remains compact at **`488.3 MB` (`dinou-9`, `+213.1 MB` expansion) / `476.7 MB` (`dinou-9-u`, `+201.4 MB` expansion)** — **`2.17×` lower peak RAM** (`-572.2 MB`) and **`3.8×` less memory expansion**.
 
 ---
 
@@ -55,7 +55,7 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 | Route | Rendering / 3D Cube Mode | Dinou 9.0.3 (`req/s` · `p50` / `p99`) | Next.js 16.4.3 (`req/s` · `p50` / `p99`) | Dinou Lead (`req/s`) | Dinou Lead (`p50` / `p99` Latency) |
 | :--- | :--- | ---: | ---: | :---: | :---: |
 | **`/`** | Baseline SSG (50 items) | **`1,424.3 req/s`** · p50 `129 ms` / p99 `173 ms` | `791.5 req/s` · p50 `199 ms` / p99 `402 ms` | **`1.80× faster`** | **`1.5×` lower p50 · `2.3×` lower p99** |
-| **`/items/42`** | Baseline ISR (`60s`) | `1,229.2 req/s` (`1,250.9` in `-u`) · p50 `147 ms` / p99 `186 ms` | `1,235.9 req/s` · p50 `146 ms` / p99 `188 ms` | **Tie (`~1.00×`)** | **Tie (`147` vs `146 ms` p50)** |
+| **`/items/42`** | Baseline ISR (`60s`) | `1,229.2 req/s` · p50 `147 ms` / p99 `186 ms` | `1,235.9 req/s` · p50 `146 ms` / p99 `188 ms` | **Tie (`~1.00×`)** | **Tie (`147` vs `146 ms` p50)** |
 | **`/dashboard`** | Baseline SSR + 3 Suspense (`200 ms`) | **`392.7 req/s`** · p50 `481 ms` / p99 **`725 ms`** | `178.9 req/s` · p50 `921 ms` / p99 **`10,001 ms`** | **`2.20× faster`** | **`1.9×` lower p50 · `13.8×` lower p99** |
 | **`/ppr`** | Baseline PPR (`200 ms` hole) | **`504.0 req/s`** · p50 `384 ms` / p99 **`478 ms`** | `188.2 req/s` · p50 `951 ms` / p99 **`7,192 ms`** | **`2.68× faster`** | **`2.5×` lower p50 · `15.0×` lower p99** |
 | **`/messages`** | Baseline SSR + Disk I/O (`readFile`) | **`411.0 req/s`** · p50 `458 ms` / p99 **`1,935 ms`** | `154.0 req/s` · p50 `1,073 ms` / p99 **`8,355 ms`** | **`2.67× faster`** | **`2.3×` lower p50 · `4.3×` lower p99** |
@@ -122,6 +122,8 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 | `/rigorous/hs-ppr` | 6. HS + PPR | `3.52 ms` | `119.7 req/s` | `1,209 ms` | `19,651 ms` | `0` | `0%` (`100% OK`) |
 | `/rigorous/triple` | 7. Triple Synergy | `3.29 ms` | `93.7 req/s` | `1,448 ms` | `22,034 ms` | `19` *(3.8/run)* | `0.13%` |
 
+> **Note on `autocannon` Socket Timeouts (`timeout = 30s` in Run 1 vs. `timeout = 60s` in Run 2):** In this first production run (`Run 1`), `scripts/load.mjs` computed `timeout: Math.max(30, setup.load.durationSeconds)` = **`30 seconds`**, inadvertently setting `timeout === duration` (`30s === 30s`). Because `autocannon` (`lib/run.js`) initializes each client socket's `30,000 ms` `timeoutTicker` a few milliseconds before the benchmark's `30,000 ms` `stopTimer` and `40 ms` teardown loop (`client.destroy()`), any initial-burst (`t = 0`) socket still queued behind active keep-alive sockets when the 30-second round ends fires a teardown-window timeout at `+30.03s–+30.05s`. Restoring the `timeout > duration` safety margin (`timeout = 60s`) in **Run 2** (documented in [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md), and [`report-run2-results.md`](./report-run2-results.md)) eliminated **100% of timeouts across all 12 routes and all 3 frameworks (`339 → 0` in `dinou-9`, `330 → 0` in `dinou-9-u`, and `279 → 0` in `next`)** while reproducing consistent throughput and latency figures (within `~1%–5%` run-to-run variance).
+
 ---
 
 ## 3. Deep Architectural Analysis of the 12-Route Load Results
@@ -133,7 +135,7 @@ The single largest performance divergence in the entire 12-route benchmark occur
 
 **Architectural Root Cause:**
 - On `/rigorous/hs-cache-slot`, the outer layout (`HsCacheSlotLayout`) and host page (`HsCacheSlotPageA`) are configured as cached **Horizontal Segmentation (`HS`)** segments (`revalidate = 3600`), while embedding several cached `<DinouCacheSlot>` components alongside one intentionally uncached dynamic slot (`hscs-page-a-dyn-slot` with `revalidate = 0`) and two `1s` TTL slots (`revalidate = 1`).
-- In **Dinou v9.0.3**, **Horizontal Segmentation (`HS`) and Vertical Segmentation (`Cache-Slot`) are orthogonal**. Even without PPR enabled on this route, Dinou keeps the host layout and page cached in its HS store and only executes and splices the dynamic `<DinouCacheSlot revalidate={0}>` subtree on each request (`~1.46 ms` of CPU work per request $\rightarrow$ **`684.7 req/s`** and a sub-350ms `p99` of **`325 ms`**).
+- In **Dinou v9.0.3**, **Horizontal Segmentation (`HS`) and Vertical Segmentation (`Cache-Slot`) are orthogonal**. Even without PPR enabled on this route, Dinou keeps the host layout and page cached in its HS store and only executes and splices the dynamic `<DinouCacheSlot revalidate={0}>` subtree on each request (`~1.46 ms` of CPU work per request → **`684.7 req/s`** and a sub-350ms `p99` of **`325 ms`**).
 - In **Next.js v16.4.3**, when a Non-PPR route contains an uncached component that opts into request-time execution via `await connection()`, Next.js cannot serve the surrounding page shell from a route cache unless the dynamic component is wrapped in a streaming `<Suspense>` boundary (PPR). Consequently, Next.js falls back to full dynamic route rendering on every request, dropping from `1,150.4 req/s` (on `/rigorous/hs`) down to **`102.7 req/s`** (`6.67×` slower than Dinou), with `p99` tail latency exploding to **`19.75 seconds`** (`60.8×` worse than Dinou) and **`160` request timeouts**.
 
 ---
@@ -143,7 +145,7 @@ Across all remaining dynamic and hybrid vertices of the 3D Caching Cube, Dinou m
 
 1. **Vertex 2 — `/rigorous/cache-slot` (`Pure Cache-Slot on Dynamic Host`):**
    - **Dinou 9.0.3 (`215.5 req/s`, `p50: 359 ms`, `p99: 6,282 ms`)** outperforms **Next.js 16.4.3 (`124.7 req/s`, `p50: 973 ms`, `p99: 18,897 ms`)** by **`1.73×` in throughput**, **`2.71×` in `p50` latency**, and **`3.01×` in `p99` latency**.
-   - Even when the host page itself has `revalidate = 0` and splices 10 `<DinouCacheSlot>` subtrees per request, Dinou's in-memory slot splicing takes just `4.58 ms` of CPU time vs. `~8.0 ms` in Next.js's `"use cache"` pipeline.
+   - Even when the host page itself has `revalidate = 0` and splices 10 `<DinouCacheSlot>` subtrees per request, Dinou's in-memory slot splicing takes just `~4.64 ms` of effective server time per request under 200-connection load (`215.5 req/s`, `4.58 ms` unloaded TTFB) vs. `~8.02 ms` per request under load (`124.7 req/s`) in Next.js's `"use cache"` pipeline.
 2. **Vertex 3 — `/rigorous/ppr` (`Pure Rigorous PPR`):**
    - **Dinou 9.0.3 (`196.4 req/s`, `p50: 937 ms`, `p99: 7,394 ms`)** outperforms **Next.js 16.4.3 (`130.6 req/s`, `p50: 1,172 ms`, `p99: 17,254 ms`)** by **`1.50×` in throughput** and **`2.33×` lower `p99` latency**.
 3. **Vertex 4 — `/rigorous/ppr-cache-slot` (`PPR + Cache-Slot Synergy`):**
@@ -167,7 +169,7 @@ Examining the three fully cached routes provides an illuminating control baselin
 ### 3.4 Vendorized (`dinou-9`) vs. Unvendorized (`dinou-9-u`) Production Parity
 Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Dinou (-u) 9.0.3` (`dinou-9-u`, unvendorized `dinou -u` build) across all 12 routes confirms:
 - Once V8 loads the module graph into RAM and completes the 5-second JIT warmup, **production HTTP throughput and latency are statistically indistinguishable** between `dinou-9` and `dinou-9-u` (within `~1%–5%` across all 12 routes, e.g., `392.7` vs. `396.6 req/s` on `/dashboard`, `504.0` vs. `509.6 req/s` on `/ppr`, `1,126.5` vs. `1,118.6 req/s` on `/rigorous/hs`).
-- Meanwhile, `dinou-9-u` compiles **`0.20s` faster** in `pnpm run build` (`6.50s` vs. `6.70s` median) and consumes **`11.6 MB` less peak RAM** under 200-connection load (`476.7 MB` vs. `488.3 MB`).
+- Meanwhile, `dinou-9-u` compiles **`0.15s` faster** in `pnpm run build` (`6.54s` vs. `6.69s` median) and consumes **`11.6 MB` less peak RAM** under 200-connection load (`476.7 MB` vs. `488.3 MB`).
 
 ---
 
@@ -175,22 +177,15 @@ Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Di
 
 `scripts/memory.mjs` measures the complete process-tree Resident Set Size (`VmRSS` on Linux) across three lifecycle stages: **Idle** (median of 5 samples taken 3s after server boot), **Peak Under Load** (sampled every 400ms during a 30-second, 200-connection `autocannon` burst against `/dashboard`), and **Post-Load Settled**.
 
-| Framework | Idle RSS (Median of 5 Samples) | Peak RSS Under Load (`200 Conn, 30s`) | Memory Expansion Under Load ($\Delta$) | Post-Load Settled RSS | Peak Memory Comparison vs. Next.js |
+| Framework | Idle RSS (Median of 5 Samples) | Peak RSS Under Load (`200 Conn, 30s`) | Memory Expansion Under Load (`Δ`) | Post-Load Settled RSS | Peak Memory Comparison vs. Next.js |
 | :--- | ---: | ---: | ---: | ---: | :--- |
 | **Dinou 9.0.3 (`dinou-9`)** | `275.2 MB` | **`488.3 MB`** | **`+213.1 MB`** (`+77.4%`) | **`488.4 MB`** | **`2.17×` lower peak RSS (`-572.2 MB`)** |
 | **Dinou (-u) 9.0.3 (`dinou-9-u`)** | `275.3 MB` | **`476.7 MB`** | **`+201.4 MB`** (`+73.2%`) | **`476.3 MB`** | **`2.22×` lower peak RSS (`-583.8 MB`)** |
 | **Next.js 16.4.3 (`next`)** | **`245.9 MB`** | `1,060.5 MB` | `+814.6 MB` (`+331.3%`) | `1,060.5 MB` | Baseline (`> 1.06 GB` RAM) |
 
-### Scaling Comparison: `50` Connections (Preliminary Report) vs. `200` Connections (Current Run)
-Comparing this 200-connection memory stress test against our preliminary 50-connection memory test reveals a critical production scaling characteristic:
-
-| Concurrency Level | Dinou 9 Peak RSS ($\Delta$ over Idle) | Next.js 16 Peak RSS ($\Delta$ over Idle) | Next.js vs. Dinou Peak RAM Gap |
-| :--- | ---: | ---: | :--- |
-| **`50` Connections (`10s`)** | `390.9 MB` (`+118.2 MB`) | `473.5 MB` (`+241.6 MB`) | Next.js uses `+82.6 MB` (`1.21×`) more RAM |
-| **`200` Connections (`30s`)** | **`476.7–488.3 MB`** (`+201–213 MB`) | **`1,060.5 MB`** (`+814.6 MB`) | Next.js uses **`+572–584 MB` (`2.22×`) more RAM** |
-
-- When concurrent connections increase **$4\times$** (from `50` to `200`), Dinou's peak RSS grows by only **`+85–97 MB`** (`390.9 MB` $\rightarrow$ `476.7–488.3 MB`).
-- Under the exact same $4\times$ concurrency increase, Next.js 16.4.3's peak RSS explodes by **`+587 MB`** (`473.5 MB` $\rightarrow$ **`1,060.5 MB`**), crossing **1 GB of RAM for a single Node.js process**—which on 512 MB or 1 GB container instances (AWS Fargate, Fly.io, Render, Railway, Kubernetes pods) would trigger an immediate Linux **OOM-Kill (`SIGKILL`)**.
+### Production Memory Scaling & Container Headroom Analysis (`200` Connections)
+- **Dinou v9.0.3 (`dinou-9`):** Under 200 concurrent connections on `/dashboard`, process-tree RSS grows by only **`+213.1 MB`** (`275.2 MB` → **`488.3 MB`** peak, **`476.7 MB`** in `dinou-9-u`), comfortably fitting inside a `512 MB` or `1 GB` container.
+- **Next.js v16.4.3 (`next`):** Under the exact same 200-connection workload, Next.js's peak RSS expands by **`+814.6 MB`** (`245.9 MB` → **`1,060.5 MB`**, **`3.8×` more memory expansion** than `dinou-9` and `0 MB` reclaimed post-load), crossing **1 GB of RAM for a single Node.js process**—which on `512 MB` or `1 GB` container instances (AWS Fargate, Fly.io, Render, Railway, Kubernetes pods) would trigger an immediate Linux **OOM-Kill (`SIGKILL`)**.
 
 ---
 
@@ -200,11 +195,11 @@ Comparing this 200-connection memory stress test against our preliminary 50-conn
 
 | Framework | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | **Median Build Time** | **Output Directory Size** | Build Speed & Disk Lead |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
-| **Dinou 9.0.3 (`dinou-9`)** | `6.6 s` | `6.7 s` | `6.7 s` | `6.7 s` | `6.7 s` | **`6.70 s`** | **`7.5 MB`** (`.dinou`) | **`2.22×` faster · `8.0×` smaller disk** |
-| **Dinou (-u) 9.0.3 (`dinou-9-u`)** | `6.6 s` | `6.6 s` | `6.5 s` | `6.5 s` | `6.5 s` | **`6.50 s`** | **`7.5 MB`** (`.dinou`) | **`2.29×` faster · `8.0×` smaller disk** |
-| **Next.js 16.4.3 (`next`)** | `14.8 s` | `14.9 s` | `15.3 s` | `14.9 s` | `14.8 s` | `14.90 s` | `59.7 MB` (`.next`) | Baseline |
+| **Dinou 9.0.3 (`dinou-9`)** | `6.57 s` | `6.73 s` | `6.65 s` | `6.69 s` | `6.73 s` | **`6.69 s`** | **`7.5 MB`** (`.dinou`) | **`2.22×` faster · `8.0×` smaller disk** |
+| **Dinou (-u) 9.0.3 (`dinou-9-u`)** | `6.61 s` | `6.59 s` | `6.47 s` | `6.54 s` | `6.53 s` | **`6.54 s`** | **`7.5 MB`** (`.dinou`) | **`2.28×` faster · `8.0×` smaller disk** |
+| **Next.js 16.4.3 (`next`)** | `14.84 s` | `14.88 s` | `15.26 s` | `14.89 s` | `14.77 s` | `14.88 s` | `59.7 MB` (`.next`) | Baseline |
 
-*Note on Disk Growth from the 3D Caching Cube:* Adding the 7 multi-route suites of the 3D Caching Cube increased Dinou's `.dinou` folder from `4.4 MB` to **`7.5 MB`** (`+3.1 MB`), whereas Next.js's `.next` folder grew from `37.5 MB` to **`59.7 MB`** (`+22.2 MB`).
+*Note on Output Directory Footprint:* Across all 12 production routes and 7 multi-route 3D Caching Cube suites, Dinou's compiled `.dinou` build directory occupies **`7.5 MB`** (`7,473,400 bytes` in `dinou-9`, `7,482,184 bytes` in `dinou-9-u`), whereas Next.js's `.next` directory occupies **`59.7 MB`** (`59,667,313 bytes`) — **`8.0×` larger on disk**.
 
 ---
 
