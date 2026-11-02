@@ -6,7 +6,7 @@ Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and
 > - [`report-run2-results.md`](./report-run2-results.md), [`report-run1-results.md`](./report-run1-results.md) & [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) — Complete 12-route & 3D Caching Cube empirical results and side-by-side reproducibility comparison across **Run 1** (`timeout = 30s`, [`results_run1/`](./results_run1/)) and **Run 2** (`timeout = 60s`, [`results_run2/`](./results_run2/)).
 > - [`report-3d-architecture.md`](./report-3d-architecture.md) — Architectural analysis: True End-to-End Orthogonal 3D Caching (Dinou 9) vs. Server-Only Coupled 2.5D Caching (Next.js 16).
 > - [`report-verify.md`](./report-verify.md) — Detailed breakdown of all **36 end-to-end Playwright behavioral checks** (`36 checks × 10 runs = 360 executions` per run).
-> - [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) & [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) — Forensic Linux `epoll`, Grafana `k6`, and `autocannon` socket-queue telemetry.
+> - [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) & [`deep-dive-investigation.md`](./deep-dive-investigation.md) — Forensic Linux `epoll`, `server.on("connection")`, Grafana `k6`, and `autocannon` socket-queue telemetry.
 > - [`report-infra.md`](./report-infra.md) & [`report-bench-structure.md`](./report-bench-structure.md) — Hardware sizing, OS process scheduling, verified `lscpu`/kernel fingerprint, and benchmark harness architecture.
 
 ---

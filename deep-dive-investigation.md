@@ -1,9 +1,10 @@
 # Deep Dive Investigation: High-Concurrency Socket Backlog, Event Loop Contention, and Cold-Start Latency in Node.js Web Frameworks
 
-> **An empirical investigation into tail latencies, connection bursts, and HTTP performance comparing Dinou 9.0.0 and Next.js 16.4.2 under 200 concurrent connections on route `/` (SSG).**
+> **An empirical investigation into tail latencies, connection bursts, and HTTP performance comparing Dinou 9.0.0 and Next.js 16.4.2 under 200 concurrent connections on route `/` (SSG).**  
+> **Companion Reports:** [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) *(Part 2: 12-Route & 3D Cube Timeout Diagnosis)* · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-verify.md`](./report-verify.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md)
 
 > [!NOTE]
-> **Disclaimer & Transparency Notice**: This document reflects an empirical investigation conducted in a controlled cloud droplet environment ($n = 1$ diagnostic run per framework). While all figures and calculations have been cross-verified across independent tools (Linux kernel `nstat`, Grafana k6, Autocannon, internal server probes), synthetic benchmarks are subject to hardware-specific characteristics, OS kernel scheduling, and potential inadvertent measurement nuances or errors. Independent replication is encouraged; full reproduction instructions and scripts are provided in [Section 8](#8-appendix-exact-diagnostic-instrumentation-and-reproduction).
+> **Disclaimer & Transparency Notice (Part 1 of the Socket-Backlog Investigation)**: This document reflects the foundational Phase I empirical investigation conducted on static route `/` (`n = 1` diagnostic run per framework on `Dinou 9.0.0` vs. `Next.js 16.4.2` when `autocannon` used its default `10s` timeout). For the subsequent Phase II investigation across all **12 routes of the 3D Caching Cube (`Dinou 9.0.3` vs. `Next.js 16.4.3`)**—explaining why CPU-bound dynamic routes (`/rigorous/cache-slot` & `/rigorous/hs-cache-slot`) exceed `30s` of initial backlog drain and how setting `timeout = 60s` (`2 × duration`) in Run 2 reduced timeouts to `0` across all 12 routes—see [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) and [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md). While all figures and calculations have been cross-verified across independent tools (Linux kernel `nstat`, Grafana k6, Autocannon, internal server probes), synthetic benchmarks are subject to hardware-specific characteristics, OS kernel scheduling, and potential inadvertent measurement nuances or errors. Independent replication is encouraged; full reproduction instructions and scripts are provided in [Section 8](#8-appendix-exact-diagnostic-instrumentation-and-reproduction).
 
 ---
 
@@ -17,10 +18,10 @@ During high-concurrency HTTP load testing (200 concurrent connections over HTTP/
 Through a multi-stage diagnostic suite examining the Linux kernel TCP stack, client-side request timestamp streaming, and server-side socket lifecycle tracking, we isolated the underlying mechanics:
 
 1. **Middleware Overhead vs Event Loop Queueing**: Inside Dinou 9.0.0, the average wall-clock duration from request entry to `res.on('finish')` was **0.65 ms** (maximum **9 ms**). The client-perceived mean latency of **138.2 ms** (median **127.5 ms**) is almost entirely queueing delay: with 200 concurrent connections sharing a single JavaScript thread in a closed loop, each request waits in turn while the event loop processes preceding requests.
-2. **100% of Delayed Requests Originated in the Initial Cold-Start Burst**: In both frameworks, all delayed requests (> 1.0s) were dispatched within the first **~65 milliseconds** (Dinou $+0.025\text{s} - +0.026\text{s}$, Next.js $+0.064\text{s} - +0.065\text{s}$) when 200 TCP connections opened simultaneously on `localhost`. Over the remaining 29+ seconds of steady load, **zero requests exceeded 1.0s**.
+2. **100% of Delayed Requests Originated in the Initial Cold-Start Burst**: In both frameworks, all delayed requests (> 1.0s) were dispatched within the first **~65 milliseconds** (Dinou `+0.025s – +0.026s`, Next.js `+0.064s – +0.065s`) when 200 TCP connections opened simultaneously on `localhost`. Over the remaining 29+ seconds of steady load, **zero requests exceeded 1.0s**.
 3. **The Bottleneck Occurs Before Socket Acceptance**:
    - The Linux kernel listen queue experienced no drops or overflows (`TcpExtListenOverflows = 0`, `TcpExtListenDrops = 0`).
-   - Node.js accepted all 200 connections, but the final connection was accepted at **$t = 13.627\text{s}$** into the test.
+   - Node.js accepted all 200 connections, but the final connection was accepted at **`t = 13.627s`** into the test.
    - Once accepted by Node.js, the time to parse and begin processing the first HTTP request was at most **0.268 seconds**.
    - The primary delay occurred while sockets waited in the kernel listen backlog to be accepted by Node's single-threaded event loop, which was heavily occupied servicing active keep-alive streams.
 4. **Data Transfer Disparity**: Next.js transferred ~1.7 GB across 23,320 requests (**~73 KB/req**), compared to Dinou's ~1.2 GB across 43,453 requests (**~28 KB/req**)—a ratio of ≈ 2.6×. Transmitting substantially more bytes per request increases socket I/O buffer drain time, which is a plausible contributing factor to Next's longer event loop ticks and slower backlog drainage (25.74s max vs 13.76s).
@@ -129,12 +130,12 @@ cat /proc/sys/net/core/somaxconn
 
 ### Phase 2: Independent Client Validation (Grafana k6 on Route `/`)
 
-Autocannon's per-request timeout defaults to 10 seconds (`timeout: 10`). In tests where initial sockets were held in the queue for > 10 seconds, Autocannon aborted them with `reqError: request timed out` at $t \approx 10.04\text{s}$.
+Autocannon's per-request timeout defaults to 10 seconds (`timeout: 10`). In tests where initial sockets were held in the queue for > 10 seconds, Autocannon aborted them with `reqError: request timed out` at `t ≈ 10.04s`.
 
 To eliminate client-side Node.js event-loop contention inside Autocannon itself, an independent diagnostic test was conducted targeting the home route (`/`, SSG · 50 items list) using **Grafana k6** (written in Go with a multi-threaded goroutine networking stack):
 
 - **Target Route**: `/` (SSG · 50 items list).
-- **Execution**: Single diagnostic run per framework ($n = 1$).
+- **Execution**: Single diagnostic run per framework (`n = 1`).
 - **Scenario**: 200 Virtual Users (VUs) constantly looping for 30 seconds.
 - **Client Protocol**: HTTP/1.1 with Keep-Alive enabled.
 - **Experimental Conditions**:
@@ -142,7 +143,7 @@ To eliminate client-side Node.js event-loop contention inside Autocannon itself,
   - Next.js was running uninstrumented (`node run.mjs start`).
   - Keep-Alive configurations: Dinou with `keepAliveTimeout: 65000`, `headersTimeout: 66000`; Next.js with `--keepAliveTimeout 65000`.
 
-#### 30-Second k6 Benchmark Results on Route `/` (SSG, $n = 1$)
+#### 30-Second k6 Benchmark Results on Route `/` (SSG, `n = 1`)
 
 | Metric | Dinou 9.0.0 (Port 3103) | Next.js 16.4.2 (Port 3102) | Delta / Ratio |
 | :--- | :--- | :--- | :--- |
@@ -159,9 +160,9 @@ To eliminate client-side Node.js event-loop contention inside Autocannon itself,
 
 #### Observations on Test Duration & Little's Law:
 1. **Backlog Drainage vs Test Duration**: In a preliminary 15-second test, Next.js reached a maximum latency of **15.2 seconds**—virtually the entire duration of the test—indicating that its queue had not finished draining when the test stopped. When duration expanded to 30 seconds, Next's maximum latency grew to **25.74 seconds**. In contrast, Dinou's max latency was **~14.4 s** (15 s test) and **~13.8 s** (30 s test), i.e. independent of test duration.
-2. **Closed-Loop Concurrency (Little's Law)**: In a closed loop (200 VUs dispatching a new request immediately upon receiving a response), throughput and latency are mathematically bound by **Little's Law** ($L = \lambda W \implies W = L / \lambda$):
-   $$\text{Dinou: } W = \frac{200}{1,441.6\text{ req/s}} \approx 138.7\text{ ms} \quad (\text{measured mean: } 138.19\text{ ms})$$
-   $$\text{Next.js: } W = \frac{200}{771.3\text{ req/s}} \approx 259.3\text{ ms} \quad (\text{measured mean: } 257.81\text{ ms})$$
+2. **Closed-Loop Concurrency (Little's Law)**: In a closed loop (200 VUs dispatching a new request immediately upon receiving a response), throughput and latency are mathematically bound by **Little's Law** (`L = λ · W  ⇒  W = L / λ`):
+   - **Dinou:** `W = 200 / 1,441.6 req/s ≈ 138.7 ms` (measured mean: `138.19 ms`)
+   - **Next.js:** `W = 200 / 771.3 req/s ≈ 259.3 ms` (measured mean: `257.81 ms`)
    Thus, "+86.9% throughput" and "46% lower latency" reflect the same underlying performance relationship. Furthermore, the mean latency represents the full round-trip cycle time of the 200 connections cycling through the server.
 
 ---
@@ -203,7 +204,7 @@ configureServer({ server, use }) {
 #### Clarification on Middleware Timing vs Client Latency:
 The `0.65 ms` figure reflects the wall-clock duration measured from the moment the request enters the middleware to the `res.on('finish')` event. It does **not** mean the client receives responses in 0.65 ms. With 200 concurrent keep-alive connections sharing a single-threaded event loop, almost all of the client-perceived round-trip (~138 ms mean) is queueing time: each request waits its turn while Node.js reads, parses, executes, and writes responses across the other active streams.
 
-*Sanity Check on Single-Thread Utilization*: $0.65\text{ ms} \times 1,441.6\text{ req/s} \approx 0.94\text{ s}$ of in-middleware wall-clock time per second (estimate), which is consistent with a near-saturated single event loop operating close to its capacity.
+*Sanity Check on Single-Thread Utilization*: `0.65 ms × 1,441.6 req/s ≈ 0.94 s` of in-middleware wall-clock time per second (estimate), which is consistent with a near-saturated single event loop operating close to its capacity.
 
 ---
 
@@ -211,7 +212,7 @@ The `0.65 ms` figure reflects the wall-clock duration measured from the moment t
 
 By streaming k6's raw JSON metric logs (`k6 run --out json=results/k6.json`), we calculated the exact moment every request was initiated relative to test start:
 
-$$t_{\text{start}} = t_{\text{finished}} - t_{\text{duration}}$$
+`t_start = t_finished - t_duration`
 
 #### Breakdown of Requests Taking > 1.0s by Dispatch Timestamp
 
@@ -247,8 +248,8 @@ Next.js 16.4.2 (Port 3102):
 ```
 
 #### Observation on Completion Intervals vs Mean Latency:
-- In Dinou, the delayed burst requests finished sequentially at regular intervals of **$\Delta t \approx 120 - 130\text{ ms}$**, which aligns closely with its **mean round-trip latency of 138.2 ms**.
-- In Next.js, the delayed burst requests finished sequentially at intervals of **$\Delta t \approx 240 - 250\text{ ms}$**, which aligns closely with its **mean round-trip latency of 257.8 ms**.
+- In Dinou, the delayed burst requests finished sequentially at regular intervals of **`Δt ≈ 120 – 130 ms`**, which aligns closely with its **mean round-trip latency of 138.2 ms**.
+- In Next.js, the delayed burst requests finished sequentially at intervals of **`Δt ≈ 240 – 250 ms`**, which aligns closely with its **mean round-trip latency of 257.8 ms**.
 
 Because each full round of 200 requests takes ~138 ms (Dinou) or ~258 ms (Next), the queued connections resolve at the pace of that cycle time.
 
@@ -287,7 +288,7 @@ if (socket) {
 #### Diagnostic Finding:
 These figures represent upper bounds across separate instrumentation points rather than sequential components of one single request. However, they demonstrate the locus of delay:
 
-- The last socket was admitted by Node.js at **$t = 13.627\text{ s}$**.
+- The last socket was admitted by Node.js at **`t = 13.627 s`**.
 - Once admitted, no socket waited more than **0.268 s** for its first HTTP request to be parsed.
 - Once parsed, no request took more than **0.009 s** within the middleware.
 
@@ -318,15 +319,15 @@ When 200 TCP connections establish simultaneously against a single-process Node.
 ## 5. Benchmarking Implications & Methodological Recommendations
 
 1. **Maximum Latency in Instant Cold Bursts is Misleading**:
-   - In synthetic tests where 200 connections are established at $t=0$, maximum latency measures how long the last connection sat in the kernel queue during the initial burst, **not** ongoing server response capacity.
-   - During steady-state operation ($t \in [1\text{s}, 30\text{s}]$), neither framework produced any request slower than 1.0 second.
+   - In synthetic tests where 200 connections are established at `t = 0`, maximum latency measures how long the last connection sat in the kernel queue during the initial burst, **not** ongoing server response capacity.
+   - During steady-state operation (`t ∈ [1s, 30s]`), neither framework produced any request slower than 1.0 second.
 2. **Percentiles (p95 / p99) Reflect Sustainable User Experience**:
    - Percentile metrics filter out anomalous connection handshake and cold-start queueing artifacts.
    - At p95 on route `/`, Dinou responded in **141.2 ms**, compared to Next.js at **261.1 ms** (1.85× faster).
 3. **Use Connection Ramp-Up / Warm-Up Periods**:
    - Introducing a brief ramp-up stage (e.g. `k6 stages: [{ duration: '5s', target: 200 }]`) allows sockets to establish before steady-state throughput and latency are recorded.
 4. **Align Client Timeouts with Benchmark Duration**:
-   - Autocannon's default 10s per-request timeout causes premature aborts during 30s tests. Setting `timeout: Math.max(30, duration)` ensures all requests complete and are recorded accurately.
+   - Autocannon's default 10s per-request timeout causes premature aborts during 30s tests. While setting `timeout: Math.max(30, duration)` (`30s`) was sufficient for the 5 baseline routes (where maximum initial-burst drain time on `/` is `13.76s` in Dinou and `25.74s` in Next.js), the expanded 12-route 3D Caching Cube benchmark revealed that on heavier CPU-bound dynamic routes (`/rigorous/cache-slot` & `/rigorous/hs-cache-slot`), setting `timeout === duration` (`30s === 30s`) triggers a `40 ms` teardown race condition inside `autocannon` (`lib/run.js`). Setting **`timeout: Math.max(60, duration * 2)` (`60s` for a `30s` test)** in Run 2 ensures `timeout > duration`, completely eliminating client-side timeouts (`0` timeouts across all 12 routes and all 3 frameworks; see [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md)).
    - *Note*: Extending Autocannon's timeout converts what were formerly reported as timeouts into tail latency entries. Benchmark results with adjusted timeouts should be documented clearly when comparing against earlier runs.
 5. **Use Multiple Test Runs (`LOAD_RUNS >= 3`)**:
    - For official publication across all routes, running at least 3 runs per route is necessary to compute reliable median and percentile values.
@@ -346,7 +347,7 @@ In production web deployments, traffic patterns and infrastructure differ signif
 
 ---
 
-## 7. Comparative Summary Scorecard — Route `/` (SSG · 50 items list, $n = 1$)
+## 7. Comparative Summary Scorecard — Route `/` (SSG · 50 items list, `n = 1`)
 
 > *Note: This scorecard summarizes the diagnostic k6 test on route `/` (SSG). Full multi-route benchmarks across dynamic and streaming routes (`/items/42`, `/dashboard`, `/ppr`, `/messages`) are conducted separately via Autocannon.*
 
