@@ -1,6 +1,6 @@
 # Benchmark Architecture & Pipeline Reference (`dinou-benchmark`)
 
-**Date:** November 1, 2026  
+**Date:** November 2, 2026  
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Pipeline Orchestrator:** `scripts/bench.mjs` (`pnpm bench`)
 
@@ -18,8 +18,8 @@ The `dinou-benchmark` suite is orchestrated by `scripts/bench.mjs` (`pnpm bench`
 | **4** | **Functional & 3D Cube Verification** (`scripts/verify.mjs`) | `pnpm bench:verify` | Executes all **36 end-to-end Playwright & HTTP verification checks** covering the 5 baseline rendering modes (`SSG`, `ISR`, `Dynamic SSR`, `PPR`, `Server Actions`) and all **7 vertices of the 3D Caching & Streaming Cube** (`HS`, `Cache-Slot`, `PPR`, the 3 pairwise synergies, and the Triple Synergy), including `1s` clock TTLs, surgical on-demand revalidation, concurrency stampedes, LWW race conditions, and `F5` hydration.<br>Supports `--runs=N` for multi-run determinism testing. Saves results to `results/verify.json` and is fully documented in `report-verify.md`. | **No** *(100% Hardware-Agnostic)* |
 | **5** | **Client JavaScript Bundle** (`scripts/bundle.mjs`) | `pnpm bench:bundle` | Walks the compiled build output, filters exclusively for client-side `.js` assets downloaded by the browser (excluding server-only bundles), and computes:<br>• **Total number of client JS files**.<br>• **Total payload size in Raw bytes, Gzip (level 9), and Brotli (quality 11)**.<br>• Top 5 largest client JS chunks.<br>Saves results to `results/bundle.json`. | **No** *(100% Deterministic & Machine-Independent)* |
 | **6** | **Production Load, Throughput & Latency** (`scripts/load.mjs`) | `pnpm bench:load` | Starts the production server (`pnpm run start`) and benchmarks all **12 routes** defined in `bench.config.mjs` (the 5 baseline routes + the 7 routes of the 3D Caching Cube) using `autocannon` (`200` concurrent connections, `5s` warmup, `5` runs of `30s` each), recording per route:<br>• **TTFB** (median and `p95` across `30` sequential probes).<br>• **Throughput (`req/s`)** (median, min, max).<br>• **Latency under load** (`p50`, `p95`, `p99`) and error rate (`%`).<br>Saves results to `results/load.json`. | **Yes** (CPU / Local Network Stack) |
-| **7** | **Server Memory Footprint (RAM)** (`scripts/memory.mjs`) | `pnpm bench:memory` | Starts the production server (`pnpm run start`) and samples the full process-tree memory footprint (`VmRSS` via `/proc` on Linux or `WorkingSet64` via `scripts/win-rss.ps1` on Windows):<br>• **Idle RSS (MB):** Baseline memory consumption 3 seconds after server startup.<br>• **Peak RSS (MB):** Maximum memory consumption while sustaining `autocannon` load bursts across both baseline and rigorous 3D routes.<br>Saves results to `results/memory.json`. | **Yes** (OS / Process Allocator) |
-| **8** | **Automated Report & SVG Charts** (`scripts/report.mjs`) | `pnpm bench:report` | Reads all JSON files in `results/` (`build.json`, `verify.json`, `bundle.json`, `dev-start.json`, `hmr.json`, `load.json`, `memory.json`) and generates the consolidated markdown summary (`results/REPORT.md`) and comparative SVG visualizations (`results/charts.svg`). | — |
+| **7** | **Server Memory Footprint (RAM)** (`scripts/memory.mjs`) | `pnpm bench:memory` | Starts the production server (`pnpm run start`) and samples the full process-tree memory footprint (`ps -eo pid,ppid,rss` / `/proc/<pid>/status` `VmRSS` on Linux or `WorkingSet64` via `scripts/win-rss.ps1` on Windows):<br>• **Idle RSS (MB):** Median of `5` samples taken 3 seconds after server startup.<br>• **Peak RSS (MB):** Maximum memory consumption sampled every `400 ms` while sustaining a `200`-connection, `30s` `autocannon` load burst on `/dashboard` (plus post-load settled RSS `afterLoadBytes`).<br>Saves results to `results/memory.json`. | **Yes** (OS / Process Allocator) |
+| **8** | **Automated Report & SVG Charts** (`scripts/report.mjs`) | `pnpm bench:report` | Reads all JSON files in `results/` (or a custom directory via `--dir=<dir>`, such as `results_run1` / `results_run2`) and generates the consolidated markdown report (`REPORT.md`, including the numbered `#1`–`#36` verification breakdown table) and comparative SVG visualizations (`charts.svg`, `ttfb.svg`, `bundle.svg`). | — |
 
 > [!IMPORTANT]
 > **Why `dev-start` and `hmr` Precede `build`, `bundle`, `load`, and `memory`:** Running `pnpm run dev` (`dinou dev` / `next dev`) writes development build artifacts into `.dinou` / `.next`. Executing `dev-start` and `hmr` **first**, followed by `build` (which wipes `.dinou` and `.next` clean before compiling), guarantees that `verify`, `bundle`, `load`, and `memory` always operate against an untouched production build.
@@ -67,7 +67,7 @@ The table below details how many passes/runs each script performs by default, wh
 | **`scripts/dev-start.mjs`** | **`5` passes** | `DEV_RUNS=5` *(env var)* | • **Dev cold start:** **Median** across `DEV_RUNS` (`medianSeconds`). | **No** |
 | **`scripts/hmr.mjs`** | **`5` passes** | `HMR_RUNS=5` *(env var)* | • **HMR edit → DOM:** **Median** across `HMR_RUNS` (`medianMs`). | **No** |
 | **`scripts/build.mjs`** | **`5` passes** | `BUILD_RUNS=5` *(env var)* | • **Build time:** **Median** across `BUILD_RUNS` (`medianSeconds`).<br>• **Output size:** Exact byte count of `.dinou` / `.next`. | **No** |
-| **`scripts/verify.mjs`** | **`1` pass** *(or `N` via CLI)* | `--runs=10` *(CLI flag)* | • Per-check pass/fail rate (`36/36` vs. `30/36`) and flaky check detection (`passedRuns < totalRuns`).<br>• Excludes `dinou-9-u` by default so Dinou and Next.js run the exact same number of passes. | **No** |
+| **`scripts/verify.mjs`** | **`1` pass** *(or `N` via CLI)* | `--runs=10` *(CLI flag)* | • Per-check pass/fail rate (`36/36` vs. `30–31/36`) and flaky check detection (`passedRuns < totalRuns`).<br>• Excludes `dinou-9-u` by default so Dinou and Next.js run the exact same number of passes. | **No** |
 | **`scripts/bundle.mjs`** | **`1` scan** | N/A *(100% deterministic)* | • Exact byte totals of client `.js` files in Raw, Gzip (level 9), and Brotli (quality 11). | **No** |
 | **`scripts/load.mjs`** | **`5` rounds per route** *(+ `30` TTFB probes)* | `LOAD_RUNS=5`<br>`LOAD_DURATION=30`<br>`LOAD_CONNECTIONS=200`<br>`LOAD_WARMUP=5` *(env vars)* | • **TTFB (`p50` / `p95`):** Median and 95th percentile of `30` sequential `timedFetch` probes after warmup.<br>• **`req/s`, `p50`, `p99`:** **Median** across `LOAD_RUNS` rounds of `autocannon`. | **Yes** *(affects `req/s`, `p50`, `p99`, and `Errors`; TTFB probes are sequential)* |
 | **`scripts/memory.mjs`** | **`1` server start** *(with `5` idle samples + `1` load burst)* | Uses `LOAD_CONNECTIONS=200` & `LOAD_DURATION=30` *(env vars)* | • **Idle RSS (MB, median):** **Median** of `5` RSS samples taken `400 ms` apart in idle state (`3s` after boot, before load).<br>• **Peak RSS under load (MB):** **Maximum** RSS sampled every `400 ms` during `1` `autocannon` burst on `/dashboard`. | **Idle RSS: No**<br>**Peak RSS: Yes** *(more concurrent connections increase simultaneous in-flight SSR streams)* |
@@ -93,6 +93,10 @@ BUILD_RUNS=5 DEV_RUNS=5 HMR_RUNS=5 LOAD_RUNS=5 LOAD_CONNECTIONS=200 LOAD_DURATIO
 pnpm bench:verify --only=dinou-9,next
 pnpm bench:bundle --only=dinou-9,next
 pnpm bench:load --only=dinou-9,next
+
+# Regenerate REPORT.md and SVG charts directly inside archived run directories:
+node scripts/report.mjs --dir=results_run1
+node scripts/report.mjs --dir=results_run2
 ```
 
 
