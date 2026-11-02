@@ -19,7 +19,7 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 
 | Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Vendorized (`dinou-9`) Lead vs. Next.js 16.4.3 |
 | :--- | ---: | ---: | ---: | :--- |
-| **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `30 / 36` (`5 ❌`, `1 ⚠️` · `85.6%`) | **Dinou `+14.4%` compliance (`0` failures vs. `52/360` failed execs)** |
+| **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `30 / 36` (`30 ✅`, `5 ❌`, `1 ⚠️` · `85.6%`) | **Dinou `+14.4%` compliance (`0` failures vs. `52/360` failed execs)** |
 | **2. Production Build Time** (`Median of 5 runs`) | **`6.69 s`** | **`6.54 s`** | `14.88 s` | **Dinou `2.22×` faster (`-8.19 s` per build)** |
 | **3. Build Output Size on Disk** (`.dinou` vs. `.next`) | **`7.5 MB`** | **`7.5 MB`** | `59.7 MB` | **Dinou `7.96×` smaller on disk (`-52.2 MB`)** |
 | **4. Client JS Bundle Weight** (`Brotli -11` / `Gzip -9` / `Raw`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | `158.3 KiB` (`182.4` / `585.7 KiB`) | **Dinou `1.94×` smaller client JS (`-76.5 KiB` Brotli, `-48.3%`)** |

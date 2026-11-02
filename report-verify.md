@@ -20,13 +20,12 @@ The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (La
 
 ### 1.1 Final Verification Scoreboard (36 Checks × 10 Runs in Run 1 & Run 2 = 720 Total Executions per Framework)
 
-Across the **10-run consecutive verification stress suite** (`node scripts/verify.mjs --only=dinou-9,dinou-9-u,next --runs=10`, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run):
+Across the **10-run consecutive verification stress suite** (`node scripts/verify.mjs --only=dinou-9,next --runs=10`, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run):
 
 | Framework | Version | Baseline Checks (1 to 13) | Core 3D Rigorous Suites (14 to 22) | Deep Stress & Concurrency Edge Cases (23 to 36) | Run 1 (`10 × 36` = `360`) | Run 2 (`10 × 36` = `360`) | Combined (`20 × 36` = `720`) | Status |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Dinou 9.0.3 (Default Vendorized)** (`apps/dinou-9`) | `9.0.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 14 ✅ (`20/20` runs) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`720/720 ✅` (`100.0%`)** | **✅ PASS (100% deterministic, `0` flaky)** |
-| **Dinou 9.0.3 (Unvendorized)** (`apps/dinou-9-u`) | `9.0.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 14 ✅ (`20/20` runs) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`720/720 ✅` (`100.0%`)** | **✅ PASS (100% deterministic, `0` flaky)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 8 ✅ / 5 ❌ / 1 ⚠️ | `30/36` (`5 ❌, 1 ⚠️` · `308/360` · `85.6%`) | `31/36` (`5 ❌` · `310/360` · `86.1%`) | **`618/720` (`85.8%`)** | **❌ FAIL (5 deterministic `0/20` fails + ⚠️ 1 flaky: `18/20` passed)** |
+| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 14 ✅ (`20/20` runs) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`720/720 ✅` (`100.0%`)** | **36 ✅ PASS (`20/20` runs · 100% deterministic)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 8 ✅ / 5 ❌ / 1 ⚠️ | `30/36` (`30 ✅, 5 ❌, 1 ⚠️` · `308/360` · `85.6%`) | `31/36` (`31 ✅, 5 ❌` · `310/360` · `86.1%`) | **`618/720` (`85.8%`)** | **30 ✅ PASS (`20/20` runs) · 5 ❌ FAIL (`0/20` runs) · 1 ⚠️ FLAKY (`18/20` runs)** |
 
 ---
 
@@ -420,7 +419,7 @@ Unlike performance benchmarks that measure CPU-bound build times, requests per s
   - Whether client-side navigation issued `0` redundant layout or page RSC network requests (`layoutFetches = 0`, `pageRscReqs = 0`).
   - Whether out-of-order responses respected monotonic **Last-Write-Wins (LWW)** (`402/fresh-fast` preserved over `401/stale-slow`).
   - Whether hard browser reloads (`F5` / `page.goto`) produced **`0` React hydration errors or warnings**.
-- Because these are **functional and architectural correctness checks**, the `100% ✅ PASS` results on **Dinou v9.0.3 (`dinou-9` & `dinou-9-u`)** and the **5 deterministic `100% ❌ FAIL` checks (`Checks 24, 27, 29, 31, 33`)** on **Next.js v16.4.3** do not depend on the CPU, RAM, disk speed, or operating system of the machine where the suite is executed, and are fully reproducible by anyone on any standard development environment. *(Only the exact failure frequency of the intrinsic race condition in Next.js's Check 28—which was `⚠️ FLAKY (1 / 10)` in Run 1 and passed `10 / 10` in Run 2—may vary slightly with OS thread scheduling, as explained in Section 3).*
+- Because these are **functional and architectural correctness checks**, the `100% ✅ PASS` results on **Dinou v9.0.3** and the **5 deterministic `100% ❌ FAIL` checks (`Checks 24, 27, 29, 31, 33`)** on **Next.js v16.4.3** do not depend on the CPU, RAM, disk speed, or operating system of the machine where the suite is executed, and are fully reproducible by anyone on any standard development environment. *(Only the exact failure frequency of the intrinsic race condition in Next.js's Check 28—which was `⚠️ FLAKY (8 / 10)` in Run 1 and passed `10 / 10` in Run 2—may vary slightly with OS thread scheduling, as explained in Section 3).*
 
 ### 6.3 How to Reproduce the Verification Suite Locally
 
@@ -432,12 +431,12 @@ pnpm install
 pnpm shared
 
 # 2. Run a single full verification pass (builds apps cleanly + runs all 36 checks on Dinou 9.0.3 & Next.js 16.4.3)
-node scripts/verify.mjs --only=dinou-9,dinou-9-u,next
+node scripts/verify.mjs --only=dinou-9,next
 
 # 3. Run the 10-pass consecutive stress & determinism suite (360 check executions per framework)
 #    Builds each app cleanly once, snapshots the pristine post-build disk cache, and before each
 #    of the 10 runs restores the pristine disk snapshot and restarts a fresh server process:
-node scripts/verify.mjs --only=dinou-9,dinou-9-u,next --runs=10
+node scripts/verify.mjs --only=dinou-9,next --runs=10
 ```
 
 Each execution prints the per-check `PASS` / `FAIL` log in real time, outputs the multi-run determinism summary table in the terminal, and saves the structured verification results to `results/verify.json`.
