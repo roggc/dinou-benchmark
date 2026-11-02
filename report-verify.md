@@ -1,13 +1,14 @@
 # Rigorous 3D Caching & Streaming Verification Report: Dinou v9.0.3 vs. Next.js v16.4.3
 
-**Date:** November 1, 2026  
+**Date:** November 2, 2026  
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Frameworks Compared:**
 - **Dinou v9.0.3** (`apps/dinou-9`) — React 19 RSC framework
-- **Next.js v16.4.3** (`apps/next` with `cacheComponents: true` / `"use cache"` / PPR enabled) — React 19 App Router
+- **Next.js v16.4.3** (`apps/next` with `cacheComponents: true` / `"use cache"` / PPR enabled) — React 19 App Router  
+**Companion Reports:** [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`results_run1/REPORT.md`](./results_run1/REPORT.md) · [`results_run2/REPORT.md`](./results_run2/REPORT.md)
 
 > **Methodological Note on Why `dinou-9-u` Is Excluded From Verification Tables:**  
-> While the repository includes `apps/dinou-9-u` (the unvendorized distribution of Dinou) for install-time and disk-size benchmarks, its framework runtime and application code are 100% identical to `apps/dinou-9` (differing only in whether third-party dependencies are resolved from `node_modules` instead of pre-bundled). Including both `dinou-9` and `dinou-9-u` in multi-run verification would subject Dinou's codebase to **twice as many verification passes (`2×`)** as Next.js, creating an asymmetric sample size that would statistically penalize Dinou when evaluating non-deterministic race conditions. Therefore, `scripts/verify.mjs` benchmarks **Dinou v9.0.3 (`dinou-9`)** and **Next.js v16.4.3 (`next`)** head-to-head with the exact same number of executions (**10 full runs × 36 checks = 360 check executions per framework**).
+> While the repository includes `apps/dinou-9-u` (the unvendorized distribution of Dinou) for install-time and disk-size benchmarks, its framework runtime and application code are 100% identical to `apps/dinou-9` (differing only in whether third-party dependencies are resolved from `node_modules` instead of pre-bundled). Including both `dinou-9` and `dinou-9-u` in multi-run verification would subject Dinou's codebase to **twice as many verification passes (`2×`)** as Next.js, creating an asymmetric sample size that would statistically penalize Dinou when evaluating non-deterministic race conditions. Therefore, `scripts/verify.mjs` benchmarks **Dinou v9.0.3 (`dinou-9`)** and **Next.js v16.4.3 (`next`)** head-to-head with the exact same number of executions (**10 full runs × 36 checks = 360 check executions per framework per run; 20 runs = 720 total executions across Run 1 & Run 2**).
 
 ---
 
@@ -17,20 +18,21 @@ To evaluate both frameworks beyond synthetic happy-path benchmarks, we implement
 
 The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
-### 1.1 Final Verification Scoreboard (36 Checks Across 10 Full Runs = 360 Check Executions per Framework)
+### 1.1 Final Verification Scoreboard (36 Checks × 10 Runs in Run 1 & Run 2 = 720 Total Executions per Framework)
 
-Across the **10-run consecutive verification stress suite** (`node scripts/verify.mjs --only=dinou-9,next --runs=10`, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run):
+Across the **10-run consecutive verification stress suite** (`node scripts/verify.mjs --only=dinou-9,dinou-9-u,next --runs=10`, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run):
 
-| Framework | Version | Baseline Checks (1 to 13) | Core 3D Rigorous Suites (14 to 22) | Deep Stress & Concurrency Edge Cases (23 to 36) | Total Check Executions (`10 × 36`) | Check Breakdown (`36` Total) | Status |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Dinou 9.0.3** (`apps/dinou-9`) | `9.0.3` | 13 ✅ on 10 runs | 9 ✅ on 10 runs | 14 ✅ on 10 runs | **360 ✅** (`100.0%`) | **36 ✅** | **✅ PASS (100% deterministic, `0` flaky)** |
-| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ on 10 runs | 9 ✅ on 10 runs | 8 ✅ / 5 ❌ / 1 ⚠️ on 10 runs | **308 ✅ / 52 ❌** (`85.6%`) | **30 ✅ / 5 ❌ / 1 ⚠️** | **❌ FAIL (5 deterministic fails on 10 runs + ⚠️ 1 flaky: `2 Fail of 10 execs`)** |
+| Framework | Version | Baseline Checks (1 to 13) | Core 3D Rigorous Suites (14 to 22) | Deep Stress & Concurrency Edge Cases (23 to 36) | Run 1 (`10 × 36` = `360`) | Run 2 (`10 × 36` = `360`) | Combined (`20 × 36` = `720`) | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Dinou 9.0.3 (Default Vendorized)** (`apps/dinou-9`) | `9.0.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 14 ✅ (`20/20` runs) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`720/720 ✅` (`100.0%`)** | **✅ PASS (100% deterministic, `0` flaky)** |
+| **Dinou 9.0.3 (Unvendorized)** (`apps/dinou-9-u`) | `9.0.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 14 ✅ (`20/20` runs) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`36/36 ✅`** (`360/360` · `100.0%`) | **`720/720 ✅` (`100.0%`)** | **✅ PASS (100% deterministic, `0` flaky)** |
+| **Next.js 16.4.3** (`apps/next`) | `16.4.3` | 13 ✅ (`20/20` runs) | 9 ✅ (`20/20` runs) | 8 ✅ / 5 ❌ / 1 ⚠️ | `30/36` (`5 ❌, 1 ⚠️` · `308/360` · `85.6%`) | `31/36` (`5 ❌` · `310/360` · `86.1%`) | **`618/720` (`85.8%`)** | **❌ FAIL (5 deterministic `0/20` fails + ⚠️ 1 flaky: `18/20` passed)** |
 
 ---
 
-### 1.2 Complete Coverage of the 7 Vertices of the 3D Caching & Streaming Cube ($2^3 - 1 = 7$ Combinations)
+### 1.2 Complete Coverage of the 7 Vertices of the 3D Caching & Streaming Cube (`2³ - 1 = 7` Combinations)
 
-Because the architecture forms a **3D Cube** across three orthogonal axes—**X: Horizontal Segmentation (`HS`)**, **Y: Vertical Segmentation (`Cache-Slot`)**, and **Z: Temporal/Streaming Segmentation (`PPR`)**—there are **$2^3 - 1 = 7$ non-empty architectural combinations**: **3 individual axes**, **3 pairwise synergies**, and **1 triple synergy**. Every single one of those 7 combinations is exhaustively tested in `scripts/verify.mjs` across client navigation, clock-based TTL expiration (`revalidate = 1s`), server on-demand surgical revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`), live client refresh (`router.refresh`, `refreshSlot`), concurrency/race conditions, and hard-reload (`F5`) React hydration:
+Because the architecture forms a **3D Cube** across three orthogonal axes—**X: Horizontal Segmentation (`HS`)**, **Y: Vertical Segmentation (`Cache-Slot`)**, and **Z: Temporal/Streaming Segmentation (`PPR`)**—there are **`2³ - 1 = 7` non-empty architectural combinations**: **3 individual axes**, **3 pairwise synergies**, and **1 triple synergy**. Every single one of those 7 combinations is exhaustively tested in `scripts/verify.mjs` across client navigation, clock-based TTL expiration (`revalidate = 1s`), server on-demand surgical revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`), live client refresh (`router.refresh`, `refreshSlot`), concurrency/race conditions, and hard-reload (`F5`) React hydration:
 
 | Cube Vertex / Synergy | Axes Combined | Checks in `scripts/verify.mjs` | Dinou 9.0.3 | Next.js 16.4.3 |
 | :--- | :---: | :--- | :---: | :---: |
@@ -127,10 +129,10 @@ Because the architecture forms a **3D Cube** across three orthogonal axes—**X:
 | 25 | `rigorous-hs: page error.tsx containment inside outlet & soft-nav recovery` | Deep Stress #3 · HS | 100% ✅ PASS | 100% ✅ PASS |
 | 26 | `rigorous-hs-ttl: clock-based 1s Layout TTL vs 1s Page TTL surgical expiration` | Deep Stress #4 · HS TTL | 100% ✅ PASS (`280/100`, `281/100`) | 100% ✅ PASS (`280/100`, `281/100`) |
 | 27 | `rigorous-cache-slot-advanced: wildcard refreshSlot('*', { fresh: true }) & static-host 1s slot TTL` | Deep Stress #5 · Slot | **100% ✅ PASS** (`hosts=100`) | **100% ❌ FAIL** (`hosts=999`) |
-| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** | **⚠️ FLAKY** (`80% ✅ · 20% ❌`) |
+| 28 | `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution` | Deep Stress #6 · Stampede | **100% ✅ PASS** | **⚠️ FLAKY** (`Run 1: 8/10 · Run 2: 10/10`) |
 | 29 | `rigorous-hs-cache-slot-lww: out-of-order concurrency race (250ms slow vs 10ms fast slot refresh)` | Deep Stress #7 · LWW Race | **100% ✅ PASS** (`402/fresh-fast`) | **100% ❌ FAIL** (`401/stale-slow`) |
 | 30 | `rigorous-hs-ppr-ttl & triple-shell-slot: 1s PPR clock TTLs + surgical static-shell slot revalidateTag` | Deep Stress #8 · Triple + TTL | 100% ✅ PASS (`330/331`, `340/341/342`) | 100% ✅ PASS (`330/331`, `340/341/342`) |
-| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **100% ✅ PASS** (`0` page RSC reqs) | **100% ❌ FAIL** (`pageRscReqs=1–3`) |
+| 31 | `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back` | Deep Stress #9 · HS + Slot | **100% ✅ PASS** (`0` page RSC reqs) | **100% ❌ FAIL** (`pageRscReqs=3`) |
 | 32 | `rigorous-hs-cache-slot-shadow-guard: slotOverrideCache yields to newer server children on router.refresh()` | Deep Stress #10 · HS + Slot | 100% ✅ PASS (`420 → 421`, state=1) | 100% ✅ PASS (`420 → 421`, state=1) |
 | 33 | `rigorous-cache-slot-tagonly: tag-only slot (no id prop) live refreshSlot & revalidateTag` | Deep Stress #11 · Slot | **100% ✅ PASS** (`host=100, slot=430`) | **100% ❌ FAIL** (`host=999`) |
 | 34 | `rigorous-triple-cascade: ancestor L1 revalidateLayout cascades through L2 to nested PPR & static children` | Deep Stress #12 · Triple Cascade | 100% ✅ PASS (`L1=440`, children=`100`) | 100% ✅ PASS (`L1=440`, children=`100`) |
@@ -232,21 +234,21 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
   LWW race failed in DOM: late slow request (401/stale-slow) overwrote fast request (402/fresh-fast); got seq=401 label=stale-slow
   ```
 - **Scenario Timeline:**
-  1. **At $t = 0\text{ ms}$:** State is mutated to `{ seq: 401, label: "stale-slow", delayMs: 250 }` and Request #1 is dispatched (`refreshSlot("hscs-page-a-slot", { fresh: true })`). Request #1 captures `{ seq: 401, label: "stale-slow" }` and sleeps for `250 ms` on the server.
-  2. **At $t = 50\text{ ms}$:** While Request #1 is still in flight, state is mutated to `{ seq: 402, label: "fresh-fast", delayMs: 10 }` and Request #2 is dispatched.
-  3. **At $t \approx 60\text{ ms}$:** Request #2 finishes in `10 ms` and commits `402 / fresh-fast`.
-  4. **At $t \approx 250\text{ ms}$:** Request #1 finally finishes `190 ms` after Request #2.
+  1. **At `t = 0 ms`:** State is mutated to `{ seq: 401, label: "stale-slow", delayMs: 250 }` and Request #1 is dispatched (`refreshSlot("hscs-page-a-slot", { fresh: true })`). Request #1 captures `{ seq: 401, label: "stale-slow" }` and sleeps for `250 ms` on the server.
+  2. **At `t = 50 ms`:** While Request #1 is still in flight, state is mutated to `{ seq: 402, label: "fresh-fast", delayMs: 10 }` and Request #2 is dispatched.
+  3. **At `t ≈ 60 ms`:** Request #2 finishes in `10 ms` and commits `402 / fresh-fast`.
+  4. **At `t ≈ 250 ms`:** Request #1 finally finishes `190 ms` after Request #2.
 - **Architectural Cause:**
   - **Dinou v9.0.3** enforces **Last-Write-Wins (LWW)** on both ends:
-    1. **Client (`dinou/core/slot.js`):** `DinouCacheSlotBoundary` increments a monotonic `latestReqId` per slot; when Request #1 resolves at $t = 250\text{ ms}$, `curEntry.latestReqId !== reqId` discards the stale response so it never overwrites `slotOverrideCache` or the DOM.
-    2. **Server (`dinou/core/cache-slot.js`):** `inflightSlotRenders` keys `{ fresh: true }` requests by `stampedeKey` (so Request #2 is not coalesced onto Request #1's stale promise) and tracks a monotonic `slotRenderGenerations` counter per `storageKey`; when Request #1 finishes at $t = 250\text{ ms}$, `isLatestGen()` is `false`, preventing Request #1 from overwriting `slots/hscs-page-a-slot/slot.json` on disk.
-  - **Next.js v16.4.3** lacks a monotonic generation guard across concurrent `updateTag("slot:hscs-page-a-slot")` + `"use cache"` executions and concurrent `router.refresh()` transitions. Either Request #2 coalesces onto Request #1's already-running `"use cache"` promise or Request #1's late resolution overwrites the cache/DOM at $t = 250\text{ ms}$, leaving the UI stuck on `401 / stale-slow`.
+    1. **Client (`dinou/core/slot.js`):** `DinouCacheSlotBoundary` increments a monotonic `latestReqId` per slot; when Request #1 resolves at `t = 250 ms`, `curEntry.latestReqId !== reqId` discards the stale response so it never overwrites `slotOverrideCache` or the DOM.
+    2. **Server (`dinou/core/cache-slot.js`):** `inflightSlotRenders` keys `{ fresh: true }` requests by `stampedeKey` (so Request #2 is not coalesced onto Request #1's stale promise) and tracks a monotonic `slotRenderGenerations` counter per `storageKey`; when Request #1 finishes at `t = 250 ms`, `isLatestGen()` is `false`, preventing Request #1 from overwriting `slots/hscs-page-a-slot/slot.json` on disk.
+  - **Next.js v16.4.3** lacks a monotonic generation guard across concurrent `updateTag("slot:hscs-page-a-slot")` + `"use cache"` executions and concurrent `router.refresh()` transitions. Either Request #2 coalesces onto Request #1's already-running `"use cache"` promise or Request #1's late resolution overwrites the cache/DOM at `t = 250 ms`, leaving the UI stuck on `401 / stale-slow`.
 
 ---
 
 ### Failure #4 — Check 31 (`10 Fail of 10 execs` — 100% Deterministic): Unmounted Cross-Route Slot Refresh Purges Client Router Cache Instead of Updating `slotOverrideCache`
 - **Test:** `rigorous-hs-cache-slot-unmounted: refreshSlot for Page A while unmounted on Page B + soft-nav back`
-- **Routes:** `/rigorous/hs-cache-slot` (Page A) $\leftrightarrow$ `/rigorous/hs-cache-slot/page-b` (Page B)
+- **Routes:** `/rigorous/hs-cache-slot` (Page A) ↔ `/rigorous/hs-cache-slot/page-b` (Page B)
 - **Real-World User Impact:** Suppose a user visits their "Portfolio" tab (Page A), navigates to the "Trade" tab (Page B), executes an action that updates a portfolio summary widget on Page A, and clicks back to "Portfolio" (Page A). In **Dinou v9.0.3**, the widget updates in the background (`slotOverrideCache`) while Page A's route remains in the client `pageCache`, so clicking back to Page A is **instant (`0` page network requests)**. In **Next.js**, invalidating that widget tag wipes out the client Router Cache, forcing a full network re-fetch of Page A when the user navigates back.
 - **Observed Error on Next.js 16.4.3 (`10/10` runs):**
   ```text
@@ -274,16 +276,16 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
 
 ---
 
-### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`2 Fail of 10 Execs` · `80% ✅ / 20% ❌`): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
+### ⚠️ Intrinsic Flaky Race Condition in Next.js 16.4.3 — Check 28 (`8/10` in Run 1 · `10/10` in Run 2 = `18/20` Passed): Server Action + `<Suspense>` Background Re-Render Leaking Into Cold Stampede Deduplication
 - **Test:** `rigorous-cache-slot-stampede: 6 concurrent cold-miss requests coalesce into 1 slot execution`
 - **Route:** `/rigorous/cache-slot`
 - **Real-World User / Production Impact:** When an admin or webhook triggers a Server Action that invalidates a cached widget on a page with `<Suspense>` streaming, Next.js prematurely resolves the client `await` while secretly continuing to re-render the `<Suspense>` tree in the background on the server. Under concurrent traffic (`6` simultaneous requests), that dangling background render races with subsequent invalidations and requests, causing expensive database/API queries inside `"use cache"` to execute multiple times (`got 2`) instead of coalescing into `1` execution. In **Dinou v9.0.3**, Server Functions are pure RPC calls that never trigger hidden background page renders, guaranteeing `1` execution across `10/10` runs.
-- **Observed Behavior Across the 10-Run Stress Suite (`--runs=10`) on Next.js 16.4.3 (`⚠️ FLAKY — 2 Fail of 10 execs` · `80% ✅ / 20% ❌`):**
-  - Passed in 8 of the 10 runs (`Runs 2–9`, `execCount = 1`), and **failed in 2 of the 10 runs** (`Run 1/10` and `Run 10/10` in the `--runs=10` stress suite, in addition to 1 failure during the 3 initial single-pass runs prior to the 10-run batch) with:
+- **Observed Behavior Across the Two Official 10-Run Droplet Suites (`Run 1` + `Run 2` = `20` Runs) on Next.js 16.4.3 (`⚠️ FLAKY — 8/10 in Run 1, 10/10 in Run 2`):**
+  - In **Run 1** ([`results_run1/verify.json`](./results_run1/verify.json)), passed in 8 of the 10 runs (`execCount = 1`) and **failed in 2 of the 10 runs** (`Run 1/10` and `Run 10/10`; `10/10` in **Run 2** [`results_run2/verify.json`](./results_run2/verify.json), totaling `18/20` = `90.0%` across both runs) with:
     ```text
     expected stampede protection to execute cold 150ms slot exactly once across 6 concurrent requests, got 2
     ```
-  - Meanwhile, on **Dinou v9.0.3 (`dinou-9`)**, all 36 checks—including Check 28—passed **`10/10` runs (`360/360` total check executions in `--runs=10`, plus `3/3` in the initial single-pass runs, `0` failures, `0` flaky checks — 100.0% deterministic)**.
+  - Meanwhile, on **Dinou v9.0.3 (`dinou-9`)**, all 36 checks—including Check 28—passed **`10/10` runs in Run 1 (`360/360`) and `10/10` runs in Run 2 (`360/360`) — `720/720` total check executions across 20 runs (`0` failures, `0` flaky checks — 100.0% deterministic)**.
 - **Root-Cause Investigation in Next.js 16.4.3 Internals (`revalidate.js`, `action-handler.js`, `use-cache-wrapper.js`):**
   1. **Forced Page Re-Render Inside Server Action `POST`:** When a `"use server"` Server Action invoked from `/rigorous/cache-slot` calls `updateTag(...)` (such as `rigorousResetState()` or `rigorousRevalidateTag("cs-tag-stampede")`), Next.js's `revalidate()` in `next/dist/server/web/spec-extension/revalidate.js` unconditionally sets `store.pathWasRevalidated = ActionDidRevalidateStaticAndDynamic`.
   2. **Automatic RSC Flight Stream on `POST`:** Because `store.pathWasRevalidated` is set, `executeActionAndPrepareForRender()` in `next/dist/server/app-render/action-handler.js` sets `skipPageRendering = false` and immediately starts re-rendering the entire current route (`/rigorous/cache-slot`) as an RSC Flight stream inside the Server Action `POST` response (`generateFlight`).
@@ -374,19 +376,19 @@ In real-world production deployments, **not needing a warmup phase (Dinou 9.0.3)
 
 ### 4.5 Deep-Dive on Check 36: Lazy `index.html` Re-Composition & Zero Hydration Mismatch on Co-Located and Descendant Pages After `revalidateLayout`
 
-A critical edge case in Horizontal Segmentation (`rigurous-hs.md` §1.2 & §2.3) occurs when `revalidateLayout(path)` updates an ancestor layout on disk (`layout.rsc` advances from generation $T_1 \to T_2$), and a user subsequently performs a **hard reload (`F5`) or direct URL navigation (`page.goto`)** in the browser (rather than a soft navigation) to:
+A critical edge case in Horizontal Segmentation (`rigurous-hs.md` §1.2 & §2.3) occurs when `revalidateLayout(path)` updates an ancestor layout on disk (`layout.rsc` advances from generation `T1 → T2`), and a user subsequently performs a **hard reload (`F5`) or direct URL navigation (`page.goto`)** in the browser (rather than a soft navigation) to:
 1. The **co-located page right next to the revalidated layout** (e.g., `/rigorous/hs` next to `rigorous/hs/layout.tsx`, or `/rigorous/hs/nested` next to `rigorous/hs/nested/layout.tsx`).
 2. A **direct child page** in a subfolder that shares the revalidated layout (`L1`) and has no layout of its own (e.g., `/rigorous/hs/sibling-a`).
 3. A **deep descendant page** under a nested child layout (`L1 → L2`) deeper in the directory tree (e.g., `/rigorous/hs/nested` and `/rigorous/hs/nested/page-2`).
 
-If a framework served the stale pre-rendered `index.html` (from $T_1$) while the client hydrated against the newly revalidated `layout.rsc` (at $T_2$), React would immediately throw a **Hydration Mismatch Error** (`Hydration failed because the server rendered HTML didn't match the client`). Conversely, if a framework eagerly re-rendered every descendant page's `page.tsx` when `revalidateLayout` was called, it would violate Horizontal Segmentation by re-executing untouched pages.
+If a framework served the stale pre-rendered `index.html` (from `T1`) while the client hydrated against the newly revalidated `layout.rsc` (at `T2`), React would immediately throw a **Hydration Mismatch Error** (`Hydration failed because the server rendered HTML didn't match the client`). Conversely, if a framework eagerly re-rendered every descendant page's `page.tsx` when `revalidateLayout` was called, it would violate Horizontal Segmentation by re-executing untouched pages.
 
 **Check 36 (`rigorous-hs-lazy-html-hydration`)** tests both **Part 1 (`revalidateLayout("/rigorous/hs")` on `L1`, `seq = 460`)** and **Part 2 (`revalidateLayout("/rigorous/hs/nested")` on nested `L2`, `seq = 461`)** while poisoning all co-located and descendant page counters to `999` (`hsIndexPageSeq = 999`, `hsIndexPropsSeq = 999`, `hsSiblingASeq = 999`, `hsNestedPage1Seq = 999`, `hsNestedPage2Seq = 999`):
 
 - **How Dinou v9.0.3 Solves It (Lazy `index.html` Re-Composition from Disk `layout.rsc [T2]` + `page.rsc [T1]`):**
-  1. When `revalidateLayout("/rigorous/hs")` runs, Dinou regenerates only `rigorous/hs/layout.rsc` ($T_2$, `seq = 460`). None of the co-located or descendant `page.rsc` payloads (`rigorous/hs/page.rsc`, `sibling-a/page.rsc`, `nested/page.rsc`, `nested/page-2/page.rsc`) are re-executed—they remain on disk at $T_1$ (`seq = 100`).
-  2. When a hard `GET` arrives for `/rigorous/hs` (co-located) or `/rigorous/hs/sibling-a` (child), Dinou compares `leafLayout.generatedAt` ($T_2$) against `page.generatedAt` ($T_1$). Detecting $T_2 > T_1$, Dinou **lazily re-composes `index.html`** by streaming the fresh `layout.rsc` ($T_2$, `460`) together with the existing cached `page.rsc` ($T_1$, `100`) and stamping `window.__DINOU_BUILD_ID__ = T2`. Both the raw SSR HTML (`await res.text()`) and the hydrated DOM show `L1 = 460` and `page = 100` with **`0` React hydration errors/warnings** and **`0` executions of `page.tsx`**.
-  3. When a hard `GET` arrives for `/rigorous/hs/nested` or `/rigorous/hs/nested/page-2` (under nested layout `L2`), Dinou detects that ancestor `L1.generatedAt` ($T_2$) is newer than `L2.generatedAt` ($T_1$), automatically cascades the layout chain regeneration into `nested/layout.rsc` (while preserving any `<DinouCacheSlot>` inside `L2`, as verified in Check 34, and keeping `nested/page.rsc` and `nested/page-2/page.rsc` untouched at `100`), and lazily re-composes `nested/index.html` and `nested/page-2/index.html` with **`0` hydration errors**.
+  1. When `revalidateLayout("/rigorous/hs")` runs, Dinou regenerates only `rigorous/hs/layout.rsc` (`T2`, `seq = 460`). None of the co-located or descendant `page.rsc` payloads (`rigorous/hs/page.rsc`, `sibling-a/page.rsc`, `nested/page.rsc`, `nested/page-2/page.rsc`) are re-executed—they remain on disk at `T1` (`seq = 100`).
+  2. When a hard `GET` arrives for `/rigorous/hs` (co-located) or `/rigorous/hs/sibling-a` (child), Dinou compares `leafLayout.generatedAt` (`T2`) against `page.generatedAt` (`T1`). Detecting `T2 > T1`, Dinou **lazily re-composes `index.html`** by streaming the fresh `layout.rsc` (`T2`, `460`) together with the existing cached `page.rsc` (`T1`, `100`) and stamping `window.__DINOU_BUILD_ID__ = T2`. Both the raw SSR HTML (`await res.text()`) and the hydrated DOM show `L1 = 460` and `page = 100` with **`0` React hydration errors/warnings** and **`0` executions of `page.tsx`**.
+  3. When a hard `GET` arrives for `/rigorous/hs/nested` or `/rigorous/hs/nested/page-2` (under nested layout `L2`), Dinou detects that ancestor `L1.generatedAt` (`T2`) is newer than `L2.generatedAt` (`T1`), automatically cascades the layout chain regeneration into `nested/layout.rsc` (while preserving any `<DinouCacheSlot>` inside `L2`, as verified in Check 34, and keeping `nested/page.rsc` and `nested/page-2/page.rsc` untouched at `100`), and lazily re-composes `nested/index.html` and `nested/page-2/index.html` with **`0` hydration errors**.
 - **How Next.js v16.4.3 Behaved:**
   - Once `getHsIndexPageState`, `getHsNestedLayoutState`, `getHsNestedPage1State`, and `getHsNestedPage2State` were added to `warmNextUseCacheBaseline()` so their `"use cache"` entries were pre-loaded into RAM before poisoning page counters to `999`, Next.js 16.4.3 also passed Check 36 with `0` hydration errors (because `updateTag("layout:/rigorous/hs")` invalidates the on-disk route HTML files and re-renders the route HTML on the next hard `GET` using the fresh layout + RAM-cached page functions). However, just as in Checks 30 and 34, without RAM warmup in `DefaultCacheHandler`, Next.js suffers a cold RAM miss on unvisited descendant pages and leaks `999`.
 
@@ -418,7 +420,7 @@ Unlike performance benchmarks that measure CPU-bound build times, requests per s
   - Whether client-side navigation issued `0` redundant layout or page RSC network requests (`layoutFetches = 0`, `pageRscReqs = 0`).
   - Whether out-of-order responses respected monotonic **Last-Write-Wins (LWW)** (`402/fresh-fast` preserved over `401/stale-slow`).
   - Whether hard browser reloads (`F5` / `page.goto`) produced **`0` React hydration errors or warnings**.
-- Because these are **functional and architectural correctness checks**, the `100% ✅ PASS` results on **Dinou v9.0.3** and the **5 deterministic `100% ❌ FAIL` checks (`Checks 24, 27, 29, 31, 33`)** on **Next.js v16.4.3** do not depend on the CPU, RAM, disk speed, or operating system of the machine where the suite is executed, and are fully reproducible by anyone on any standard development environment. *(Only the exact failure frequency of the intrinsic race condition in Next.js's `⚠️ FLAKY` Check 28 may vary slightly with OS thread scheduling, as explained in Section 3).*
+- Because these are **functional and architectural correctness checks**, the `100% ✅ PASS` results on **Dinou v9.0.3 (`dinou-9` & `dinou-9-u`)** and the **5 deterministic `100% ❌ FAIL` checks (`Checks 24, 27, 29, 31, 33`)** on **Next.js v16.4.3** do not depend on the CPU, RAM, disk speed, or operating system of the machine where the suite is executed, and are fully reproducible by anyone on any standard development environment. *(Only the exact failure frequency of the intrinsic race condition in Next.js's Check 28—which was `⚠️ FLAKY (1 / 10)` in Run 1 and passed `10 / 10` in Run 2—may vary slightly with OS thread scheduling, as explained in Section 3).*
 
 ### 6.3 How to Reproduce the Verification Suite Locally
 
@@ -429,13 +431,13 @@ Anyone can independently verify and reproduce all results presented in this repo
 pnpm install
 pnpm shared
 
-# 2. Run a single full verification pass (builds both apps cleanly + runs all 36 checks on Dinou 9.0.3 & Next.js 16.4.3)
-node scripts/verify.mjs --only=dinou-9,next
+# 2. Run a single full verification pass (builds apps cleanly + runs all 36 checks on Dinou 9.0.3 & Next.js 16.4.3)
+node scripts/verify.mjs --only=dinou-9,dinou-9-u,next
 
 # 3. Run the 10-pass consecutive stress & determinism suite (360 check executions per framework)
 #    Builds each app cleanly once, snapshots the pristine post-build disk cache, and before each
 #    of the 10 runs restores the pristine disk snapshot and restarts a fresh server process:
-node scripts/verify.mjs --only=dinou-9,next --runs=10
+node scripts/verify.mjs --only=dinou-9,dinou-9-u,next --runs=10
 ```
 
 Each execution prints the per-check `PASS` / `FAIL` log in real time, outputs the multi-run determinism summary table in the terminal, and saves the structured verification results to `results/verify.json`.
