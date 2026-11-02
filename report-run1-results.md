@@ -173,6 +173,20 @@ Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Di
 
 ---
 
+### 3.5 How to Interpret These Results
+
+- **The Initial Connection Burst Phenomenon (Why `p50` and `p99` Are Reported Instead of `max`)**:
+  Each test execution opens `200` TCP connections simultaneously on `localhost` at `t = 0`. While Node.js's single-threaded Event Loop is saturated servicing active HTTP/1.1 keep-alive streams, queued connections dwell in the Linux kernel listen backlog until accepted across successive loop turns. **This occurs in both frameworks and is an OS/event-loop queueing dynamic, not a framework bug.** Because this initial burst primarily inflates maximum (`max`) latency, **`p50` and `p99` percentiles are reported instead of maximums**:
+  - In Dinou, this initial queueing affected only **`~0.04%`** of requests on `/`, leaving `p99` unaffected (`173 ms`).
+  - In Next.js, this affected **`~0.7%`** of requests on `/`. These requests fall close to the 99th percentile, raising Next.js's `p99` on `/` to `402 ms` despite a `p50` of `199 ms`.
+  - The exhaustive diagnostic investigation into this behavior is documented in [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) and [`deep-dive-investigation.md`](./deep-dive-investigation.md).
+- **True Event Loop Saturation on Dynamic Routes in Next.js**:
+  On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (`p50`) reaches **`~921–1,073 ms`**, with tail queues (`p99`) reaching **`7.2–10.0 seconds`** (and **`17.3–22.1 seconds`** across the 3D Cube routes). In contrast, Dinou maintains a **`~384–481 ms` `p50`** and a **sub-second `p99` (`478–725 ms` on `/ppr` and `/dashboard`, and `325 ms` on `/rigorous/hs-cache-slot`)**. Under identical high concurrency, Dinou stays close to the baseline architectural latency of each route (`200 ms` per dynamic slot), whereas Next.js accumulates compounding queue dwell times.
+- **Timeout Thresholds vs. Tail Latency**:
+  In preliminary runs with `autocannon`'s default `10s` per-request timeout, client timeouts occurred whenever queue dwell time exceeded 10 seconds. With a `30s` client timeout (on the 10 routes with `0` timeouts in Run 1) and a `60s` client timeout (`2 × duration` across all 12 routes in Run 2), delayed requests are recorded as **tail latency (`p99` / `max`)** rather than premature connection failures. Error metrics from `30s`/`60s` timeout runs should therefore not be compared directly against runs using lower timeout thresholds.
+
+---
+
 ## 4. Process-Tree Memory Footprint Under 200 Concurrent Connections (`pnpm bench:memory`)
 
 `scripts/memory.mjs` measures the complete process-tree Resident Set Size (`VmRSS` on Linux) across three lifecycle stages: **Idle** (median of 5 samples taken 3s after server boot), **Peak Under Load** (sampled every 400ms during a 30-second, 200-connection `autocannon` burst against `/dashboard`), and **Post-Load Settled**.
@@ -265,6 +279,23 @@ Prior to executing the hardware-dependent load and pipeline phases, `scripts/ver
 - **Percentile Aggregation & `p95` (`p97.5` Upper Bound)**: Each reported percentile (`p50`, `p95`, `p99`) is the **median of that percentile across the 5 independent rounds**. Because `autocannon` does not expose an exact `p95` bucket in its default HDR histogram percentiles, `p95` entries in `load.json` and `REPORT.md` represent `autocannon`'s **`p97_5` (`p97.5`) upper bound**.
 - **Sequential TTFB (Unloaded) vs. Latency Under Load**: The `30` sequential TTFB probes are measured **without concurrent load (`c = 1`)** between warmup and load testing to capture baseline server processing time; they must not be conflated with latency under 200-connection load.
 - **Keep-Alive Configuration**: `keepAliveTimeout` is set to `65s` across all apps (`headersTimeout = 66s` in Dinou) so sockets are never closed mid-round.
+
+#### Evaluated Routes (`12` Production Routes: `5` Baseline + `7` Rigorous 3D Cube Routes)
+
+| Route | Category / 3D Vertex | Implementation Details |
+| :--- | :--- | :--- |
+| **`/`** | Baseline SSG | 50 items list loaded from local JSON (`data/items.json`), statically pre-rendered at build time. |
+| **`/items/42`** | Baseline ISR (`60s`) | Item detail view with `revalidate = 60` (`cacheLife({ revalidate: 60 })`), pre-rendered at build time and served from ISR cache. |
+| **`/dashboard`** | Baseline Dynamic SSR | Uncached dynamic SSR shell + three parallel `<Suspense>` slots each awaiting a `200 ms` artificial delay (`await sleep(200)`). |
+| **`/ppr`** | Baseline PPR | Static pre-rendered shell flushed immediately in the first chunk + one dynamic `200 ms` `<Suspense>` hole streamed in the same HTTP response. |
+| **`/messages`** | Baseline SSR + Disk I/O | Dynamic SSR page reading a local JSON store via `fs.promises.readFile("data/messages.json")` on every request (no in-memory framework cache) + Server Function/Action form mutation. |
+| **`/rigorous/hs`** | **1. Pure HS** | Multi-level segmented layouts (`L1`, `L2`, `reset_layout`, `no_layout`) + cached page (`revalidate = 3600`), testing independent layout vs. page caching and surgical revalidation. |
+| **`/rigorous/cache-slot`** | **2. Pure Cache-Slot** | Uncached dynamic host layout & page (`revalidate = 0`) embedding **10 isolated `<DinouCacheSlot>` / `"use cache"` boundaries** (static, `1s` TTL, tagged, tag-only, and stampede slots). |
+| **`/rigorous/ppr`** | **3. Pure Rigorous PPR** | Instant static PPR shell + parallel `@sidebar` slot + static/dynamic/nested `<Suspense>` holes (`80 ms` delay). |
+| **`/rigorous/ppr-cache-slot`** | **4. Pairwise #1 (`PPR + Slot`)** | Instant static PPR shell + `<DinouCacheSlot>` / `"use cache"` inside both the static shell and streamed `<Suspense>` holes (`80 ms`). |
+| **`/rigorous/hs-cache-slot`** | **5. Pairwise #2 (`HS + Slot`)** | Cached HS layout & page (`revalidate = 3600`, Non-PPR) embedding cached slots, `1s` TTL slots, and one uncached dynamic slot (`revalidate = 0`). |
+| **`/rigorous/hs-ppr`** | **6. Pairwise #3 (`HS + PPR`)** | PPR layout (`L1`) with `@sidebar` hole + PPR child pages (`80 ms` holes) with independent layout/page surgical revalidation. |
+| **`/rigorous/triple`** | **7. Triple Synergy (`HS + Slot + PPR`)** | Full 3D combination: multi-level HS layouts (`L1 → L2`) + `<DinouCacheSlot>` / `"use cache"` boundaries in both static shells and streamed PPR `<Suspense>` holes (`80 ms`). |
 
 ### 7.3 Limitations & Boundary Conditions
 

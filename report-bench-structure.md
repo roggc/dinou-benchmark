@@ -86,6 +86,34 @@ The table below details how many passes/runs each script performs by default, wh
 - **Autocannon Client Socket Timeout (`timeout = 60s` = `2 × duration` in Run 2 vs. `timeout = 30s` in Run 1)**: Setting `timeout = Math.max(60, durationSeconds * 2)` (`60s` for a `30s` test) prevents `autocannon`'s `40 ms` teardown race condition (`lib/run.js`) when `timeout === duration` (`30s === 30s` in Run 1), ensuring delayed initial-burst connections are recorded as tail latency (`p99` / `max`) rather than teardown-window timeout counters (see [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md)).
 - **Zero Active Instrumentation**: No diagnostic hooks, probes, or request-logging listeners are active during official benchmark runs.
 
+### 5.1 Evaluated Routes (5 Baseline + 7 Rigorous 3D Cube Routes)
+
+| Route | Category / 3D Vertex | Implementation Details |
+| :--- | :--- | :--- |
+| **`/`** | Baseline SSG | 50 items list loaded from local JSON (`data/items.json`), statically pre-rendered at build time. |
+| **`/items/42`** | Baseline ISR (`60s`) | Item detail view with `revalidate = 60` (`cacheLife({ revalidate: 60 })`), pre-rendered at build time and served from ISR cache. |
+| **`/dashboard`** | Baseline Dynamic SSR | Uncached dynamic SSR shell + three parallel `<Suspense>` slots each awaiting a `200 ms` artificial delay (`await sleep(200)`). |
+| **`/ppr`** | Baseline PPR | Static pre-rendered shell flushed immediately in the first chunk + one dynamic `200 ms` `<Suspense>` hole streamed in the same HTTP response. |
+| **`/messages`** | Baseline SSR + Disk I/O | Dynamic SSR page reading a local JSON store via `fs.promises.readFile("data/messages.json")` on every request (no in-memory framework cache) + Server Function/Action form mutation. |
+| **`/rigorous/hs`** | **1. Pure HS** | Multi-level segmented layouts (`L1`, `L2`, `reset_layout`, `no_layout`) + cached page (`revalidate = 3600`), testing independent layout vs. page caching and surgical revalidation. |
+| **`/rigorous/cache-slot`** | **2. Pure Cache-Slot** | Uncached dynamic host layout & page (`revalidate = 0`) embedding **10 isolated `<DinouCacheSlot>` / `"use cache"` boundaries** (static, `1s` TTL, tagged, tag-only, and stampede slots). |
+| **`/rigorous/ppr`** | **3. Pure Rigorous PPR** | Instant static PPR shell + parallel `@sidebar` slot + static/dynamic/nested `<Suspense>` holes (`80 ms` delay). |
+| **`/rigorous/ppr-cache-slot`** | **4. Pairwise #1 (`PPR + Slot`)** | Instant static PPR shell + `<DinouCacheSlot>` / `"use cache"` inside both the static shell and streamed `<Suspense>` holes (`80 ms`). |
+| **`/rigorous/hs-cache-slot`** | **5. Pairwise #2 (`HS + Slot`)** | Cached HS layout & page (`revalidate = 3600`, Non-PPR) embedding cached slots, `1s` TTL slots, and one uncached dynamic slot (`revalidate = 0`). |
+| **`/rigorous/hs-ppr`** | **6. Pairwise #3 (`HS + PPR`)** | PPR layout (`L1`) with `@sidebar` hole + PPR child pages (`80 ms` holes) with independent layout/page surgical revalidation. |
+| **`/rigorous/triple`** | **7. Triple Synergy (`HS + Slot + PPR`)** | Full 3D combination: multi-level HS layouts (`L1 → L2`) + `<DinouCacheSlot>` / `"use cache"` boundaries in both static shells and streamed PPR `<Suspense>` holes (`80 ms`). |
+
+### 5.2 How to Interpret HTTP Load Results
+
+- **The Initial Connection Burst Phenomenon (Why `p50` and `p99` Are Reported Instead of `max`)**:
+  Each `autocannon` round opens `200` TCP connections simultaneously on `localhost` at `t = 0`. While Node.js's single-threaded Event Loop is saturated servicing active HTTP/1.1 keep-alive streams, newly opened connections wait in the Linux kernel listen backlog until accepted across successive loop turns. **This occurs in both frameworks and is an OS/event-loop queueing dynamic, not a framework bug.** Because this initial `t = 0` burst primarily inflates the single worst-case (`max`) request, **`p50` (median) and `p99` (99th percentile) latencies are reported instead of maximums**:
+  - On `/` (SSG), this initial queueing affects only **`~0.04%`** of requests in Dinou, leaving `p99` unaffected (`172–176 ms`).
+  - In Next.js, because each `/` response transfers `~2.6×` more bytes (`~73 KB/req` vs. `~28 KB/req`) and takes longer per Event Loop tick, the initial backlog drain affects **`~0.7%`** of requests—falling close to the 99th percentile and raising Next.js's `p99` on `/` to `392–432 ms` despite a `p50` of `191–199 ms`.
+- **True Event Loop Saturation on Dynamic & 3D Cube Routes in Next.js**:
+  On `/dashboard`, `/ppr`, and `/messages`, Next.js's median latency (`p50`) reaches **`~904–1,073 ms`** with tail queues (`p99`) reaching **`6.3–10.0 seconds`** (and **`15.9–22.1 seconds`** across the 3D Cube routes). In contrast, Dinou maintains a **`~365–481 ms` `p50`** and a **sub-second `p99` (`475–725 ms` on `/ppr` and `/dashboard`, and `312–325 ms` on `/rigorous/hs-cache-slot`)**—staying close to the baseline architectural latency of each route (`200 ms` per dynamic slot) while Next.js accumulates compounding queue dwell times.
+- **`0 Errors` & Client Timeout Thresholds vs. Tail Latency**:
+  In preliminary diagnostic runs using `autocannon`'s default `10s` timeout, client timeouts occurred whenever queue dwell time exceeded 10 seconds. With `timeout = 60s` (`2 × duration` in Run 2, or `30s` on fast routes in Run 1), delayed requests from the initial connection burst are recorded accurately as **tail latency (`p99` / `max`)** rather than premature client-side aborts. Error rates from `60s`-timeout runs should therefore not be compared directly against runs using `10s` or `30s` timeout thresholds (see [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md)).
+
 ---
 
 ## 6. Limitations & Boundary Conditions
