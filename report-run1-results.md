@@ -5,7 +5,7 @@
 **Frameworks Evaluated:** **Dinou v9.0.3** (`dinou-9`), **Dinou v9.0.3 Unvendorized** (`dinou-9-u`, `dinou -u`), and **Next.js v16.4.3** (`next`), all running **React 19.3.1**  
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
 **Total Pipeline Execution Time:** `6,073 seconds` (`1 hour 41 minutes 13 seconds`) · **`autocannon` Socket Timeout:** `timeout = 30s` (equal to the `30s` round window)  
-**Companion Reports:** [`report-run2-results.md`](./report-run2-results.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`deep-dive-investigation.md`](./deep-dive-investigation.md) · **Raw Archive:** [`results_run1/REPORT.md`](./results_run1/REPORT.md)
+**Companion Reports:** [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`deep-dive-investigation.md`](./deep-dive-investigation.md) · **Raw Archive:** [`results_run1/REPORT.md`](./results_run1/REPORT.md)
 
 ---
 
