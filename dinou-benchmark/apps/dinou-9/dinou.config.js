@@ -20,6 +20,7 @@ export default {
         let maxWaitBeforeFirstReqMs = 0;
         let maxSocketAcceptedRelMs = 0;
         let slowFirstReqs = [];
+        let activeSocketsSet = new Set();
 
         server.on("connection", (socket) => {
           totalConnections++;
@@ -46,6 +47,7 @@ export default {
                 slowOver1s,
                 topSlowInsideNode: topSlowInsideNode.sort((a, b) => b.durationMs - a.durationMs).slice(0, 5),
                 totalConnections,
+                activeSocketsWithReqs: activeSocketsSet.size,
                 maxSocketAcceptedRelMs,
                 maxWaitBeforeFirstReqMs,
                 slowFirstReqs: slowFirstReqs.sort((a, b) => b.waitMs - a.waitMs).slice(0, 10),
@@ -65,6 +67,7 @@ export default {
             maxSocketAcceptedRelMs = 0;
             maxWaitBeforeFirstReqMs = 0;
             slowFirstReqs = [];
+            activeSocketsSet = new Set();
             res.statusCode = 200;
             res.end("ok");
             return;
@@ -73,6 +76,7 @@ export default {
           const reqStart = Date.now();
           const socket = req.socket;
           if (socket) {
+            activeSocketsSet.add(socket);
             socket._reqCount = (socket._reqCount || 0) + 1;
             if (socket._reqCount === 1 && socket._acceptedAt) {
               const waitMs = reqStart - socket._acceptedAt;

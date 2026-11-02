@@ -5,12 +5,12 @@
  * Usage:
  *   node scripts/diagnose-timeouts.mjs
  *   ROUTE=/rigorous/cache-slot node scripts/diagnose-timeouts.mjs
- *   node scripts/diagnose-timeouts.mjs --route=/rigorous/cache-slot
+ *   node scripts/diagnose-timeouts.mjs --route=/rigorous/hs-cache-slot
  *
  * Tests 3 scenarios against Dinou 9.0.3 (with DIAGNOSE=1 internal server instrumentation):
- * 1. 200 Connections, Keep-Alive, 5s Warmup -> 30s Run (timeout: 30s) — exact replica of load.mjs
- * 2. 50 Connections, Keep-Alive, 30s Run (timeout: 30s)
- * 3. 200 Connections, Connection: close (No Keep-Alive), 30s Run (timeout: 30s)
+ * 1. Clean 200-Conn Burst (10 sequential warmup reqs so kernel backlog is 100% empty at t=0, then 200 Conn for 30s)
+ * 2. Exact Replica of load.mjs (200-Conn 5s Warmup -> 200-Conn 30s Run)
+ * 3. Moderate Concurrency (50 Conn for 30s)
  */
 import path from "node:path";
 import autocannon from "autocannon";
@@ -23,7 +23,7 @@ const routePath = process.env.ROUTE || cliRoute || "/rigorous/cache-slot";
 const durationSec = Number(process.env.DURATION || 30);
 const timeoutSec = Number(process.env.TIMEOUT || 30);
 
-async function runScenario({ name, connections = 200, warmupSec = 0, headers = {} }) {
+async function runScenario({ name, connections = 200, warmupMode = "sequential", headers = {} }) {
   console.log(`\n============================================================`);
   console.log(`SCENARIO: ${name}`);
   console.log(`Route: ${routePath} | Connections: ${connections} | Duration: ${durationSec}s | Timeout: ${timeoutSec}s`);
@@ -41,15 +41,21 @@ async function runScenario({ name, connections = 200, warmupSec = 0, headers = {
   try {
     const targetUrl = `${server.url}${routePath}`;
 
-    if (warmupSec > 0) {
-      console.log(`→ Running ${warmupSec}s warmup at ${connections} connections (matching load.mjs)...`);
+    if (warmupMode === "sequential") {
+      console.log(`→ Warming up V8 JIT & route caches with 20 sequential requests (0 backlog residue)...`);
+      for (let i = 0; i < 20; i++) {
+        await fetch(targetUrl);
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    } else if (warmupMode === "burst5s") {
+      console.log(`→ Running 5s warmup at ${connections} connections (matching load.mjs)...`);
       await new Promise((resolve) => {
         autocannon(
           {
             url: targetUrl,
             connections,
-            duration: warmupSec,
-            timeout: Math.max(30, warmupSec),
+            duration: 5,
+            timeout: 30,
             pipelining: 1,
           },
           () => resolve()
@@ -113,6 +119,7 @@ async function runScenario({ name, connections = 200, warmupSec = 0, headers = {
       console.log(`Max duration inside Node         : ${stats.maxDurationMs} ms`);
       console.log(`Requests > 1s inside Node        : ${stats.slowOver1s}`);
       console.log(`Total TCP sockets accepted       : ${stats.totalConnections} (out of ${connections})`);
+      console.log(`Distinct sockets serving >=1 req : ${stats.activeSocketsWithReqs} (out of ${connections})`);
       console.log(`Latest socket accepted at        : +${(stats.maxSocketAcceptedRelMs / 1000).toFixed(3)}s`);
       console.log(`Max wait accept() -> 1st req     : ${(stats.maxWaitBeforeFirstReqMs / 1000).toFixed(3)}s`);
     }
@@ -137,22 +144,21 @@ async function runScenario({ name, connections = 200, warmupSec = 0, headers = {
 console.log(`Starting Timeout Origin Isolation Suite for route: ${routePath}...\n`);
 
 await runScenario({
-  name: "1. REPLICA OF LOAD.MJS (200 Conn, 5s Warmup, 30s Run, Keep-Alive)",
+  name: "1. CLEAN 200-CONN BURST (20 Sequential Warmup Reqs -> 200 Conn 30s Run)",
   connections: 200,
-  warmupSec: 5,
+  warmupMode: "sequential",
 });
 
 await runScenario({
-  name: "2. MODERATE CONCURRENCY (50 Conn, 30s Run, Keep-Alive)",
+  name: "2. REPLICA OF LOAD.MJS (200-Conn 5s Warmup -> 200 Conn 30s Run)",
+  connections: 200,
+  warmupMode: "burst5s",
+});
+
+await runScenario({
+  name: "3. MODERATE CONCURRENCY (50 Conn, 30s Run, Keep-Alive)",
   connections: 50,
-  warmupSec: 3,
-});
-
-await runScenario({
-  name: "3. 200 CONN WITHOUT KEEP-ALIVE (Connection: close)",
-  connections: 200,
-  warmupSec: 3,
-  headers: { Connection: "close" },
+  warmupMode: "sequential",
 });
 
 console.log("\n============================================================");

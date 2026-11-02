@@ -216,6 +216,7 @@ async function testWithK6(framework, appDir, port) {
           if (stats.totalConnections !== undefined) {
             console.log(`\n--- Socket Connection vs Request Timing Diagnostic (${framework}) ---`);
             console.log(`  Total TCP sockets accepted by Node: ${stats.totalConnections}`);
+            console.log(`  Distinct sockets serving >=1 req  : ${stats.activeSocketsWithReqs}`);
             console.log(`  Latest socket accepted into test  : ${(stats.maxSocketAcceptedRelMs / 1000).toFixed(3)}s`);
             console.log(`  Max wait from accept -> 1st req   : ${(stats.maxWaitBeforeFirstReqMs / 1000).toFixed(3)}s`);
             if (stats.slowFirstReqs && stats.slowFirstReqs.length > 0) {
