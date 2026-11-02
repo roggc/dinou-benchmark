@@ -2,7 +2,8 @@
 
 **Date:** November 2, 2026  
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
-**Pipeline Orchestrator:** `scripts/bench.mjs` (`pnpm bench`)
+**Pipeline Orchestrator:** `scripts/bench.mjs` (`pnpm bench`)  
+**Companion Reports:** [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-verify.md`](./report-verify.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md)
 
 ---
 
@@ -74,7 +75,71 @@ The table below details how many passes/runs each script performs by default, wh
 
 ---
 
-## 5. Quick Command Reference
+## 5. Key Methodological Rules & Measurement Nuances (`scripts/load.mjs`)
+
+- **Production Builds Only**: All three application targets (`dinou-9`, `dinou-9-u`, `next`) are measured in production mode (`build` + `start`), never in development mode (except during the dedicated `dev-start` and `hmr` DX phases).
+- **`200` Connections, `30s` Duration, `5` Runs per Route**: All HTTP load metrics represent sustained high-concurrency traffic (`150 seconds` of recorded load per route per framework).
+- **`5s` Warm-up at Full `200` Connections**: Executed prior to recording each route to warm up the V8 JIT compiler (TurboFan/Maglev), framework in-memory caches, and the Linux kernel page cache.
+- **Percentile Calculation & `p95` (`p97.5` Upper Bound)**: Each published percentile (`p50`, `p95`, `p99`) represents the **median of that respective percentile across the 5 independent rounds** (minimum and maximum throughput values across the 5 rounds are also preserved in `results/load.json`). Because `autocannon` does not record an exact `p95` bucket in its default HDR histogram percentiles, reported `p95` entries in `load.json` and `REPORT.md` represent `autocannon`'s **`p97_5` (`p97.5`) upper bound** (`latency.p95 ?? latency.p97_5`).
+- **Sequential TTFB (Unloaded)**: `30` sequential `timedFetch` requests are sampled **without concurrent load (`c = 1`)** right between the `5s` warm-up and the 5 concurrent load rounds. This establishes baseline server processing time without event-loop queueing and must not be conflated with latency under 200-connection load.
+- **Keep-Alive Configuration**: `keepAliveTimeout` is configured to `65s` across all apps (with `headersTimeout` set to `66s` in Dinou; Next.js defaults `headersTimeout` to Node's `60s`), preventing premature server-side keep-alive socket closures during a `30s` round.
+- **Autocannon Client Socket Timeout (`timeout = 60s` = `2 × duration` in Run 2 vs. `timeout = 30s` in Run 1)**: Setting `timeout = Math.max(60, durationSeconds * 2)` (`60s` for a `30s` test) prevents `autocannon`'s `40 ms` teardown race condition (`lib/run.js`) when `timeout === duration` (`30s === 30s` in Run 1), ensuring delayed initial-burst connections are recorded as tail latency (`p99` / `max`) rather than teardown-window timeout counters (see [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md)).
+- **Zero Active Instrumentation**: No diagnostic hooks, probes, or request-logging listeners are active during official benchmark runs.
+
+---
+
+## 6. Limitations & Boundary Conditions
+
+- **Colocated Client & Server (`loopback`)**: The load generator (`autocannon`) and application servers ran on the same 4-vCPU dedicated host over Linux loopback (`127.0.0.1`). Because a single-process Node.js server uses `~1.0 vCPU` and `autocannon` uses `~0.6–0.8 vCPU`, `~2.0` dedicated vCPUs remain free for OS networking, `libuv`, and V8 GC; interference is minimal and identical across frameworks, though non-zero (see [`report-infra.md`](./report-infra.md)).
+- **Sample Size & Multi-Run Reproducibility**: The benchmark repository includes **two complete, independent cloud runs** (`results_run1/` and `results_run2/`, each comprising `5` independent `30s` rounds per route across `12` routes and `10` verification passes across `36` checks = `720` total verification executions per framework). Total wall-clock pipeline duration replicated within **`0.41%`** (`6,073s` vs. `6,048s`), and per-route medians replicated within **`~1%–5%`** (see [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md)).
+- **Synthetic Delays**: The `200 ms` (`await sleep(200)`) delays on `/dashboard` and `/ppr` and the `80 ms` (`await sleep(80)`) delays on the 7 `/rigorous/*` 3D Cube routes simulate realistic database query and upstream API latencies without introducing external network jitter.
+- **Single-Process Node.js Execution**: Results reflect single-process Node.js execution (`node start.js` / `next start`). Multi-core production deployments (`node:cluster`, PM2, or multiple container replicas behind Nginx/Envoy) scale horizontally with different absolute throughput ceilings.
+- **Next.js 16 Architecture (`cacheComponents: true`)**: Next.js 16 replaces `experimental.ppr` with `cacheComponents: true` (`"use cache"`, `cacheLife`, `cacheTag`, `updateTag`, `connection()`). Both framework implementations follow their respective idiomatic conventions across all 12 routes and 36 verification checks.
+
+---
+
+## 7. How to Reproduce End-to-End
+
+### 7.1 Machine Provisioning & Environment Setup
+
+For rigorous, clean reproduction without noisy-neighbor CPU interference, deploy a dedicated cloud instance (**DigitalOcean CPU-Optimized, 4 Dedicated vCPUs / 8 GB RAM on Ubuntu 24.04 LTS**) and run the automated provisioning script:
+
+```bash
+git clone https://github.com/roggc/dinou-benchmark
+cd dinou-benchmark
+
+# Option A: Automated droplet provisioning (recommended)
+# Installs Node 22 LTS, pnpm 12.15.0, autocannon 8.0.0, k6 0.54.0, Playwright Chromium,
+# configures 4 GB swap, tunes kernel network/file limits (somaxconn=65535, nofile=1048576),
+# and runs pnpm install --frozen-lockfile + pnpm shared:
+sudo bash infra/droplet-setup.sh
+```
+
+If reproducing manually or on an already provisioned machine, initialize dependencies and sync shared components explicitly:
+
+```bash
+# Option B: Manual setup
+pnpm install --frozen-lockfile
+pnpm shared
+pnpm exec playwright install --with-deps chromium
+```
+
+### 7.2 Running the Official Cloud Benchmark Workflow (`verify --runs=10` + `bench --skip=verify`)
+
+```bash
+# 1. Log exact hardware and runtime parameters
+mkdir -p results
+{ date -u; uname -a; lscpu; free -h; df -h; node -v; pnpm -v; } > results/env.txt
+
+# 2. Run the 10-pass 3D verification determinism suite (36 checks × 10 runs = 360 executions/framework):
+ulimit -n 65535
+node scripts/verify.mjs --only=dinou-9,next --runs=10
+
+# 3. Run the remaining hardware-dependent benchmark phases (defaults: 5 runs, 200 connections, 30s duration, 5s warmup):
+node scripts/bench.mjs --skip=verify
+```
+
+### 7.3 Quick Command Reference (Full Suite & Individual Phases)
 
 ```bash
 # Run the entire 8-phase pipeline end to end:

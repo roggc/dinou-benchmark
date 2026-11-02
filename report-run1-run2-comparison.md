@@ -131,3 +131,12 @@ To validate this finding empirically and measure run-to-run reproducibility acro
   - **Run 1:** Idle `245.9 MB` · Peak under 200-conn load **`1,060.5 MB`** (`+814.6 MB`) · Post-load `1,060.5 MB`
   - **Run 2:** Idle `246.5 MB` · Peak under 200-conn load **`1,019.3 MB`** (`+772.8 MB`) · Post-load `1,019.4 MB`
 
+---
+
+## 5. Methodological Notes, Boundary Conditions & How to Reproduce
+
+- **Percentile Calculation & `p95` (`p97.5` Upper Bound)**: Each published percentile is the **median of that percentile across the 5 independent rounds**. Because `autocannon` does not expose an exact `p95` bucket in its default HDR histogram, reported `p95` entries in `load.json` and `REPORT.md` represent `autocannon`'s `p97_5` (`p97.5`) upper bound.
+- **Sequential TTFB (Unloaded) vs. Latency Under Load**: The `30` sequential TTFB probes per route are sampled **without concurrent load (`c = 1`)** between the `5s` warmup and the `5` concurrent load rounds, capturing baseline server processing time without event-loop queueing.
+- **Colocated Client & Server (`loopback`)**: Both `autocannon` (`~0.7 vCPU`) and the single-process Node.js server (`~1.0 vCPU`) ran on the same 4-vCPU dedicated droplet over loopback (`127.0.0.1`), leaving `~2.0` dedicated vCPUs free for OS networking, `libuv`, and V8 GC (see [`report-infra.md`](./report-infra.md)).
+- **Synthetic Delays & Single-Process Scope**: The `200 ms` (`/dashboard`, `/ppr`) and `80 ms` (`/rigorous/*`) delays simulate database/API latency without network jitter, and measurements reflect single-process Node.js execution (`node start.js` / `next start`). Full boundary conditions and step-by-step reproduction commands are documented in [`report-bench-structure.md`](./report-bench-structure.md#5-key-methodological-rules--measurement-nuances-scriptsloadmjs).
+

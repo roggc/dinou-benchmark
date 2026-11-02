@@ -81,30 +81,28 @@ cat <<NOTES
 -----------------------------------------------------------------------
 Next steps:
 -----------------------------------------------------------------------
-1) AUTOMATED BENCHMARK (Recommended)
-   Runs all 3 frameworks sequentially across all 8 phases:
-   (Dinou 8.1.2 on port 3101, Dinou 9.0.0 on 3103, and Next.js 16.4.2 on 3102)
+1) OFFICIAL CLOUD BENCHMARK WORKFLOW (Recommended)
+   Evaluates all 3 targets sequentially across all 8 phases:
+   (Dinou 9.0.3 Vendorized on port 3121, Dinou 9.0.3 Unvendorized on 3131,
+    and Next.js 16.4.3 on port 3111)
 
-     cd $REPO_DIR && pnpm bench
+     cd $REPO_DIR
+     mkdir -p results
+     { date -u; uname -a; lscpu; free -h; df -h; node -v; pnpm -v; } > results/env.txt
+     ulimit -n 65535
+     node scripts/verify.mjs --only=dinou-9,next --runs=10
+     node scripts/bench.mjs --skip=verify
 
-2) MANUAL TESTS WITH CPU PINNING (Optional)
-   If you wish to run manual load tests isolating server and load generator:
-     # Dinou 8.1.2 (port 3101)
-     taskset -c 0,1 pnpm --dir apps/dinou-8 run start &
-     taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3101/
-
-     # Dinou 9.0.0 (port 3103)
-     taskset -c 0,1 pnpm --dir apps/dinou-9 run start &
-     taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3103/
-
-     # Next.js 16.4.2 (port 3102)
-     taskset -c 0,1 pnpm --dir apps/next run start &
-     taskset -c 2,3 autocannon -c 50 -d 30 http://127.0.0.1:3102/
+2) SINGLE-COMMAND PIPELINE (With 1 Verify Pass)
+     cd $REPO_DIR && ulimit -n 65535 && pnpm bench
 
 Methodology guidelines:
-  - 3 runs per route; report the median, never cherry-picked best.
-  - Cooldown pause between frameworks to allow OS TCP stack recovery.
+  - 5 runs per route (200 connections, 30s duration, 5s warmup, 60s timeout);
+    reports the median across runs, never cherry-picked best.
+  - 10 consecutive passes of all 36 E2E verification checks (360 executions/framework).
+  - Run WITHOUT taskset on 4 dedicated vCPUs so the Linux scheduler places the
+    server Event Loop, autocannon, libuv workers, and V8 GC across all 4 cores.
   - Do not run background tasks on the droplet while measuring.
-  - Store results/*.json along with the measured git commit.
+  - Store results/*.json and results/env.txt along with the measured git commit.
 -----------------------------------------------------------------------
 NOTES

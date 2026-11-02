@@ -233,3 +233,60 @@ Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Di
 
 *(Notice how using `n = 5` median sampling cleanly filtered the single `330 ms` GC/OS spike in Run 4 of `dinou-9`, yielding the true central `271 ms` median across both `dinou-9` and `dinou-9-u`).*
 
+---
+
+## 6. Functional & 3D Architectural Verification Summary (`scripts/verify.mjs` — `36 Checks × 10 Runs`)
+
+Prior to executing the hardware-dependent load and pipeline phases, `scripts/verify.mjs` ran **10 consecutive verification passes** (`36 checks × 10 runs = 360 check executions` per framework, restoring a pristine post-build disk snapshot and restarting a fresh server process before every run; archived in [`results_run1/verify.json`](./results_run1/verify.json) and analyzed in full in [`report-verify.md`](./report-verify.md)):
+
+| Framework | Baseline Checks (`1–13`) | Core 3D Cube Suites (`14–22`) | Deep Stress & Concurrency (`23–36`) | Total Non-Flaky Passed | Total Check Executions (`10 × 36`) | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Dinou 9.0.3 (`dinou-9`)** | `13 / 13 ✅` | `9 / 9 ✅` | `14 / 14 ✅` | **`36 / 36 ✅`** | **`360 / 360` (`100.0%`)** | **36 ✅ PASS (`10/10` runs · `0` flaky)** |
+| **Next.js 16.4.3 (`next`)** | `13 / 13 ✅` | `9 / 9 ✅` | `8 ✅ / 5 ❌ / 1 ⚠️` | `30 / 36` | `308 / 360` (`85.6%`) | **30 ✅ PASS · 5 ❌ FAIL (`0/10`) · 1 ⚠️ FLAKY (`8/10`)** |
+
+---
+
+## 7. Testbed, Methodology, Limitations & How to Reproduce
+
+### 7.1 Hardware & Runtime Environment (`results_run1/env.txt`)
+
+| Parameter | Specification |
+| :--- | :--- |
+| **Cloud Instance & CPU** | DigitalOcean CPU-Optimized Dedicated Droplet (`lon1`), **4 Dedicated vCPUs** (`Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz`, `0%` CPU Steal Time), **8 GB RAM** (`7.8 GiB` usable + `4.0 GiB` Swap) |
+| **Operating System & Kernel** | Ubuntu 24.04.5 LTS (`6.8.0-142-generic x86_64`), `ext4` SSD |
+| **Kernel Networking & Limits** | `ulimit -n = 65535` · `net.core.somaxconn = 65535` · `net.ipv4.tcp_max_syn_backlog = 65535` · `tcp_tw_reuse = 1` |
+| **Runtime & Toolchain** | Node.js `v22.23.4` (V8 `12.4.254.21-node.57`, `libuv 1.51.0`) · `pnpm 12.15.0` · `autocannon 8.0.0` · `playwright 1.64.1` |
+| **Frameworks Compared** | **Dinou 9.0.3** (`dinou-9` vendorized & `dinou-9-u` unvendorized) vs. **Next.js 16.4.3** (`next`), both on **React 19.3.1** |
+
+### 7.2 Key Methodological Rules & Measurement Nuances
+
+- **Production Builds Only**: All three applications are measured in production mode (`build` + `start`), never in development (except in the dedicated `dev-start` and `hmr` sections).
+- **`200` Connections, `30s` Duration, `5` Runs per Route**: Every route undergoes a `5s` full-concurrency warmup (`200` connections), followed by `30` sequential unloaded TTFB probes (`c = 1`), and `5` recorded `30s` rounds at `200` concurrent connections (`150s` of sustained load per route).
+- **Percentile Aggregation & `p95` (`p97.5` Upper Bound)**: Each reported percentile (`p50`, `p95`, `p99`) is the **median of that percentile across the 5 independent rounds**. Because `autocannon` does not expose an exact `p95` bucket in its default HDR histogram percentiles, `p95` entries in `load.json` and `REPORT.md` represent `autocannon`'s **`p97_5` (`p97.5`) upper bound**.
+- **Sequential TTFB (Unloaded) vs. Latency Under Load**: The `30` sequential TTFB probes are measured **without concurrent load (`c = 1`)** between warmup and load testing to capture baseline server processing time; they must not be conflated with latency under 200-connection load.
+- **Keep-Alive Configuration**: `keepAliveTimeout` is set to `65s` across all apps (`headersTimeout = 66s` in Dinou) so sockets are never closed mid-round.
+
+### 7.3 Limitations & Boundary Conditions
+
+- **Colocated Client & Server (`loopback`)**: `autocannon` and the application servers ran on the same 4-vCPU dedicated droplet over loopback (`127.0.0.1`). With `~1.0 vCPU` used by the single-threaded Node.js server and `~0.7 vCPU` by `autocannon`, `~2.0` dedicated vCPUs remain free for OS loopback, `libuv`, and V8 GC; interference is minimal and identical across frameworks, though non-zero (see [`report-infra.md`](./report-infra.md)).
+- **Synthetic Delays**: The `200 ms` (`await sleep(200)`) delays on `/dashboard` and `/ppr` and `80 ms` (`await sleep(80)`) delays on `/rigorous/*` simulate database and external API latencies without external network jitter.
+- **Single-Process Node.js**: Results reflect single-process Node.js execution (`node start.js` / `next start`). Multi-core deployments (`node:cluster`, PM2, or multiple container replicas behind Nginx/Envoy) scale horizontally with different absolute numbers.
+- **Next.js 16 Architecture (`cacheComponents: true`)**: Next.js 16 replaces `experimental.ppr` with `cacheComponents: true` (`"use cache"`, `cacheLife`, `cacheTag`, `updateTag`, `connection()`). Both implementations follow each framework's idiomatic conventions.
+
+### 7.4 How to Reproduce
+
+```bash
+# 1. Automated provisioning on a 4 Dedicated vCPU / 8 GB RAM Ubuntu 24.04 droplet:
+git clone https://github.com/roggc/dinou-benchmark
+cd dinou-benchmark
+sudo bash infra/droplet-setup.sh
+
+# 2. Run the 10-pass 3D verification suite and the full hardware benchmark pipeline:
+ulimit -n 65535
+node scripts/verify.mjs --only=dinou-9,next --runs=10
+node scripts/bench.mjs --skip=verify
+
+# 3. Or regenerate REPORT.md and SVG charts directly from the archived Run 1 JSON data:
+node scripts/report.mjs --dir=results_run1
+```
+
