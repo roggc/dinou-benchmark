@@ -17,9 +17,9 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 
 ### 1.1 Global Scorecard across All 9 Benchmark Dimensions
 
-| Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Lead vs. Next.js 16.4.3 |
+| Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Vendorized (`dinou-9`) Lead vs. Next.js 16.4.3 |
 | :--- | ---: | ---: | ---: | :--- |
-| **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `31 / 36` (`5 ❌`, `0 ⚠️` · `86.1%`) | **Dinou `+13.9%` compliance (`0` failures vs. `50/360` failed execs)** |
+| **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `31 / 36` (`5 ❌` · `86.1%`) | **Dinou `+13.9%` compliance (`0` failures vs. `50/360` failed execs)** |
 | **2. Production Build Time** (`Median of 5 runs`) | **`6.52 s`** | **`6.39 s`** | `14.54 s` | **Dinou `2.23×` faster (`-8.02 s` per build)** |
 | **3. Build Output Size on Disk** (`.dinou` vs. `.next`) | **`7.5 MB`** | **`7.5 MB`** | `59.6 MB` | **Dinou `7.95×` smaller on disk (`-52.1 MB`)** |
 | **4. Client JS Bundle Weight** (`Brotli -11` / `Gzip -9` / `Raw`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | `158.3 KiB` (`182.5` / `585.7 KiB`) | **Dinou `1.94×` smaller client JS (`-76.5 KiB` Brotli, `-48.3%`)** |
@@ -50,7 +50,7 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 
 ## 2. Full 12-Route HTTP Load Results (`200` Connections, `30s × 5` Runs, `timeout = 60s`)
 
-### 2.1 Comparative Head-to-Head Summary Table (`Dinou 9.0.3` vs. `Next.js 16.4.3`)
+### 2.1 Comparative Head-to-Head Summary Table (`Dinou 9.0.3 Vendorized (dinou-9)` vs. `Next.js 16.4.3`)
 
 | Route | Rendering / 3D Cube Mode | Dinou 9.0.3 (`req/s` · `p50` / `p99`) | Next.js 16.4.3 (`req/s` · `p50` / `p99`) | Dinou Lead (`req/s`) | Dinou Lead (`p50` / `p99` Latency) |
 | :--- | :--- | ---: | ---: | :---: | :---: |

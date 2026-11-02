@@ -30,7 +30,7 @@ To validate this finding empirically and measure run-to-run reproducibility acro
 
 ## 2. Global Scorecard: Run 1 vs. Run 2 Across All Benchmark Dimensions
 
-| Benchmark Dimension | Dinou 9.0.3 (`Run 1` → `Run 2`) | Dinou `-u` 9.0.3 (`Run 1` → `Run 2`) | Next.js 16.4.3 (`Run 1` → `Run 2`) | Dinou Lead vs. Next.js (Run 1 / Run 2) |
+| Benchmark Dimension | Dinou 9.0.3 (`Run 1` → `Run 2`) | Dinou `-u` 9.0.3 (`Run 1` → `Run 2`) | Next.js 16.4.3 (`Run 1` → `Run 2`) | Dinou Vendorized (`dinou-9`) Lead vs. Next.js (Run 1 / Run 2) |
 | :--- | :---: | :---: | :---: | :--- |
 | **1. 3D Verification (`36 checks × 10 runs` per run = `720` total)** | **`36/36 ✅` (`360/360`) → `36/36 ✅` (`360/360`)** | *Identical runtime* | `30/36` (`308/360`) → `31/36` (`310/360`) | **Dinou `720/720` (`100.0%`, `0` flaky) vs. Next.js `618/720` (`85.8%`)** |
 | **2. Production Build Time (`Median of 5 runs`)** | **`6.69 s` → `6.52 s`** | **`6.54 s` → `6.39 s`** | `14.88 s` → `14.54 s` | **Dinou `2.22×–2.23×` faster (`-8.02 to -8.19 s` per build)** |

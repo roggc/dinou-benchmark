@@ -17,11 +17,11 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 
 ### 1.1 Global Scorecard across All 9 Benchmark Dimensions
 
-| Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Lead vs. Next.js 16.4.3 |
+| Benchmark Dimension | Dinou 9.0.3 (`dinou-9`) | Dinou (-u) 9.0.3 (`dinou-9-u`) | Next.js 16.4.3 (`next`) | Dinou Vendorized (`dinou-9`) Lead vs. Next.js 16.4.3 |
 | :--- | ---: | ---: | ---: | :--- |
 | **1. Functional & 3D Cube Verification** (`36 checks × 10 runs`) | **`36 / 36 ✅` (`100.0%`)** | *Identical runtime* | `30 / 36` (`5 ❌`, `1 ⚠️` · `85.6%`) | **Dinou `+14.4%` compliance (`0` failures vs. `52/360` failed execs)** |
 | **2. Production Build Time** (`Median of 5 runs`) | **`6.69 s`** | **`6.54 s`** | `14.88 s` | **Dinou `2.22×` faster (`-8.19 s` per build)** |
-| **3. Build Output Size on Disk** (`.dinou` vs. `.next`) | **`7.5 MB`** | **`7.5 MB`** | `59.7 MB` | **Dinou `8.0×` smaller on disk (`-52.2 MB`)** |
+| **3. Build Output Size on Disk** (`.dinou` vs. `.next`) | **`7.5 MB`** | **`7.5 MB`** | `59.7 MB` | **Dinou `7.96×` smaller on disk (`-52.2 MB`)** |
 | **4. Client JS Bundle Weight** (`Brotli -11` / `Gzip -9` / `Raw`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | **`81.8 KiB`** (`94.2` / `283.3 KiB`) | `158.3 KiB` (`182.4` / `585.7 KiB`) | **Dinou `1.94×` smaller client JS (`-76.5 KiB` Brotli, `-48.3%`)** |
 | **5. Dev Server Cold Start** (`Median of 5 runs`) | **`2.18 s`** | **`2.27 s`** | `3.55 s` | **Dinou `1.63×` faster cold start (`-1.37 s`)** |
 | **6. Browser HMR Edit-to-DOM** (`Median of 5 runs`) | **`271 ms`** | **`271 ms`** | `314 ms` | **Dinou `1.16×` faster HMR (`-43 ms`)** |
@@ -50,7 +50,7 @@ Every statistical phase in this run was standardized to **`n = 5` independent pa
 
 ## 2. Full 12-Route HTTP Load Results (`200` Connections, `30s × 5` Runs)
 
-### 2.1 Comparative Head-to-Head Summary Table (`Dinou 9.0.3` vs. `Next.js 16.4.3`)
+### 2.1 Comparative Head-to-Head Summary Table (`Dinou 9.0.3 Vendorized (dinou-9)` vs. `Next.js 16.4.3`)
 
 | Route | Rendering / 3D Cube Mode | Dinou 9.0.3 (`req/s` · `p50` / `p99`) | Next.js 16.4.3 (`req/s` · `p50` / `p99`) | Dinou Lead (`req/s`) | Dinou Lead (`p50` / `p99` Latency) |
 | :--- | :--- | ---: | ---: | :---: | :---: |
@@ -195,11 +195,11 @@ Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Di
 
 | Framework | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | **Median Build Time** | **Output Directory Size** | Build Speed & Disk Lead |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
-| **Dinou 9.0.3 (`dinou-9`)** | `6.57 s` | `6.73 s` | `6.65 s` | `6.69 s` | `6.73 s` | **`6.69 s`** | **`7.5 MB`** (`.dinou`) | **`2.22×` faster · `8.0×` smaller disk** |
-| **Dinou (-u) 9.0.3 (`dinou-9-u`)** | `6.61 s` | `6.59 s` | `6.47 s` | `6.54 s` | `6.53 s` | **`6.54 s`** | **`7.5 MB`** (`.dinou`) | **`2.28×` faster · `8.0×` smaller disk** |
+| **Dinou 9.0.3 (`dinou-9`)** | `6.57 s` | `6.73 s` | `6.65 s` | `6.69 s` | `6.73 s` | **`6.69 s`** | **`7.5 MB`** (`.dinou`) | **`2.22×` faster · `7.96×` smaller disk** |
+| **Dinou (-u) 9.0.3 (`dinou-9-u`)** | `6.61 s` | `6.59 s` | `6.47 s` | `6.54 s` | `6.53 s` | **`6.54 s`** | **`7.5 MB`** (`.dinou`) | **`2.28×` faster · `7.96×` smaller disk** |
 | **Next.js 16.4.3 (`next`)** | `14.84 s` | `14.88 s` | `15.26 s` | `14.89 s` | `14.77 s` | `14.88 s` | `59.7 MB` (`.next`) | Baseline |
 
-*Note on Output Directory Footprint:* Across all 12 production routes and 7 multi-route 3D Caching Cube suites, Dinou's compiled `.dinou` build directory occupies **`7.5 MB`** (`7,473,400 bytes` in `dinou-9`, `7,482,184 bytes` in `dinou-9-u`), whereas Next.js's `.next` directory occupies **`59.7 MB`** (`59,667,313 bytes`) — **`8.0×` larger on disk**.
+*Note on Output Directory Footprint:* Across all 12 production routes and 7 multi-route 3D Caching Cube suites, Dinou's compiled `.dinou` build directory occupies **`7.5 MB`** (`7,473,400 bytes` in `dinou-9`, `7,482,184 bytes` in `dinou-9-u`), whereas Next.js's `.next` directory occupies **`59.7 MB`** (`59,667,313 bytes`) — **`7.96×` larger on disk**.
 
 ---
 
