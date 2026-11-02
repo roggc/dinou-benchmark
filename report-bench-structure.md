@@ -1,7 +1,7 @@
 # Benchmark Architecture & Pipeline Reference (`dinou-benchmark`)
 
 **Date:** November 1, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Pipeline Orchestrator:** `scripts/bench.mjs` (`pnpm bench`)
 
 ---

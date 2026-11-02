@@ -1,7 +1,7 @@
 # Dinou v9.0.3 vs. Next.js v16.4.3 — Full 12-Route & 3D Caching Cube Benchmark Report (Run 1)
 
 **Date:** November 2, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Frameworks Evaluated:** **Dinou v9.0.3** (`dinou-9`), **Dinou v9.0.3 Unvendorized** (`dinou-9-u`, `dinou -u`), and **Next.js v16.4.3** (`next`), all running **React 19.3.1**  
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
 **Total Pipeline Execution Time:** `6,073 seconds` (`1 hour 41 minutes 13 seconds`)  
@@ -182,7 +182,7 @@ Comparing `Dinou 9.0.3` (`dinou-9`, default vendorized server build) against `Di
 | **Next.js 16.4.3 (`next`)** | **`245.9 MB`** | `1,060.5 MB` | `+814.6 MB` (`+331.3%`) | `1,060.5 MB` | Baseline (`> 1.06 GB` RAM) |
 
 ### Scaling Comparison: `50` Connections (Preliminary Report) vs. `200` Connections (Current Run)
-Comparing this 200-connection memory stress test against the 50-connection memory test in [`final-report.md`](./final-report.md) (§7.6) reveals a critical production scaling characteristic:
+Comparing this 200-connection memory stress test against our preliminary 50-connection memory test reveals a critical production scaling characteristic:
 
 | Concurrency Level | Dinou 9 Peak RSS ($\Delta$ over Idle) | Next.js 16 Peak RSS ($\Delta$ over Idle) | Next.js vs. Dinou Peak RAM Gap |
 | :--- | ---: | ---: | :--- |

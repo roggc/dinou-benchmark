@@ -1,7 +1,7 @@
 # Dinou v9.0.3 vs. Next.js v16.4.3 — Full 12-Route & 3D Caching Cube Benchmark Report (Run 2 & Run 1 vs. Run 2 Comparison)
 
 **Date:** November 2, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Frameworks Evaluated:** **Dinou v9.0.3** (`dinou-9`), **Dinou v9.0.3 Unvendorized** (`dinou-9-u`, `dinou -u`), and **Next.js v16.4.3** (`next`), all running **React 19.3.1**  
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
 **Total Pipeline Execution Time:** `6,048 seconds` (`1 hour 40 minutes 48 seconds` — vs. `6,073 seconds` in Run 1, a `0.41%` variance)  

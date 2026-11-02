@@ -1,7 +1,7 @@
 # Rigorous 3D Caching & Streaming Verification Report: Dinou v9.0.3 vs. Next.js v16.4.3
 
 **Date:** November 1, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Frameworks Compared:**
 - **Dinou v9.0.3** (`apps/dinou-9`) — React 19 RSC framework
 - **Next.js v16.4.3** (`apps/next` with `cacheComponents: true` / `"use cache"` / PPR enabled) — React 19 App Router

@@ -1,7 +1,7 @@
 # Diagnostic Report: Keep-Alive Socket Monopolization & Tail Timeouts on CPU-Bound Dynamic Routes (`/rigorous/cache-slot` & `/rigorous/hs-cache-slot`)
 
 **Date:** November 2, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Target Environment:** DigitalOcean CPU-Optimized Dedicated Droplet (4 Dedicated vCPUs / 8 GB RAM, Regular Intel SSD, Ubuntu 24.04 LTS)  
 **Diagnostic Scripts:** [`scripts/diagnose-timeouts.mjs`](./scripts/diagnose-timeouts.mjs), [`scripts/k6-diagnose.mjs`](./scripts/k6-diagnose.mjs)
 

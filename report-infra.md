@@ -1,7 +1,7 @@
 # Benchmark Infrastructure, Hardware Sizing & OS Scheduling Reference (`dinou-benchmark`)
 
-**Date:** November 1, 2026  
-**Benchmark Repository:** `dinou-benchmark` (`dev` branch)  
+**Date:** November 2, 2026  
+**Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Target Environment:** DigitalOcean CPU-Optimized Dedicated Droplet (4 Dedicated vCPUs / 8 GB RAM, Regular Intel SSD, Ubuntu 24.04 LTS)
 
 ---
@@ -12,9 +12,9 @@ This document establishes the hardware sizing, storage architecture, operating s
 
 Key architectural conclusions:
 1. **4 Dedicated vCPUs / 8 GB RAM is the Optimal Machine Profile:** Because production Node.js servers (`dinou` and `next`) execute on a single JavaScript Event Loop thread (~`1.0 vCPU`) alongside a single-threaded `autocannon` client (~`0.7 vCPU`), total active CPU demand peaks at **~2.0–2.5 vCPUs**. Scaling to 8 vCPUs / 16 GB RAM leaves ~6 vCPUs idle during HTTP load, dev-start, HMR, and memory tests without changing throughput or latency figures.
-2. **Regular Intel (Dedicated CPU + SSD) Guarantees Full Comparative Reliability:** What makes cloud benchmarks noisy is **shared vCPU contention (`%st` steal time)**, not Regular vs. Premium Intel generations. On a **CPU-Optimized Dedicated** droplet (`Intel Xeon Platinum 8168 @ 2.70GHz`), physical CPU threads are 100% dedicated. Furthermore, Linux's in-memory **Kernel Page Cache** serves repeated file reads (such as `/messages` reading `data/messages.json`) directly from RAM (`> 6.5 GB` free) after the initial warmup request, eliminating physical SSD latency from HTTP load metrics. Using the exact same 4 vCPU / 8 GB Regular Intel specification also preserves **100% hardware continuity** with `final-report.md` and `deep-dive-investigation.md`.
+2. **Regular Intel (Dedicated CPU + SSD) Guarantees Full Comparative Reliability:** What makes cloud benchmarks noisy is **shared vCPU contention (`%st` steal time)**, not Regular vs. Premium Intel generations. On a **CPU-Optimized Dedicated** droplet (`Intel Xeon Platinum 8168 @ 2.70GHz`), physical CPU threads are 100% dedicated. Furthermore, Linux's in-memory **Kernel Page Cache** serves repeated file reads (such as `/messages` reading `data/messages.json`) directly from RAM (`> 6.5 GB` free) after the initial warmup request, eliminating physical SSD latency from HTTP load metrics. Using the exact same 4 vCPU / 8 GB Regular Intel specification also preserves **100% hardware continuity** across [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`deep-dive-investigation.md`](./deep-dive-investigation.md).
 3. **Unpinned Linux Kernel Scheduling Outperforms Manual `taskset` Pinning on 4 vCPUs:** Running `pnpm bench` without `taskset` allows the Linux kernel scheduler to place the server's main Event Loop thread on one vCPU, `autocannon` on a second vCPU, and utilize the remaining **2 dedicated vCPUs** for Node.js's background `libuv` worker pool (`UV_THREADPOOL_SIZE=4`), V8 parallel garbage collection (Major/Minor GC), and TurboFan JIT compilation threads—without starving the primary Event Loop.
-4. **Unified $n = 5$ Median Sampling & High-Concurrency Stress Configuration:** All multi-pass phases (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, and `5` idle RSS samples) use an odd sample size of **5 independent passes** to report true observed medians while tolerating up to 2 outliers per metric. Load testing defaults to **`LOAD_CONNECTIONS=200`**, **`LOAD_DURATION=30`**, **`LOAD_WARMUP=5`**, and **`LOAD_RUNS=5`**.
+4. **Unified `n = 5` Median Sampling & High-Concurrency Stress Configuration:** All performance phases (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, and `5` idle RSS samples) use an odd sample size of **5 independent passes** to report true observed medians while tolerating up to 2 outliers per metric, while functional verification executes **`VERIFY_RUNS=10` passes (`36 checks × 10 runs = 360 executions` per run)**. Load testing defaults to **`LOAD_CONNECTIONS=200`**, **`LOAD_DURATION=30`**, **`LOAD_WARMUP=5`**, and **`LOAD_RUNS=5`**.
 
 ---
 
@@ -26,7 +26,7 @@ Key architectural conclusions:
 | **Server Auxiliary Threads (`libuv` + V8 GC/JIT)** | Uses `~0.2–0.5 vCPU` across idle cores | Uses `~0.2–0.5 vCPU` across idle cores | **Identical** (4 vCPUs already provide ~1.8–2.0 vCPUs of headroom) |
 | **Load Generator (`autocannon`)** | Uses `~0.6–0.8 vCPU` | Uses `~0.6–0.8 vCPU` | **Identical** (`autocannon` runs in a single Node.js process) |
 | **Idle CPU Headroom Under 200 Connections** | **~1.5–2.0 vCPUs free** | **~5.5–6.0 vCPUs free** | **No change in `req/s`, `p50`, or `p99`** |
-| **RAM Headroom** | Peak server RSS is `~390–550 MB` (`> 6.5 GB` free RAM) | `> 14.5 GB` free RAM | **Identical** (Zero swap pressure in either configuration) |
+| **RAM Headroom** | Peak server RSS is `~477–499 MB` in Dinou and `~1,019–1,061 MB` in Next.js (`> 6.0 GB` free RAM) | `> 14.0 GB` free RAM | **Identical** (Zero swap pressure in either configuration) |
 | **Production Build (`scripts/build.mjs`)** | Parallel bundler threads use up to 4 vCPUs | Parallel bundler threads can use up to 8 vCPUs | Only phase where >4 vCPUs slightly reduces wall-clock build time |
 
 ### Key Takeaway
@@ -52,15 +52,15 @@ When resizing or provisioning in regions where `Premium Intel` is unavailable, u
    - On the 12th route (`/messages`, which executes `fs.promises.readFile` on `data/messages.json` on every request), the very first requests during the 5-second warmup (`LOAD_WARMUP=5`) cause the Linux kernel to cache `data/messages.json` inside its in-memory **Page Cache (`buff/cache` in RAM)**. Because the droplet has `> 6.5 GB` of free physical RAM and `messages.json` is only a few kilobytes, **100% of subsequent `fs.promises.readFile` syscalls across all 5 measured runs are served directly from RAM in microseconds** without ever touching the physical SSD.
 3. **5-Pass Median Aggregation Filters Out Any Storage Jitter in Disk-Writing Phases (`build`, `dev-start`, `hmr`):**
    - In phases that write to the filesystem (`scripts/build.mjs` deleting and writing `.dinou`/`.next`, and `scripts/hmr.mjs` writing `page.tsx`), computing the **median across `5` independent passes** (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`) automatically discards up to 2 I/O outliers at either tail.
-   - Furthermore, Dinou's compiled production output (`.dinou`, `4.4 MB`) is **8.5× smaller on disk** than Next.js's output (`.next`, `37.5 MB`). Measuring build duration on standard SSD accurately reflects real-world CI/CD runners and container filesystems where emitting 8.5× more disk data carries a proportional I/O cost.
-4. **100% Hardware Continuity with `final-report.md` and `deep-dive-investigation.md`:**
-   - Both [`final-report.md`](./final-report.md) and [`deep-dive-investigation.md`](./deep-dive-investigation.md) were executed on this exact **4 Dedicated vCPUs / 8 GB RAM Regular Intel (`Intel Xeon Platinum 8168 @ 2.70GHz`)** droplet profile, where empirical run-to-run reproducibility was verified at **94.5%–99.0%** (`1.0%–5.5%` variance). Using the same `Regular Intel` tier guarantees strict apples-to-apples continuity across all published reports.
+   - Furthermore, Dinou's compiled production output (`.dinou`, `7.5 MB`) is **8.0× smaller on disk** than Next.js's output (`.next`, `59.6–59.7 MB`). Measuring build duration on standard SSD accurately reflects real-world CI/CD runners and container filesystems where emitting 8.0× more disk data carries a proportional I/O cost.
+4. **100% Hardware Continuity Across `report-run1-results.md`, `report-run2-results.md`, and `deep-dive-investigation.md`:**
+   - [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`deep-dive-investigation.md`](./deep-dive-investigation.md) were all executed on this exact **4 Dedicated vCPUs / 8 GB RAM Regular Intel (`Intel Xeon Platinum 8168 @ 2.70GHz`)** droplet profile, where empirical run-to-run reproducibility was verified at **95.0%–99.6%** (`0.41%` total wall-clock variance between Run 1 [`6,073s`] and Run 2 [`6,048s`], and `1%–5%` metric variance). Using the same `Regular Intel` tier guarantees strict apples-to-apples continuity across all published reports.
 
 ### 3.2 Phase-by-Phase Impact Matrix: Regular Intel (SSD) vs. Premium Intel (NVMe SSD)
 
 | Benchmark Phase | Touches Physical Disk During Measurement? | Impact of Regular Intel (SSD) on Comparative Reliability |
 | :--- | :---: | :--- |
-| **1. `build.mjs` (`BUILD_RUNS=5`)** | **Yes** (writes `.dinou` / `.next`) | **100% Fair & Reliable:** Median of 5 runs eliminates transient SSD spikes; accurately reflects the I/O cost of writing `4.4 MB` (Dinou) vs. `37.5 MB` (Next.js). |
+| **1. `build.mjs` (`BUILD_RUNS=5`)** | **Yes** (writes `.dinou` / `.next`) | **100% Fair & Reliable:** Median of 5 runs eliminates transient SSD spikes; accurately reflects the I/O cost of writing `7.5 MB` (Dinou) vs. `59.6–59.7 MB` (Next.js). |
 | **2. `verify.mjs` (`36 checks`)** | **No** (functional assertions) | **Zero Impact:** 100% hardware-independent pass/fail architectural invariants. |
 | **3. `bundle.mjs`** | **Reads once** (byte size calculation) | **Zero Impact:** 100% deterministic byte/Gzip/Brotli output sizes. |
 | **4. `dev-start.mjs` (`DEV_RUNS=5`)** | **Reads module graph** (cached in RAM after Run 1) | **100% Fair & Reliable:** Linux Page Cache holds `node_modules` in RAM after the first pass; median of 5 runs filters cold-read variance. |
@@ -91,20 +91,20 @@ Even if the server and client were pinned separately (`0,1` for the server and `
 
 ## 5. Optimal Load Testing Parameters (`bench.config.mjs`)
 
-Based on the empirical socket-backlog findings in [`deep-dive-investigation.md`](./deep-dive-investigation.md) and [`final-report.md`](./final-report.md), [`bench.config.mjs`](./bench.config.mjs) is pre-configured with the following production load defaults:
+Based on the empirical socket-backlog findings in [`deep-dive-investigation.md`](./deep-dive-investigation.md) and [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`bench.config.mjs`](./bench.config.mjs) is pre-configured with the following production load defaults:
 
 | Parameter | Environment Variable | Default Value | Technical Justification |
 | :--- | :--- | :---: | :--- |
-| **`connections`** | `LOAD_CONNECTIONS` | **`200`** | At `50` connections, Dinou is barely stressed (`0.65 ms` average internal middleware time). At **`200` concurrent connections**, Dinou's single Event Loop operates near capacity (`~94%` utilization on `/`, keeping `p99 < 1s` on all dynamic routes), while exposing severe event-loop queueing in Next.js (`p99` reaching `5.7s–7.9s`). |
-| **`durationSeconds`** | `LOAD_DURATION` | **`30` (`30s`)** | Opening 200 TCP connections simultaneously at $t = 0$ creates an initial kernel listen-backlog burst that takes **`13.63s` in Dinou** and **`25.74s` in Next.js** to fully accept on `/`. A **`30s` duration** (paired with a `30s` Autocannon timeout) is required so both frameworks finish draining the initial 200-socket burst and accumulate `6,000–52,000` steady-state requests per pass. |
+| **`connections`** | `LOAD_CONNECTIONS` | **`200`** | At `50` connections, Dinou is barely stressed (`0.65 ms` average internal middleware time). At **`200` concurrent connections**, Dinou's single Event Loop operates near capacity (`~94%` utilization on `/`, keeping `p99` at `312–725 ms` on `/dashboard`, `/ppr`, and `/rigorous/hs-cache-slot`), while exposing severe event-loop queueing in Next.js (`p99` reaching `6.3s–10.0s` on baseline dynamic routes and `15.9s–22.0s` across the 3D Caching Cube). |
+| **`durationSeconds`** | `LOAD_DURATION` | **`30` (`30s`)** | Opening 200 TCP connections simultaneously at `t = 0` creates an initial kernel listen-backlog burst that takes **`13.63s` in Dinou** and **`25.74s` in Next.js** to fully accept on `/`. A **`30s` duration** (paired with a `60s` Autocannon timeout in Run 2, `2 × duration`, vs. `30s` in Run 1) is required so both frameworks finish draining the initial 200-socket burst and accumulate `3,000–43,000` steady-state requests per pass. |
 | **`warmupSeconds`** | `LOAD_WARMUP` | **`5` (`5s`)** | Runs an unrecorded `5s` burst at full `200` connections before each route to trigger V8 JIT compilation (TurboFan/Maglev) and populate route/kernel caches prior to sampling unloaded `TTFB` and the 5 measured load passes. |
 | **`runs`** | `LOAD_RUNS` | **`5` passes** | Unifies the entire benchmark suite at **`n = 5` (odd)** across all phases (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, `5` idle RSS samples). Across `12 routes × 3 frameworks = 36 route evaluations`, 5 passes protect `p99` tail latency medians against up to 2 transient V8 Major GC pauses per route. |
 
 ### Estimated Wall-Clock Execution Time (`LOAD_RUNS=5`, `LOAD_DURATION=30`, `LOAD_WARMUP=5`)
 Because `autocannon` runs on fixed wall-clock timers, the execution duration of `scripts/load.mjs` is virtually independent of CPU speed:
-- **Per Route:** $5\text{s (warmup)} + \sim 3\text{s (30 sequential TTFB probes)} + (5 \times 30\text{s}) = \mathbf{158\text{ seconds/route}}$.
-- **Per Framework (12 Routes):** $12 \times 158\text{s} = 1,896\text{s} \approx \mathbf{31.6\text{ minutes/framework}}$.
-- **Full 3-Framework Suite (`dinou-9`, `dinou-9-u`, `next`):** $\approx \mathbf{95\text{ minutes (~1 hour 35 minutes)}}$ for `load.mjs` (or $\approx \mathbf{63\text{ minutes}}$ when running the 2 primary frameworks `--only=dinou-9,next`).
+- **Per Route:** `5s (warmup) + ~3s (30 sequential TTFB probes) + (5 × 30s)` = **`158 seconds/route`**.
+- **Per Framework (12 Routes):** `12 × 158s = 1,896s` ≈ **`31.6 minutes/framework`**.
+- **Full 3-Framework Suite (`dinou-9`, `dinou-9-u`, `next`):** ≈ **`95 minutes (~1 hour 35 minutes)`** for `load.mjs` alone, and **empirically measured at `6,073 seconds` (`1h 41m 13s`) in Run 1 and `6,048 seconds` (`1h 40m 48s`) in Run 2 (`0.41%` variance)** for the complete benchmark pipeline (`dev-start` + `hmr` + `build` + `bundle` + `load` + `memory`).
 
 
 ---
