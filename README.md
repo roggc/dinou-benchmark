@@ -1,6 +1,6 @@
 # dinou-benchmark
 
-Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and `dinou-9-u` unvendorized `-u`) and **Next.js 16.4.3** running **the exact same application**: identical local data, identical React 19 components, identical CSS, and the full 3D caching & revalidation matrix defined in the `rigurous-*.md` specification documents.
+Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and `dinou-9-u` unvendorized `-u`) and **Next.js 16.4.3** running **the exact same application** (identical local data, identical React 19 components, and identical CSS) across **12 production routes and 36 E2E verification tests** covering both the **5 baseline rendering modes** (`SSG`, `ISR`, `Dynamic SSR`, `PPR`, `SSR + Disk I/O`) and the full **3D Caching & Streaming Cube** (`2³ - 1 = 7` combinations of Horizontal Segmentation, Vertical Cache-Slots, and Partial Prerendering).
 
 ---
 
@@ -39,7 +39,7 @@ All official benchmark results, architectural analyses, E2E verification audits,
 | `/ppr` | PPR | Static shell + one 200ms dynamic slot streamed in the same HTTP response |
 | `/messages` | SSR + Mutation | Server Function / Server Action writing to local JSON and revalidating the route |
 
-### 2.2. Rigorous 3D Caching & Revalidation Suites (7 Suites from `rigurous-*.md`)
+### 2.2. Rigorous 3D Caching & Revalidation Suites (7 Vertices of the 3D Cube)
 
 | Route | Dimension / Synergy | What Is Verified & Benchmarked |
 | --- | --- | --- |
@@ -92,7 +92,6 @@ dinou-benchmark/
 │   ├── memory.mjs              # Idle and peak RSS memory consumption
 │   ├── report.mjs              # Generates results/REPORT.md + charts.svg
 │   └── bench.mjs               # Main pipeline orchestrator
-├── rigurous-*.md               # 11 architectural & E2E specification documents
 ├── infra/
 │   └── droplet-setup.sh        # Automated DigitalOcean Ubuntu 24.04 LTS provisioning
 ├── report-*.md                 # Official empirical benchmark & architectural reports

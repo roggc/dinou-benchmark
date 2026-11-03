@@ -14,7 +14,7 @@
 
 ## 1. Executive Summary
 
-To evaluate both frameworks beyond synthetic happy-path benchmarks, we implemented the complete **3D Caching & Streaming Matrix** defined across the eight `rigurous-*.md` reference specifications (`rigurous-hs.md`, `rigurous-cache-slot.md`, `rigurous-ppr.md`, `rigurous-sinergy.md`, `rigurous-sinergy-hs-cache-slot.md`, `rigurous-sinergy-hs-ppr.md`, `rigurous-triple-sinergy.md`, and `rigurous-revalidation-scenarios.md`) and expanded `scripts/verify.mjs` from **13 baseline checks** to **36 end-to-end Playwright & HTTP verification checks**.
+To evaluate both frameworks beyond synthetic happy-path benchmarks, we implemented the complete **3D Caching & Streaming Matrix** across all **7 non-empty vertices of the 3D Cube** (documented in [`report-3d-architecture.md`](./report-3d-architecture.md)) and expanded `scripts/verify.mjs` from **13 baseline checks** to **36 end-to-end Playwright & HTTP verification checks**.
 
 The 36 checks test three orthogonal caching axes—**Horizontal Segmentation (Layouts vs. Pages)**, **Vertical Segmentation (`<DinouCacheSlot>` / `"use cache"` Micro-ISR)**, and **Partial Prerendering (PPR)**—individually, in all three pairwise combinations, and in full **Triple Synergy**, under both **Clock-Based TTL Expiration (`revalidate = 1s`)** and **On-Demand Surgical Revalidation (`revalidatePage`, `revalidateLayout`, `revalidatePath`, `revalidateTag`, `refreshSlot`)**, including concurrency stampedes, out-of-order race conditions, unmounted cross-route slot refreshes, `slotOverrideCache` shadowing guards, tag-only slot boundaries, multi-level ancestor layout cascades, simultaneous revalidation queues, and lazy `index.html` re-composition with zero hydration mismatch on hard navigation across co-located and descendant pages.
 
@@ -255,7 +255,7 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
   ```
 - **Architectural Cause:**
   - **Dinou v9.0.3** decouples the client-side `pageCache` (horizontal route VNodes) from `slotOverrideCache` + `knownClientSlots` (vertical slot VNodes). When the user visits Page A, soft-navigates to Page B (unmounting Page A's `hscs-page-a-slot`), and calls `refreshSlot("hscs-tag-page-a-slot", { fresh: true })` while on Page B:
-    1. Dinou resolves `"hscs-tag-page-a-slot"` against `knownClientSlots`, fetches **only** `/____rsc_slot____/hscs-page-a-slot?fresh=1` in the background, and stores the updated VNode (`410`) in `slotOverrideCache` (`T1 → T2 → T3` synchronization in `rigurous-sinergy-hs-cache-slot.md` Scenario 8).
+    1. Dinou resolves `"hscs-tag-page-a-slot"` against `knownClientSlots`, fetches **only** `/____rsc_slot____/hscs-page-a-slot?fresh=1` in the background, and stores the updated VNode (`410`) in `slotOverrideCache` (`T1 → T2 → T3` synchronization).
     2. When the user clicks normal `<Link href="/rigorous/hs-cache-slot">` to return to Page A, Dinou serves Page A's VNode directly from the client `pageCache` (**`0` `/____rsc_page____` network requests**) while `<DinouCacheSlotBoundary>` mounts with `slotOverrideCache.get("hscs-page-a-slot")` (`410`).
   - **Next.js v16.4.3** has no client-side `slotOverrideCache` or background slot endpoint. Calling `updateTag("hscs-tag-page-a-slot")` inside a Server Action while on Page B **purges the entire client-side Router Cache**, forcing the subsequent `<Link href="/rigorous/hs-cache-slot">` click to issue full-page RSC network requests instead of serving Page A from client cache.
 
@@ -270,7 +270,7 @@ Rather than being six isolated or accidental bugs, the **5 deterministic failure
   tag-only refreshSlot must NOT re-execute dynamic host page (expected 100, got 999)
   ```
 - **Architectural Cause:**
-  - **Dinou v9.0.3** supports tag-only `<DinouCacheSlot tags={["cs-tag-only"]} revalidate={3600}>` without an explicit `id` prop (`rigurous-cache-slot.md` §2.1 & §3.3). Dinou derives a deterministic internal slot identifier from the primary tag (`tag:cs-tag-only#0`), registers the mounted boundary under `"cs-tag-only"` on the client, and allows `refreshSlot("cs-tag-only", { fresh: true })` to refresh only that slot (`430`) via `/____rsc_slot____` while the enclosing `revalidate = 0` dynamic host page stays untouched at `100` (even when poisoned to `999`).
+  - **Dinou v9.0.3** supports tag-only `<DinouCacheSlot tags={["cs-tag-only"]} revalidate={3600}>` without an explicit `id` prop. Dinou derives a deterministic internal slot identifier from the primary tag (`tag:cs-tag-only#0`), registers the mounted boundary under `"cs-tag-only"` on the client, and allows `refreshSlot("cs-tag-only", { fresh: true })` to refresh only that slot (`430`) via `/____rsc_slot____` while the enclosing `revalidate = 0` dynamic host page stays untouched at `100` (even when poisoned to `999`).
   - **Next.js v16.4.3** requires `updateTag("cs-tag-only")` + `router.refresh()` to update a tag-addressed `"use cache"` component from the client, which re-executes the dynamic host page (`#cs-dynamic-host-seq` becomes `999`).
 
 ---
@@ -375,7 +375,7 @@ In real-world production deployments, **not needing a warmup phase (Dinou 9.0.3)
 
 ### 4.5 Deep-Dive on Check 36: Lazy `index.html` Re-Composition & Zero Hydration Mismatch on Co-Located and Descendant Pages After `revalidateLayout`
 
-A critical edge case in Horizontal Segmentation (`rigurous-hs.md` §1.2 & §2.3) occurs when `revalidateLayout(path)` updates an ancestor layout on disk (`layout.rsc` advances from generation `T1 → T2`), and a user subsequently performs a **hard reload (`F5`) or direct URL navigation (`page.goto`)** in the browser (rather than a soft navigation) to:
+A critical edge case in Horizontal Segmentation occurs when `revalidateLayout(path)` updates an ancestor layout on disk (`layout.rsc` advances from generation `T1 → T2`), and a user subsequently performs a **hard reload (`F5`) or direct URL navigation (`page.goto`)** in the browser (rather than a soft navigation) to:
 1. The **co-located page right next to the revalidated layout** (e.g., `/rigorous/hs` next to `rigorous/hs/layout.tsx`, or `/rigorous/hs/nested` next to `rigorous/hs/nested/layout.tsx`).
 2. A **direct child page** in a subfolder that shares the revalidated layout (`L1`) and has no layout of its own (e.g., `/rigorous/hs/sibling-a`).
 3. A **deep descendant page** under a nested child layout (`L1 → L2`) deeper in the directory tree (e.g., `/rigorous/hs/nested` and `/rigorous/hs/nested/page-2`).
