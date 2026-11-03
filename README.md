@@ -2,18 +2,30 @@
 
 Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and `dinou-9-u` unvendorized `-u`) and **Next.js 16.4.3** running **the exact same application**: identical local data, identical React 19 components, identical CSS, and the full 3D caching & revalidation matrix defined in the `rigurous-*.md` specification documents.
 
-> **Official Benchmark Results & Engineering Reports (4 Dedicated Intel Xeon vCPUs / 8 GB RAM DigitalOcean CPU-Optimized Droplet):**
-> - [`report-run2-results.md`](./report-run2-results.md), [`report-run1-results.md`](./report-run1-results.md) & [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) — Complete 12-route & 3D Caching Cube empirical results and side-by-side reproducibility comparison across **Run 1** (`timeout = 30s`, [`results_run1/`](./results_run1/)) and **Run 2** (`timeout = 60s`, [`results_run2/`](./results_run2/)).
-> - [`report-3d-architecture.md`](./report-3d-architecture.md) — Architectural analysis: True End-to-End Orthogonal 3D Caching (Dinou 9) vs. Server-Only Coupled 2.5D Caching (Next.js 16).
-> - [`report-verify.md`](./report-verify.md) — Detailed breakdown of all **36 end-to-end Playwright behavioral checks** (`36 checks × 10 runs = 360 executions` per run).
-> - [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) & [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) — Forensic Linux `epoll`, `server.on("connection")`, Grafana `k6`, and `autocannon` socket-queue telemetry.
-> - [`report-infra.md`](./report-infra.md) & [`report-bench-structure.md`](./report-bench-structure.md) — Hardware sizing, OS process scheduling, verified `lscpu`/kernel fingerprint, and benchmark harness architecture.
+---
+
+## 1. Guide to the Benchmark Reports (`report-*.md`)
+
+All official benchmark results, architectural analyses, E2E verification audits, socket-level diagnostics, and hardware/methodology specifications are organized into **10 standalone engineering reports** (`report-*.md`) in the root of this repository (plus an executive overview in [`reddit-3d.md`](./reddit-3d.md) and the raw auto-generated archives in [`results_run1/REPORT.md`](./results_run1/REPORT.md) and [`results_run2/REPORT.md`](./results_run2/REPORT.md)):
+
+| Report | Category | What It Covers |
+| :--- | :--- | :--- |
+| **[`report-run2-results.md`](./report-run2-results.md)** | **Results (Run 2)** | **Official Run 2 12-Route & 3D Cube Benchmark Report (`timeout = 60s`, `0` Timeouts):** Complete results across all 9 dimensions (`verify`, `build`, `disk output`, `bundle`, `dev-start`, `hmr`, `memory`, and `200`-conn HTTP `load` with `timeout = 60s = 2 × duration`, achieving `0` timeouts across all 12 routes and all 3 frameworks). |
+| **[`report-run1-results.md`](./report-run1-results.md)** | **Results (Run 1)** | **Official Run 1 12-Route & 3D Cube Benchmark Report (`timeout = 30s`):** First complete cloud execution (`timeout = 30s === duration = 30s`), documenting the baseline metrics and the `autocannon` teardown-window timeouts that motivated Run 2. |
+| **[`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md)** | **Reproducibility** | **Run 1 vs. Run 2 Side-by-Side Comparison:** Audits run-to-run reproducibility across both cloud runs (`6,073s` vs. `6,048s` wall-clock time, `0.41%` variance; `~1%–5%` metric variance) and confirms `100%` timeout elimination (`339 → 0`, `330 → 0`, `279 → 0`). |
+| **[`report-3d-architecture.md`](./report-3d-architecture.md)** | **3D Architecture** | **True End-to-End Orthogonal 3D Caching (Dinou 9) vs. Server-Only Coupled 2.5D Caching (Next.js 16):** Explains the 3D Caching & Streaming Cube (`X: Horizontal Segmentation`, `Y: Vertical Cache-Slots`, `Z: Temporal PPR`) across Server, Network, and Client. |
+| **[`report-verify.md`](./report-verify.md)** | **E2E Verification** | **36-Check Playwright & HTTP Verification Report (`720` Executions/Framework):** Detailed breakdown of all 36 behavioral checks (`10` runs in Run 1 + `10` runs in Run 2), real-world UX translations, and code-level root causes for Next.js's `5` deterministic failures and `1` flaky stampede race. |
+| **[`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md)** | **Diagnostics (Part 2)** | **Forensic Timeout Diagnosis on CPU-Bound 3D Routes (`timeout = 30s → 60s`):** Linux `epoll`, Grafana `k6`, and `autocannon` (`lib/run.js`) telemetry explaining keep-alive socket monopolization and the `40 ms` teardown race on `/rigorous/cache-slot` & `/rigorous/hs-cache-slot`. |
+| **[`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md)** | **Diagnostics (Plain English)** | **Plain-English Visual Guide to the Socket Timeouts ("For Humans"):** Accessible, analogy-driven companion to `report-timeouts-diagnosis.md` using the single-cashier store and `30.00s` alarm clock model without kernel jargon. |
+| **[`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)** | **Diagnostics (Part 1)** | **Foundational Socket-Backlog & Event-Loop Investigation on Route `/` (`timeout = 10s → 30s`):** Phase I empirical investigation via `nstat`, `server.on("connection")` accept hooks (`13.627s`), internal middleware timing (`0.65 ms` avg), Little's Law (`W = L / λ`), and `k6` payload size analysis (`~28 KB/req` vs. `~73 KB/req`). |
+| **[`report-bench-structure.md`](./report-bench-structure.md)** | **Methodology & Pipeline** | **Benchmark Architecture, Methodology, Boundary Conditions & Reproduction Guide:** Reference for the 8-phase `pnpm bench` pipeline, hardware-independent vs. hardware-dependent metrics, statistical rules (`n = 5` medians, `p97.5` upper bound, unloaded TTFB), limitations, and step-by-step reproduction commands. |
+| **[`report-infra.md`](./report-infra.md)** | **Infrastructure & OS** | **Hardware Sizing, Storage Tier & OS Process Scheduling Reference:** Explains why 4 Dedicated Intel Xeon vCPUs / 8 GB RAM (`0%` steal time) is optimal, why Linux Page Cache eliminates SSD latency on `/messages`, why `taskset` is avoided, and archives the full `lscpu`/kernel fingerprint (`env.txt`). |
 
 ---
 
-## 1. What Is Compared
+## 2. What Is Compared
 
-### 1.1. Baseline Routes (5 Core Rendering Strategies)
+### 2.1. Baseline Routes (5 Core Rendering Strategies)
 
 | Route | Strategy | Behavior |
 | --- | --- | --- |
@@ -23,7 +35,7 @@ Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and
 | `/ppr` | PPR | Static shell + one 200ms dynamic slot streamed in the same HTTP response |
 | `/messages` | SSR + Mutation | Server Function / Server Action writing to local JSON and revalidating the route |
 
-### 1.2. Rigorous 3D Caching & Revalidation Suites (7 Suites from `rigurous-*.md`)
+### 2.2. Rigorous 3D Caching & Revalidation Suites (7 Suites from `rigurous-*.md`)
 
 | Route | Dimension / Synergy | What Is Verified & Benchmarked |
 | --- | --- | --- |
@@ -37,7 +49,7 @@ Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and
 
 No external network calls, no third-party databases, no CDN: all measured latency and throughput reflect framework runtime performance.
 
-## 2. Fixed Package Versions
+## 3. Fixed Package Versions
 
 | Package | Version |
 | --- | --- |
@@ -52,7 +64,7 @@ No external network calls, no third-party databases, no CDN: all measured latenc
 | `playwright` | 1.64.1 |
 | `pnpm` (`packageManager`) | 12.15.0 |
 
-## 3. Repository Structure
+## 4. Repository Structure
 
 ```
 dinou-benchmark/
@@ -86,7 +98,7 @@ dinou-benchmark/
 └── bench.config.mjs            # Single source of truth for framework configurations
 ```
 
-## 4. How to Run
+## 5. How to Run
 
 ### Locally
 
@@ -116,7 +128,7 @@ pnpm bench:load --only=dinou-9
 pnpm bench:verify --only=dinou-9,next
 ```
 
-## 5. Documented Framework Differences (Dinou 9.0.3 vs. Next.js 16.4.3)
+## 6. Documented Framework Differences (Dinou 9.0.3 vs. Next.js 16.4.3)
 
 1. **Horizontal Segmentation (`layout.rsc` vs. `page.rsc`) & Lazy HTML Re-Composition.**
    - **Dinou 9.0.3** persists `layout.rsc` + `layout.metadata.json` independently from `page.rsc` + `metadata.json`. Calling `revalidateLayout(path)` regenerates only `layout.rsc`; on the next request to any static or PPR child route, Dinou detects `leafLayout.generatedAt > page.generatedAt` and lazily re-composes `index.html` / `shell.html` in `O(1)` without re-executing the child's `page.tsx`.
@@ -128,6 +140,6 @@ pnpm bench:verify --only=dinou-9,next
    - **Dinou 9.0.3** enables PPR via `export const ppr = true` in `page_functions.ts` or `layout_functions.ts` (with automatic inheritance to child routes and `export const ppr = false` child opt-out). During build-time Pass A, any `<Suspense>` boundary whose subtree does not access request context (`ctx.req.cookies`, `headers`, `query`) or `useSearchParams()` collapses automatically into `shell.html` for instant TTFB, while request-dependent boundaries emit `$PPR_HOLE` markers and stream concurrently at request time.
    - **Next.js 16.4.3** enables PPR globally via `cacheComponents: true`, collapsing `"use cache"` subtrees into the static shell and streaming `<Suspense>` subtrees that call `await connection()`, `await cookies()`, `await headers()`, or `await searchParams`.
 
-## 6. License
+## 7. License
 
 MIT. The benchmark apps are demo implementations; frameworks belong to their respective authors.
