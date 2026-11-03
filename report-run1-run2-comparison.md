@@ -8,6 +8,9 @@
 **Raw Data Archives:** [`results_run1/`](./results_run1/) ([`REPORT.md`](./results_run1/REPORT.md), `timeout = 30s`) · [`results_run2/`](./results_run2/) ([`REPORT.md`](./results_run2/REPORT.md), `timeout = 60s`)  
 **Companion Reports:** [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)
 
+> [!IMPORTANT]
+> **Authoritative Source of Truth ([`results_run1/`](./results_run1/) & [`results_run2/`](./results_run2/)):** The raw telemetry files in [`results_run1/`](./results_run1/) and [`results_run2/`](./results_run2/) (`*.json`, `bench-run.log`, `env.txt`, `REPORT.md`, and `*.svg`) are the untouched, machine-generated outputs emitted directly by the benchmark suite on the Linux droplet without any AI processing or manual modification. In the event of any discrepancy between this narrative comparison report and the raw archives, the files in [`results_run1/`](./results_run1/) and [`results_run2/`](./results_run2/) are the authoritative source of truth.
+
 ---
 
 ## 1. Executive Summary & Rationale for Run 2

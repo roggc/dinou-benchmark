@@ -8,6 +8,10 @@ Reproducible benchmark suite comparing **Dinou 9.0.3** (`dinou-9` vendorized and
 
 All official benchmark results, architectural analyses, E2E verification audits, socket-level diagnostics, and hardware/methodology specifications are organized into **10 standalone engineering reports** (`report-*.md`) in the root of this repository (plus an executive overview in [`reddit-3d.md`](./reddit-3d.md) and the raw auto-generated archives in [`results_run1/REPORT.md`](./results_run1/REPORT.md) and [`results_run2/REPORT.md`](./results_run2/REPORT.md)):
 
+> [!IMPORTANT]
+> **Authoritative Source of Truth (`results_run1/` & `results_run2/`):**  
+> The raw benchmark output directories **[`results_run1/`](./results_run1/)** and **[`results_run2/`](./results_run2/)** (`*.json` telemetry files, `bench-run.log`, `env.txt`, `REPORT.md`, and `*.svg` charts) contain the **unmodified, untouched data generated directly by the automated benchmark scripts on the Linux droplet, without any AI processing or manual intervention**. While the narrative `report-*.md` documents below were co-authored with an AI assistant to analyze and explain those results, **in the event of any discrepancy between a narrative `report-*.md` file and the raw files inside [`results_run1/`](./results_run1/) or [`results_run2/`](./results_run2/), the raw files in `results_run1/` and `results_run2/` are the absolute source of truth.**
+
 | Report | Category | What It Covers |
 | :--- | :--- | :--- |
 | **[`report-run2-results.md`](./report-run2-results.md)** | **Results (Run 2)** | **Official Run 2 12-Route & 3D Cube Benchmark Report (`timeout = 60s`, `0` Timeouts):** Complete results across all 9 dimensions (`verify`, `build`, `disk output`, `bundle`, `dev-start`, `hmr`, `memory`, and `200`-conn HTTP `load` with `timeout = 60s = 2 × duration`, achieving `0` timeouts across all 12 routes and all 3 frameworks). |

@@ -7,6 +7,9 @@
 **Total Pipeline Execution Time:** `6,048 seconds` (`1 hour 40 minutes 48 seconds`) · **`autocannon` Socket Timeout:** `timeout = 60s` (`2 × durationSeconds`)  
 **Companion Reports:** [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) · **Raw Archive:** [`results_run2/REPORT.md`](./results_run2/REPORT.md)
 
+> [!IMPORTANT]
+> **Authoritative Source of Truth ([`results_run2/`](./results_run2/)):** The raw telemetry files in [`results_run2/`](./results_run2/) (`*.json`, `bench-run.log`, `env.txt`, [`REPORT.md`](./results_run2/REPORT.md), and `*.svg`) are the untouched, machine-generated outputs emitted directly by the benchmark suite on the Linux droplet without any AI processing or manual modification. In the event of any discrepancy between this narrative analysis report and the files in [`results_run2/`](./results_run2/), the raw files in [`results_run2/`](./results_run2/) are the authoritative source of truth.
+
 ---
 
 ## 1. Executive Summary
