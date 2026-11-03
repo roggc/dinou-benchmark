@@ -4,7 +4,7 @@
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Target Environment:** DigitalOcean CPU-Optimized Dedicated Droplet (4 Dedicated vCPUs / 8 GB RAM, Regular Intel SSD, Ubuntu 24.04 LTS)  
 **Diagnostic Scripts:** [`scripts/diagnose-timeouts.mjs`](./scripts/diagnose-timeouts.mjs), [`scripts/k6-diagnose.mjs`](./scripts/k6-diagnose.mjs)  
-**Companion Reports:** [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md)
+**Companion Reports:** [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) *(Part 1: Route `/` Socket-Backlog Investigation)* · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md)
 
 ---
 

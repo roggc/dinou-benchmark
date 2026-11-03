@@ -1,6 +1,6 @@
 # Plain-English Guide to the `/rigorous/cache-slot` Timeouts ("For Humans")
 
-> **Companion to**: [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md).  
+> **Companion to**: [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md).  
 > **Goal of this document**: Explain in plain, visual, everyday language what is actually happening inside Node.js, Dinou, and Next.js during the `/rigorous/cache-slot` load test, why `autocannon` reports timeouts on Dinou while Dinou is running faster, and how our diagnostic tools prove it.
 
 ---

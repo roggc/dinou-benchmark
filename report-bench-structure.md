@@ -3,7 +3,7 @@
 **Date:** November 2, 2026  
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
 **Pipeline Orchestrator:** `scripts/bench.mjs` (`pnpm bench`)  
-**Companion Reports:** [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-verify.md`](./report-verify.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md)
+**Companion Reports:** [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-verify.md`](./report-verify.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)
 
 ---
 

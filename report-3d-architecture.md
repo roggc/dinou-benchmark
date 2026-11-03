@@ -1,6 +1,7 @@
 # True End-to-End Orthogonal 3D Architecture (Dinou) vs. Server-Only Coupled Caching (Next.js)
 
-> **Core Thesis**: **Next.js 16** implements 3D caching at server render time, but collapses into **1D (full-route) invalidation** on the client. **Dinou 9** is a **True End-to-End Orthogonal 3D Framework** across **Server, Network, and Client**: every one of the three axes (Horizontal Layout/Page Segmentation, Vertical Cache-Slots, and Temporal PPR Streaming) can be cached, streamed, and surgically invalidated without dragging down or re-executing the other two.
+> **Core Thesis**: **Next.js 16** implements 3D caching at server render time, but collapses into **1D (full-route) invalidation** on the client. **Dinou 9** is a **True End-to-End Orthogonal 3D Framework** across **Server, Network, and Client**: every one of the three axes (Horizontal Layout/Page Segmentation, Vertical Cache-Slots, and Temporal PPR Streaming) can be cached, streamed, and surgically invalidated without dragging down or re-executing the other two.  
+> **Companion Reports:** [`report-verify.md`](./report-verify.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)
 
 ---
 

@@ -2,7 +2,8 @@
 
 **Date:** November 2, 2026  
 **Benchmark Repository:** `dinou-benchmark` (`master` branch)  
-**Target Environment:** DigitalOcean CPU-Optimized Dedicated Droplet (4 Dedicated vCPUs / 8 GB RAM, Regular Intel SSD, Ubuntu 24.04 LTS)
+**Target Environment:** DigitalOcean CPU-Optimized Dedicated Droplet (4 Dedicated vCPUs / 8 GB RAM, Regular Intel SSD, Ubuntu 24.04 LTS)  
+**Companion Reports:** [`report-bench-structure.md`](./report-bench-structure.md) · [`report-run1-run2-comparison.md`](./report-run1-run2-comparison.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-run1-results.md`](./report-run1-results.md) · [`report-verify.md`](./report-verify.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)
 
 ---
 
@@ -12,7 +13,7 @@ This document establishes the hardware sizing, storage architecture, operating s
 
 Key architectural conclusions:
 1. **4 Dedicated vCPUs / 8 GB RAM is the Optimal Machine Profile:** Because production Node.js servers (`dinou` and `next`) execute on a single JavaScript Event Loop thread (~`1.0 vCPU`) alongside a single-threaded `autocannon` client (~`0.7 vCPU`), total active CPU demand peaks at **~2.0–2.5 vCPUs**. Scaling to 8 vCPUs / 16 GB RAM leaves ~6 vCPUs idle during HTTP load, dev-start, HMR, and memory tests without changing throughput or latency figures.
-2. **Regular Intel (Dedicated CPU + SSD) Guarantees Full Comparative Reliability:** What makes cloud benchmarks noisy is **shared vCPU contention (`%st` steal time)**, not Regular vs. Premium Intel generations. On a **CPU-Optimized Dedicated** droplet (`Intel Xeon Platinum 8168 @ 2.70GHz`), physical CPU threads are 100% dedicated. Furthermore, Linux's in-memory **Kernel Page Cache** serves repeated file reads (such as `/messages` reading `data/messages.json`) directly from RAM (`> 6.5 GB` free) after the initial warmup request, eliminating physical SSD latency from HTTP load metrics. Using the exact same 4 vCPU / 8 GB Regular Intel specification also preserves **100% hardware continuity** across [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`deep-dive-investigation.md`](./deep-dive-investigation.md).
+2. **Regular Intel (Dedicated CPU + SSD) Guarantees Full Comparative Reliability:** What makes cloud benchmarks noisy is **shared vCPU contention (`%st` steal time)**, not Regular vs. Premium Intel generations. On a **CPU-Optimized Dedicated** droplet (`Intel Xeon Platinum 8168 @ 2.70GHz`), physical CPU threads are 100% dedicated. Furthermore, Linux's in-memory **Kernel Page Cache** serves repeated file reads (such as `/messages` reading `data/messages.json`) directly from RAM (`> 6.5 GB` free) after the initial warmup request, eliminating physical SSD latency from HTTP load metrics. Using the exact same 4 vCPU / 8 GB Regular Intel specification also preserves **100% hardware continuity** across [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md).
 3. **Unpinned Linux Kernel Scheduling Outperforms Manual `taskset` Pinning on 4 vCPUs:** Running `pnpm bench` without `taskset` allows the Linux kernel scheduler to place the server's main Event Loop thread on one vCPU, `autocannon` on a second vCPU, and utilize the remaining **2 dedicated vCPUs** for Node.js's background `libuv` worker pool (`UV_THREADPOOL_SIZE=4`), V8 parallel garbage collection (Major/Minor GC), and TurboFan JIT compilation threads—without starving the primary Event Loop.
 4. **Unified `n = 5` Median Sampling & High-Concurrency Stress Configuration:** All performance phases (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`, `LOAD_RUNS=5`, and `5` idle RSS samples) use an odd sample size of **5 independent passes** to report true observed medians while tolerating up to 2 outliers per metric, while functional verification executes **`VERIFY_RUNS=10` passes (`36 checks × 10 runs = 360 executions` per run)**. Load testing defaults to **`LOAD_CONNECTIONS=200`**, **`LOAD_DURATION=30`**, **`LOAD_WARMUP=5`**, and **`LOAD_RUNS=5`**.
 
@@ -53,8 +54,8 @@ When resizing or provisioning in regions where `Premium Intel` is unavailable, u
 3. **5-Pass Median Aggregation Filters Out Any Storage Jitter in Disk-Writing Phases (`build`, `dev-start`, `hmr`):**
    - In phases that write to the filesystem (`scripts/build.mjs` deleting and writing `.dinou`/`.next`, and `scripts/hmr.mjs` writing `page.tsx`), computing the **median across `5` independent passes** (`BUILD_RUNS=5`, `DEV_RUNS=5`, `HMR_RUNS=5`) automatically discards up to 2 I/O outliers at either tail.
    - Furthermore, Dinou's compiled production output (`.dinou`, `7.5 MB`) is **8.0× smaller on disk** than Next.js's output (`.next`, `59.6–59.7 MB`). Measuring build duration on standard SSD accurately reflects real-world CI/CD runners and container filesystems where emitting 8.0× more disk data carries a proportional I/O cost.
-4. **100% Hardware Continuity Across `report-run1-results.md`, `report-run2-results.md`, and `deep-dive-investigation.md`:**
-   - [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`deep-dive-investigation.md`](./deep-dive-investigation.md) were all executed on this exact **4 Dedicated vCPUs / 8 GB RAM Regular Intel (`Intel Xeon Platinum 8168 @ 2.70GHz`)** droplet profile, where empirical run-to-run reproducibility was verified at **95.0%–99.6%** (`0.41%` total wall-clock variance between Run 1 [`6,073s`] and Run 2 [`6,048s`], and `1%–5%` metric variance). Using the same `Regular Intel` tier guarantees strict apples-to-apples continuity across all published reports.
+4. **100% Hardware Continuity Across `report-run1-results.md`, `report-run2-results.md`, and `report-deep-dive-investigation.md`:**
+   - [`report-run1-results.md`](./report-run1-results.md), [`report-run2-results.md`](./report-run2-results.md), and [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) were all executed on this exact **4 Dedicated vCPUs / 8 GB RAM Regular Intel (`Intel Xeon Platinum 8168 @ 2.70GHz`)** droplet profile, where empirical run-to-run reproducibility was verified at **95.0%–99.6%** (`0.41%` total wall-clock variance between Run 1 [`6,073s`] and Run 2 [`6,048s`], and `1%–5%` metric variance). Using the same `Regular Intel` tier guarantees strict apples-to-apples continuity across all published reports.
 
 ### 3.2 Phase-by-Phase Impact Matrix: Regular Intel (SSD) vs. Premium Intel (NVMe SSD)
 
@@ -91,7 +92,7 @@ Even if the server and client were pinned separately (`0,1` for the server and `
 
 ## 5. Optimal Load Testing Parameters (`bench.config.mjs`)
 
-Based on the empirical socket-backlog findings in [`deep-dive-investigation.md`](./deep-dive-investigation.md) and [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`bench.config.mjs`](./bench.config.mjs) is pre-configured with the following production load defaults:
+Based on the empirical socket-backlog findings in [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md) and [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md), [`bench.config.mjs`](./bench.config.mjs) is pre-configured with the following production load defaults:
 
 | Parameter | Environment Variable | Default Value | Technical Justification |
 | :--- | :--- | :---: | :--- |

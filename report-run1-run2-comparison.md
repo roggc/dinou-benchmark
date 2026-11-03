@@ -6,7 +6,7 @@
 **Environment:** DigitalOcean CPU-Optimized Dedicated Droplet — 4 Dedicated Intel Xeon vCPUs / 8 GB RAM / Regular Intel SSD / Ubuntu 24.04 LTS  
 **Total Pipeline Execution Time:** `Run 1: 6,073 seconds` (`1h 41m 13s`) vs. `Run 2: 6,048 seconds` (`1h 40m 48s` — a `0.41%` variance)  
 **Raw Data Archives:** [`results_run1/`](./results_run1/) ([`REPORT.md`](./results_run1/REPORT.md), `timeout = 30s`) · [`results_run2/`](./results_run2/) ([`REPORT.md`](./results_run2/REPORT.md), `timeout = 60s`)  
-**Companion Reports:** [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`deep-dive-investigation.md`](./deep-dive-investigation.md)
+**Companion Reports:** [`report-run1-results.md`](./report-run1-results.md) · [`report-run2-results.md`](./report-run2-results.md) · [`report-timeouts-diagnosis.md`](./report-timeouts-diagnosis.md) · [`report-timeouts-diagnosis-for-dumbs.md`](./report-timeouts-diagnosis-for-dumbs.md) · [`report-3d-architecture.md`](./report-3d-architecture.md) · [`report-verify.md`](./report-verify.md) · [`report-bench-structure.md`](./report-bench-structure.md) · [`report-infra.md`](./report-infra.md) · [`report-deep-dive-investigation.md`](./report-deep-dive-investigation.md)
 
 ---
 
