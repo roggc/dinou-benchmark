@@ -1,6 +1,6 @@
 # Dinou v9.0.3 vs Next.js v16.4.3: Testing True Orthogonal 3D Caching (Horizontal, Vertical & PPR) across 36 E2E checks and 12 production routes
 
-**TL;DR:** I built [**Dinou**](https://github.com/roggc/dinou) (an independent React 19 Server Components framework with its own native HTTP server — zero Express — and support for esbuild, Rollup, and Webpack) and created an open-source, reproducible benchmark suite ([`dinou-benchmark`](https://github.com/roggc/dinou-benchmark)) to test **Dinou v9.0.3** head-to-head against **Next.js v16.4.3** (Turbopack, `cacheComponents: true`, `"use cache"`, and PPR).
+**TL;DR:** I built [**Dinou**](https://github.com/roggc/dinou) ([`dinou.dev`](https://dinou.dev) — an independent React 19 Server Components framework with its own native HTTP server, zero Express, `"use server"` Server Functions, and support for esbuild, Rollup, and Webpack) and created an open-source, reproducible benchmark suite ([`dinou-benchmark`](https://github.com/roggc/dinou-benchmark)) to test **Dinou v9.0.3** head-to-head against **Next.js v16.4.3** (Turbopack, `cacheComponents: true`, `"use cache"`, and PPR).
 
 Rather than testing only basic "Hello World" routes, the suite tests all **7 vertices of the 3D Caching & Streaming Cube** (**Horizontal** Layout/Page Segmentation × **Vertical** Component Cache-Slots × **Temporal** PPR Streaming) across **two complete, independent benchmark runs (`Run 1` with a `30s` `autocannon` timeout and `Run 2` with a `60s` timeout)**: **36 end-to-end Playwright behavioral checks × 20 total runs (`720` check executions per framework)** and **12 production HTTP load routes** on a dedicated 4-vCPU / 8 GB RAM DigitalOcean CPU-Optimized Linux droplet (`200` concurrent connections, `30s` duration × `5` passes per run = `10` passes / `300s` per route):
 
@@ -106,6 +106,11 @@ Every check in [`scripts/verify.mjs`](https://github.com/roggc/dinou-benchmark/b
 
 *(Note: Latencies and TTFB shown in the cells above are from Run 2 (`0` errors across all 36 cells); full Run 1 latency tables are in [`report-run1-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run1-results.md) and [`report-run2-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run2-results.md)).*
 
+> **📖 Quick Guide: How to Read These Metrics?**
+> - **Throughput (`req/s` — Higher is better ↑):** Completed HTTP responses per second sustained under **`200` concurrent connections** for `30s` (`× 5` passes per run). Shows server capacity under heavy concurrent traffic.
+> - **Latency (`p50` / `p99` in `ms` — Lower is better ↓):** Total time to receive the **complete HTTP response body** under 200-connection load. **`p50` (Median)** is the typical user experience (`50%` of requests finish faster); **`p99` (Tail Latency)** is the worst-case `1%` (`99%` finish faster) and exposes event-loop stalls and memory backpressure.
+> - **Unloaded TTFB (`ms` — Lower is better ↓):** **Time-To-First-Byte** at concurrency `= 1` (`100` sequential requests). On streaming/PPR routes, this measures how fast the server flushes the initial HTML shell (`t = 0`) before async `<Suspense>` holes finish resolving.
+
 ### Why Is Dinou `6.22×–6.67×` Faster on `/rigorous/hs-cache-slot` (`p99 = 312 ms` vs `19.3s`) and `1.4×–2.7×` Faster Across All Streaming/PPR Routes?
 1. **Orthogonal Server Isolation on `/rigorous/hs-cache-slot` (`X ∩ Y`)**:
    When a route with a cached Horizontal Segmentation layout and page (`revalidate: 3600`) embeds a single uncached dynamic slot (`revalidate: 0`), Dinou preserves its outer HS cache and re-renders *only* the dynamic slot in `~1.4 ms` of CPU (**`684.7–689.0 req/s`**, `p99 = 312–325 ms`). In Next.js 16.4.3, calling `await connection()` inside the dynamic slot **de-optimizes the entire route into full dynamic SSR**, collapsing throughput by **`6.22×–6.67×`** to `102.7–110.7 req/s` and driving `p99` tail latency to **`19,344–19,753 ms` (~20 seconds)**.
@@ -126,6 +131,11 @@ Every check in [`scripts/verify.mjs`](https://github.com/roggc/dinou-benchmark/b
 | **Idle RSS Memory** | `275.2` → `275.1 MB` | `275.3` → `275.4 MB` | **`245.9` → `246.5 MB`** | Next.js `~29 MB` lower at idle |
 | **Peak RSS Memory Under 200-Conn Load** | **`488.3` → `492.5 MB`** | **`476.7` → `498.7 MB`** | `1,060.5` → `1,019.3 MB` | **`2.07×–2.17×` lower peak RAM (`-527 to -572 MB`)** |
 | **Post-Load Settled RSS Memory** | **`488.4` → `492.6 MB`** | **`476.3` → `490.0 MB`** | `1,060.5` → `1,019.4 MB` | **`2.07×–2.17×` lower settled RAM** |
+
+> **Why Are Two Dinou Variants Tested (`Vendorized` vs. `-u` `Unvendorized`)?**  
+> Dinou 9 introduces **Dual-Mode Vendoring**:
+> - **Vendorized Mode (`dinou-9`, default):** Pre-bundles the RSC runtime (`react-server-dom-webpack`) and internal dependencies inside the framework package for zero-config stability and strict version isolation.
+> - **Unvendorized Mode (`dinou-9-u`, `-u` / `--unvendorized` flag):** Resolves dependencies directly from the host project's `node_modules` for teams that want custom bundler deduplication, patching, or ~2% faster builds (`6.39s` vs `6.52s`). Both modes produce the exact same **`81.8 KiB` (Brotli)** client bundle and **`7.5 MB`** build output, and both support standard **`"use server"` Server Functions** invoked directly from Client Components (`createItem` on `/messages` + invalidation actions across `/rigorous/*`).
 
 ---
 
@@ -150,11 +160,27 @@ A look across every major category in the ecosystem shows why no other framework
 
 ---
 
-## 6. Full Reproducibility & Detailed Engineering Reports
+## 6. Methodology, Boundary Conditions, Full Reproducibility & Reports
 
 Every script, route implementation, and raw telemetry JSON from both runs (`results_run1/` and `results_run2/`) is open-source in the benchmark repository:
 - **Benchmark Repository**: [`https://github.com/roggc/dinou-benchmark`](https://github.com/roggc/dinou-benchmark)
-- **Dinou Framework Repository**: [`https://github.com/roggc/dinou`](https://github.com/roggc/dinou)
+- **Dinou Framework & Documentation**: [`https://github.com/roggc/dinou`](https://github.com/roggc/dinou) · **[`https://dinou.dev`](https://dinou.dev)**
+- **Authoritative Source of Truth (`results_run1/` & `results_run2/`)**: The [`results_run1/`](https://github.com/roggc/dinou-benchmark/tree/master/results_run1) and [`results_run2/`](https://github.com/roggc/dinou-benchmark/tree/master/results_run2) directories contain the **100% raw, untouched benchmark outputs** (`raw.json`, `bench-run.log`, `environment.json`, `REPORT.md`, and `charts/*.svg`) generated directly by the automated harness on the DigitalOcean droplet with zero human or AI post-processing.
+- **Methodology & Boundary Conditions**:
+  - **Single Node.js Process (`NODE_ENV=production`)**: Both frameworks run as a single Node.js process (`dinou start` vs `next start`) with no cluster mode, reverse proxy, or CDN in front, isolating pure framework HTTP and RSC overhead.
+  - **Loopback Load Generation on 4 Dedicated Xeon vCPUs**: `autocannon` runs on the same 4-vCPU host over loopback (`127.0.0.1`) so network latency is `< 0.05 ms` and every framework's server process and `autocannon` share the exact same 4 physical cores under identical conditions.
+  - **Synthetic `200 ms` / `80 ms` Delays vs. Real Disk I/O (`/messages`)**: Dynamic streaming routes (`/dashboard`, `/ppr`, `/rigorous/*`) use controlled `setTimeout` delays (`200 ms` / `80 ms`) so server CPU and event-loop overhead isn't masked by external database jitter, while `/messages` performs real `fs.promises.readFile` disk I/O + JSON parsing on every request.
+- **Run It Yourself**:
+  ```bash
+  git clone https://github.com/roggc/dinou-benchmark.git
+  cd dinou-benchmark
+  # Provision environment (Ubuntu 24.04) or install locally:
+  sudo bash infra/droplet-setup.sh
+  # Run the 36 E2E Playwright checks (10 runs per framework):
+  node scripts/verify.mjs --only=dinou-9,next --runs=10
+  # Run the full benchmark suite (or skip verify if already run):
+  pnpm bench
+  ```
 - **Deep-Dive Reports in the Repo**:
   - [`report-3d-architecture.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-3d-architecture.md) — *True End-to-End Orthogonal 3D Architecture (Dinou) vs. Server-Only Coupled Caching (Next.js)*
   - [`report-run2-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run2-results.md), [`report-run1-results.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run1-results.md) & [`report-run1-run2-comparison.md`](https://github.com/roggc/dinou-benchmark/blob/master/report-run1-run2-comparison.md) — *Complete Run 1 (`timeout = 30s`) and Run 2 (`timeout = 60s`) analysis & side-by-side reproducibility comparison*
